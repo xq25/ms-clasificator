@@ -1,47 +1,29 @@
 package Backend.ms_clasificator.Models;
 
+import jakarta.persistence.*;
+import lombok.Data;
+
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Entity
-@Table(name = "doctor")
 @Data
-@NoArgsConstructor
+@Entity
 public class Doctor {
-    // Identificador principal del medico
     @Id
-    @Column(nullable = false, unique = true)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(name = "code", unique = true, nullable = false, updatable = false)
     private String code;
 
-    // Referencia externa al microservicio de seguridad (no hay relación JPA)
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    @Column(name = "user_id", unique = true, nullable = false, updatable = false)
+    private UUID user_id;
 
-    // Area de evaluacion a la que pertenece
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "evaluation_area_id", nullable = false)
-    private EvaluationArea evaluationArea;
+    // Si se elimina el doctor, se deben eliminar las relaciones automaticamente, para no tener relaciones huerfanas
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<DoctorArea> doctorAreas;
 
-    // Relacion de diligenciamiento con respecto aa las calificaciones o grado de evaluaciom de un medico dado para una imagen especifica
-    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ImgDiagnostic> imgDiagnostics;
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ImageDiagnostic> imageDiagnostics;
 
-    public Doctor(String code, UUID userId, EvaluationArea evaluationArea) {
-        this.code = code;
-        this.userId = userId;
-        this.evaluationArea = evaluationArea;
-        this.imgDiagnostics = null;
-    }
 }
