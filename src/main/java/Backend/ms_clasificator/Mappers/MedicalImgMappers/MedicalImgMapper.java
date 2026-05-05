@@ -1,0 +1,33 @@
+package Backend.ms_clasificator.Mappers.MedicalImgMappers;
+
+import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgCreateDTO;
+import Backend.ms_clasificator.Mappers.Mapper;
+import Backend.ms_clasificator.Models.MedicalImg;
+
+public class MedicalImgMapper implements Mapper<MedicalImg, MedicalImgCreateDTO> {
+    @Override
+    public MedicalImg toEntity(MedicalImgCreateDTO medicalImgCreateDTO) {
+        if (medicalImgCreateDTO == null) {
+            return null;
+        }
+
+        return MedicalImg.builder()
+                .url(medicalImgCreateDTO.getUrl())
+                // Las relaciones se asignan en el Service
+                .build();
+    }
+
+    @Override
+    public MedicalImgCreateDTO toDTO(MedicalImg medicalImg) {
+        if (medicalImg == null) {
+            return null;
+        }
+
+        return MedicalImgCreateDTO.builder()
+                .url(medicalImg.getUrl())
+                .evaluationAreaId(medicalImg.getEvaluationArea() != null ? medicalImg.getEvaluationArea().getId() : null)
+                .patientId(medicalImg.getPatient() != null ? medicalImg.getPatient().getId() : null)
+                .build();
+    }
+}
+
