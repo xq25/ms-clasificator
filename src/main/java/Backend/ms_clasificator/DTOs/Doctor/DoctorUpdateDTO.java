@@ -1,4 +1,9 @@
 package Backend.ms_clasificator.DTOs.Doctor;
 
-public class DoctorUpdateDTO extends DoctorCreateDTO{
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+public class DoctorUpdateDTO {
 }

@@ -1,0 +1,32 @@
+package Backend.ms_clasificator.Mappers.ImageDiagnosticMappers;
+
+import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticCreateDTO;
+import Backend.ms_clasificator.Mappers.Mapper;
+import Backend.ms_clasificator.Models.ImageDiagnostic;
+
+public class ImageDiagnosticMapper implements Mapper<ImageDiagnostic, ImageDiagnosticCreateDTO> {
+    @Override
+    public ImageDiagnostic toEntity(ImageDiagnosticCreateDTO imageDiagnosticCreateDTO) {
+        if (imageDiagnosticCreateDTO == null) {
+            return null;
+        }
+
+        return ImageDiagnostic.builder()
+                // Las relaciones se asignan en el Service
+                .build();
+    }
+
+    @Override
+    public ImageDiagnosticCreateDTO toDTO(ImageDiagnostic imageDiagnostic) {
+        if (imageDiagnostic == null) {
+            return null;
+        }
+
+        return ImageDiagnosticCreateDTO.builder()
+                .doctorId(imageDiagnostic.getDoctor() != null ? imageDiagnostic.getDoctor().getId() : null)
+                .medicalImgId(imageDiagnostic.getMedicalImg() != null ? imageDiagnostic.getMedicalImg().getId() : null)
+                .medicalDiagnosticId(imageDiagnostic.getMedicalDiagnostic() != null ? imageDiagnostic.getMedicalDiagnostic().getId() : null)
+                .build();
+    }
+}
+
