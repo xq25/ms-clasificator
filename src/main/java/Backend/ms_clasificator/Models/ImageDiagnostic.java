@@ -8,7 +8,7 @@ import org.hibernate.query.common.FetchClauseType;
 @Entity
 // No puede existir dos diagnosticos de un mismo medico a una misma imagen
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"doctor_id", "medical_img_id", "medical_diagnostic_id"}))
-public class ImageDiagnostic {
+public class    ImageDiagnostic {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
