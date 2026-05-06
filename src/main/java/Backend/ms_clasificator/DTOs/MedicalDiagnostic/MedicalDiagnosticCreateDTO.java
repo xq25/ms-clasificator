@@ -23,5 +23,8 @@ public class MedicalDiagnosticCreateDTO {
     //Importante para el manejo del sistema para personas no especializadas en areas medicas
     @NotBlank(message = "El nombre del diagnóstico no puede estar vacío")
     private String diagnosticName;
+
+    // ID del diagnóstico padre (opcional - nullable si es diagnosis raíz)
+    private Integer parentDiagnosticId;
 }
 
