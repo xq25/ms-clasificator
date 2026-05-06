@@ -4,5 +4,4 @@ import Backend.ms_clasificator.Models.DoctorArea;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface DoctorAreaRepository extends JpaRepository<DoctorArea, Integer> {
-     DoctorArea findByDoctorId(Integer doctorId);
 }

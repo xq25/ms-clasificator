@@ -14,6 +14,7 @@ public class MedicalDiagnosticMapper implements Mapper<MedicalDiagnostic, Medica
         return MedicalDiagnostic.builder()
                 .diagnosticCode(medicalDiagnosticCreateDTO.getDiagnosticCode())
                 .diagnosticName(medicalDiagnosticCreateDTO.getDiagnosticName())
+                // parentDiagnostic esta configurado en el service, para asegurar existencia por medio de validaciones
                 .build();
     }
 
@@ -26,6 +27,9 @@ public class MedicalDiagnosticMapper implements Mapper<MedicalDiagnostic, Medica
         return MedicalDiagnosticCreateDTO.builder()
                 .diagnosticCode(medicalDiagnostic.getDiagnosticCode())
                 .diagnosticName(medicalDiagnostic.getDiagnosticName())
+                // Mapear el ID del diagnóstico padre si existe
+                .parentDiagnosticId(medicalDiagnostic.getParentDiagnostic() != null ?
+                        medicalDiagnostic.getParentDiagnostic().getId() : null)
                 .build();
     }
 }
