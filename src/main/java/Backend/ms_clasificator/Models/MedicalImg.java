@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Entity
 @Builder
@@ -25,10 +23,7 @@ public class MedicalImg {
     @JoinColumn(name = "evaluation_area_id")
     private EvaluationArea evaluationArea;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "patient_id")
     private Patient patient;
-
-    @OneToMany(mappedBy = "medicalImg", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<ImageDiagnostic> imageDiagnostics;
 }

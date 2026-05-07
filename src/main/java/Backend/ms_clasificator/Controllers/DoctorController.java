@@ -27,7 +27,7 @@ public class DoctorController {
     @GetMapping("{id}")
     public Doctor findById(@PathVariable Integer id){ return this.doctorService.findById(id);}
 
-    @GetMapping("{code}")
+    @GetMapping("code/{code}")
     public Doctor findByCode(@PathVariable String code){ return this.doctorService.findByCode(code);}
 
     @PostMapping("")

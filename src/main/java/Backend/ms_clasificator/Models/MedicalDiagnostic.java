@@ -27,9 +27,6 @@ public class MedicalDiagnostic {
     @Column(name = "diagnosticName")
     private String diagnosticName;
 
-    @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ImageDiagnostic> imageDiagnostics;
-
     // Relación al diagnostico padre (self-referencing) - nullable
     // Foreing key del diagnostico padre, si lo hay
     @ManyToOne
@@ -38,15 +35,15 @@ public class MedicalDiagnostic {
 
     // Relación a los sub-diagnosticos - nullable
     // Buscamos en esta misma tabla en base al parentDiagnostic, este es el campo por el cul podemos saber cuantos diagnosticos pertenecen a un diagnostico padre
-    @OneToMany(mappedBy = "parentDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "parentDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<MedicalDiagnostic> subDiagnostics;
 
     // Relacion con los puntos de evaluacion asociados a este diagnostico
-    @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<UIState> uiStates;
 
     // Relación a losUIConfig asociados a este diagnóstico o enfermedad
-    @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<UIConfig> uiConfigs;
 
 

@@ -20,11 +20,11 @@ public class UIState {
     @Column(name = "numValue", nullable = false)
     private Integer numValue;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ui_config_id", nullable = false)
     private UIConfig uiConfig;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "medical_diagnostic_id", nullable = false)
     private MedicalDiagnostic medicalDiagnostic;
 

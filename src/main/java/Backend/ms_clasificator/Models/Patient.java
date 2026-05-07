@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Entity
 @Builder
@@ -26,8 +24,4 @@ public class Patient {
 
     @Column(name="user_id", nullable = false, unique = true)
     private String userId;
-
-    @OneToMany(mappedBy = "patient", fetch = FetchType.LAZY)
-    private List<MedicalImg> medicalImages;
-
 }

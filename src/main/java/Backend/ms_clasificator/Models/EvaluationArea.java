@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Entity
 @Builder
@@ -24,11 +22,4 @@ public class EvaluationArea {
 
     @Column(name = "name", unique = true, nullable = false, updatable = true)
     private String name;
-
-    @OneToMany(mappedBy = "evaluationArea", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<DoctorArea> doctorAreas;
-
-    @OneToMany(mappedBy = "evaluationArea", fetch = FetchType.LAZY)
-    private List<MedicalImg> medicalImages;
-
 }
