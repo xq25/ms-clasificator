@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.NotNull;
 
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,5 +23,7 @@ public class ImageDiagnosticCreateDTO {
 
     @NotNull(message = "El ID del diagnóstico médico no puede ser nulo")
     private Integer medicalDiagnosticId;
+
+    private LocalDateTime diagnosticDate;
 }
 

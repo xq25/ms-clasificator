@@ -4,6 +4,7 @@ import Backend.ms_clasificator.DTOs.Doctor.DoctorBaseDTO;
 import Backend.ms_clasificator.DTOs.Doctor.DoctorUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Models.Doctor;
+import Backend.ms_clasificator.Models.DoctorArea;
 import Backend.ms_clasificator.Services.DoctorService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,4 +54,40 @@ public class DoctorController {
 
     @DeleteMapping("{id}")
     public void delete(@PathVariable Integer id){ this.doctorService.delete(id);}
+
+    // ===== Relaciones con otras entidades =====
+
+    /**
+     * Asociar un doctor a un área de evaluación
+     * @param doctorId ID del doctor
+     * @param evaluationAreaId ID del área de evaluación
+     * @return ApiResponse con el resultado
+     */
+    @PostMapping("{doctorId}/join-area/{evaluationAreaId}")
+    public ResponseEntity<ApiResponse<DoctorArea>> joinInEvaluationArea(@PathVariable Integer doctorId, @PathVariable Integer evaluationAreaId) {
+        ApiResponse<DoctorArea> response = this.doctorService.joinInEvaluationArea(doctorId, evaluationAreaId);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * Disociar un doctor de un área de evaluación
+     * @param doctorId ID del doctor
+     * @param evaluationAreaId ID del área de evaluación
+     * @return ApiResponse con el resultado
+     */
+    @DeleteMapping("{doctorId}/remove-area/{evaluationAreaId}")
+    public ResponseEntity<ApiResponse<Void>> removeFromEvaluationArea(@PathVariable Integer doctorId, @PathVariable Integer evaluationAreaId) {
+        ApiResponse<Void> response = this.doctorService.removeFromEvaluationArea(doctorId, evaluationAreaId);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
 }

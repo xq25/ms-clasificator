@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.query.common.FetchClauseType;
 
+import java.time.LocalDateTime;
+
 @Data
 @Entity
 @Builder
@@ -30,6 +32,9 @@ public class ImageDiagnostic {
     @ManyToOne (fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "medical_diagnostic_id", nullable = false)
     private MedicalDiagnostic medicalDiagnostic;
+
+    @Column(name = "diagnostic_date", nullable = false)
+    private LocalDateTime diagnosticDate;
 
 
 }

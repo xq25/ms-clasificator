@@ -13,8 +13,8 @@ public class ImageDiagnosticMapper implements Mapper<ImageDiagnostic, ImageDiagn
             return null;
         }
 
+        // Las relaciones y la fecha se asignan en el Service
         return ImageDiagnostic.builder()
-                // Las relaciones se asignan en el Service
                 .build();
     }
 
@@ -28,6 +28,7 @@ public class ImageDiagnosticMapper implements Mapper<ImageDiagnostic, ImageDiagn
                 .doctorId(imageDiagnostic.getDoctor() != null ? imageDiagnostic.getDoctor().getId() : null)
                 .medicalImgId(imageDiagnostic.getMedicalImg() != null ? imageDiagnostic.getMedicalImg().getId() : null)
                 .medicalDiagnosticId(imageDiagnostic.getMedicalDiagnostic() != null ? imageDiagnostic.getMedicalDiagnostic().getId() : null)
+                .diagnosticDate(imageDiagnostic.getDiagnosticDate())
                 .build();
     }
 }
