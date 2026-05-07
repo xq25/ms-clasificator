@@ -3,7 +3,9 @@ package Backend.ms_clasificator.Mappers.ImageDiagnosticMappers;
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticCreateDTO;
 import Backend.ms_clasificator.Mappers.Mapper;
 import Backend.ms_clasificator.Models.ImageDiagnostic;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ImageDiagnosticMapper implements Mapper<ImageDiagnostic, ImageDiagnosticCreateDTO> {
     @Override
     public ImageDiagnostic toEntity(ImageDiagnosticCreateDTO imageDiagnosticCreateDTO) {

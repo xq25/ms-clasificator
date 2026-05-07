@@ -3,7 +3,9 @@ package Backend.ms_clasificator.Mappers.MedicalImgMappers;
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgCreateDTO;
 import Backend.ms_clasificator.Mappers.Mapper;
 import Backend.ms_clasificator.Models.MedicalImg;
+import org.springframework.stereotype.Component;
 
+@Component
 public class MedicalImgMapper implements Mapper<MedicalImg, MedicalImgCreateDTO> {
     @Override
     public MedicalImg toEntity(MedicalImgCreateDTO medicalImgCreateDTO) {

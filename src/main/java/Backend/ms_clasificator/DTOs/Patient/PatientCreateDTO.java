@@ -24,5 +24,8 @@ public class PatientCreateDTO {
     @Positive(message = "La edad debe ser un número positivo")
     private Integer years;
 
+    @NotNull(message = "El userId no puede ser nulo")
+    private String userId;
+
 }
 

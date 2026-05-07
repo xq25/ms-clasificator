@@ -24,6 +24,9 @@ public class Patient {
     @Column(name = "years", nullable = false)
     private Integer years;
 
+    @Column(name="user_id", nullable = false, unique = true)
+    private String userId;
+
     @OneToMany(mappedBy = "patient", fetch = FetchType.LAZY)
     private List<MedicalImg> medicalImages;
 

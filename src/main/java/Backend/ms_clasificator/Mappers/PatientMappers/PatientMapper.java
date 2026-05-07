@@ -3,7 +3,9 @@ package Backend.ms_clasificator.Mappers.PatientMappers;
 import Backend.ms_clasificator.DTOs.Patient.PatientCreateDTO;
 import Backend.ms_clasificator.Mappers.Mapper;
 import Backend.ms_clasificator.Models.Patient;
+import org.springframework.stereotype.Component;
 
+@Component
 public class PatientMapper implements Mapper<Patient, PatientCreateDTO> {
     @Override
     public Patient toEntity(PatientCreateDTO patientCreateDTO) {
@@ -14,6 +16,7 @@ public class PatientMapper implements Mapper<Patient, PatientCreateDTO> {
         return Patient.builder()
                 .document(patientCreateDTO.getDocument())
                 .years(patientCreateDTO.getYears())
+                .userId(patientCreateDTO.getUserId())
                 .build();
     }
 
@@ -26,6 +29,7 @@ public class PatientMapper implements Mapper<Patient, PatientCreateDTO> {
         return PatientCreateDTO.builder()
                 .document(patient.getDocument())
                 .years(patient.getYears())
+                .userId(patient.getUserId())
                 .build();
     }
 }

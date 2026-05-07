@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.util.List;
-import java.util.UUID;
 
 @Data
 @Entity
@@ -23,7 +22,7 @@ public class Doctor {
     private String code;
 
     @Column(name = "user_id", unique = true, nullable = false, updatable = false)
-    private UUID user_id;
+    private String userId;
 
     // Si se elimina el doctor, se deben eliminar las relaciones automaticamente, para no tener relaciones huerfanas
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

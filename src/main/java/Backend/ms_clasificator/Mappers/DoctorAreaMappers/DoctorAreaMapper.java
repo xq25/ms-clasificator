@@ -3,7 +3,9 @@ package Backend.ms_clasificator.Mappers.DoctorAreaMappers;
 import Backend.ms_clasificator.DTOs.DoctorArea.DoctorAreaCreateDTO;
 import Backend.ms_clasificator.Mappers.Mapper;
 import Backend.ms_clasificator.Models.DoctorArea;
+import org.springframework.stereotype.Component;
 
+@Component
 public class DoctorAreaMapper implements Mapper<DoctorArea, DoctorAreaCreateDTO> {
     @Override
     public DoctorArea toEntity(DoctorAreaCreateDTO doctorAreaCreateDTO) {
