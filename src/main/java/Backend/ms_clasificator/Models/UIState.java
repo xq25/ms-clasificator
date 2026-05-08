@@ -1,5 +1,6 @@
 package Backend.ms_clasificator.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +18,9 @@ public class UIState {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JsonIgnore
     @JoinColumn(name = "ui_config_id", nullable = false)
     private UIConfig uiConfig;
 
@@ -26,3 +29,4 @@ public class UIState {
     private MedicalDiagnostic medicalDiagnostic;
 
 }
+
