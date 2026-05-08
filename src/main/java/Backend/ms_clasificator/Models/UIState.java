@@ -17,9 +17,6 @@ public class UIState {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "numValue", nullable = false)
-    private Integer numValue;
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ui_config_id", nullable = false)
     private UIConfig uiConfig;

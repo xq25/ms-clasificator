@@ -94,39 +94,4 @@ public class EvaluationAreaController {
         }
     }
 
-    // ===== Relaciones con otras entidades =====
-
-    /**
-     * Agregar un doctor a un área de evaluación
-     * @param evaluationAreaId ID del área de evaluación
-     * @param doctorId ID del doctor
-     * @return ApiResponse con el resultado
-     */
-    @PostMapping("{evaluationAreaId}/add-doctor/{doctorId}")
-    public ResponseEntity<ApiResponse<DoctorArea>> addDoctor(@PathVariable Integer evaluationAreaId, @PathVariable Integer doctorId) {
-        ApiResponse<DoctorArea> response = evaluationAreaService.addDoctor(evaluationAreaId, doctorId);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * Remover un doctor de un área de evaluación
-     * @param evaluationAreaId ID del área de evaluación
-     * @param doctorId ID del doctor
-     * @return ApiResponse con el resultado
-     */
-    @DeleteMapping("{evaluationAreaId}/remove-doctor/{doctorId}")
-    public ResponseEntity<ApiResponse<Void>> removeDoctor(@PathVariable Integer evaluationAreaId, @PathVariable Integer doctorId) {
-        ApiResponse<Void> response = evaluationAreaService.removeDoctor(evaluationAreaId, doctorId);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
 }

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.List;
 
@@ -39,10 +40,12 @@ public class MedicalDiagnostic {
     private List<MedicalDiagnostic> subDiagnostics;
 
     // Relacion con los puntos de evaluacion asociados a este diagnostico
+    @JsonIgnore // Para evitar problemas de serialización y referencias circulares al convertir a JSON
     @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<UIState> uiStates;
 
     // Relación a losUIConfig asociados a este diagnóstico o enfermedad
+    @JsonIgnore // Para evitar problemas de serialización y referencias circulares al convertir a JSON
     @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<UIConfig> uiConfigs;
 

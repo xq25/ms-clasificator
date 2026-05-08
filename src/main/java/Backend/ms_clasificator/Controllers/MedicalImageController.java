@@ -45,6 +45,22 @@ public class MedicalImageController {
     }
 
     /**
+     * Obtener todas las imágenes médicas de un área de evaluación
+     * @param evaluationAreaId ID del área de evaluación
+     * @return ApiResponse con la lista de imágenes
+     */
+    @GetMapping("area/{evaluationAreaId}")
+    public ResponseEntity<ApiResponse<List<MedicalImg>>> findByEvaluationAreaId(@PathVariable Integer evaluationAreaId) {
+        ApiResponse<List<MedicalImg>> response = medicalImageService.findByEvaluationAreaId(evaluationAreaId);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
      * Crear una nueva imagen médica
      * @param medicalImgCreateDTO DTO con datos de entrada
      * @return ApiResponse con el resultado

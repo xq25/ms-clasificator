@@ -1,6 +1,6 @@
 package Backend.ms_clasificator.DTOs.EvaluationArea;
 
-import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +14,7 @@ import jakarta.validation.constraints.NotBlank;
 @Builder
 public class EvaluationAreaCreateDTO {
 
-    @Max(10)
+    @Size(max = 10, message = "El código del área debe tener máximo 10 caracteres")
     @NotBlank(message = "El código del área de evaluación no puede estar vacío")
     private String codeArea;
 

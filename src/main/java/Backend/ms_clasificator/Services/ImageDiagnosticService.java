@@ -62,6 +62,7 @@ public class ImageDiagnosticService {
             if (imageDiagnosticCreateDTO == null) {
                 return ApiResponse.error("El DTO no puede ser nulo");
             }
+        // Validaciones de coherencia de datos.
 
             // Validar que exista el doctor
             Doctor doctor = doctorRepository.findById(imageDiagnosticCreateDTO.getDoctorId())
@@ -75,7 +76,14 @@ public class ImageDiagnosticService {
             MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(imageDiagnosticCreateDTO.getMedicalDiagnosticId())
                     .orElseThrow(() -> new IllegalArgumentException("Diagnóstico médico no encontrado con ID: " + imageDiagnosticCreateDTO.getMedicalDiagnosticId()));
 
-            // Asignar la fecha actual si no se proporciona
+        // Validacion de correctitud de logica y preservacion de datos.
+
+            if (this.validateSameImgDiagnostic(imageDiagnosticCreateDTO.getDoctorId(), imageDiagnosticCreateDTO.getMedicalImgId())){
+                throw new IllegalArgumentException("Ya existe un diagnóstico dado por ese doctor a esa imagen médica");
+            }
+
+
+        // Asignar la fecha actual si no se proporciona
             LocalDateTime diagnosticDate = imageDiagnosticCreateDTO.getDiagnosticDate() != null 
                     ? imageDiagnosticCreateDTO.getDiagnosticDate()
                     : LocalDateTime.now();
@@ -159,5 +167,15 @@ public class ImageDiagnosticService {
         } catch (Exception ex) {
             return ApiResponse.error("Error al eliminar diagnóstico de imagen: " + ex.getMessage());
         }
+    }
+
+    private boolean validateSameImgDiagnostic(Integer doctor_id, Integer img_id){
+        boolean validation = false;
+        ImageDiagnostic diagnostic = imageDiagnosticRepository.findByDoctorIdAndMedicalImgId(doctor_id, img_id);
+        // Si existe un registro ya generado por ese medico a esa imagen, devolvemos true.
+        if (diagnostic != null){
+            validation = true;
+        }
+        return validation;
     }
 }

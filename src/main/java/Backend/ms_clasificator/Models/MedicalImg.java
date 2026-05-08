@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import java.util.List;
 
 @Data
 @Entity
@@ -23,7 +26,12 @@ public class MedicalImg {
     @JoinColumn(name = "evaluation_area_id")
     private EvaluationArea evaluationArea;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "patient_id")
-    private Patient patient;
+    private Integer patientId;
+
+    // Relación con los diagnósticos de imagen asociados
+    // Si se elimina una imagen, se eliminan automáticamente sus diagnósticos (cascade)
+    @JsonIgnore
+    @OneToMany(mappedBy = "medicalImg", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ImageDiagnostic> imageDiagnostics;
 }
