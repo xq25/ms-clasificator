@@ -21,7 +21,7 @@ public class UIState {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JsonIgnore
-    @JoinColumn(name = "ui_config_id", nullable = false)
+    @JoinColumn(name = "ui_config_id", nullable = false, updatable = false)
     private UIConfig uiConfig;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

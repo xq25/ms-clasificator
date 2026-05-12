@@ -7,6 +7,7 @@ import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import Backend.ms_clasificator.Repositories.MedicalDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -23,6 +24,7 @@ public class MedicalDiagnosticService {
      * Obtener todos los diagnósticos médicos
      * @return Lista de todos los diagnósticos
      */
+    @Transactional(readOnly = true)
     public List<MedicalDiagnostic> findAll() {
         return medicalDiagnosticRepository.findAll();
     }
@@ -32,6 +34,7 @@ public class MedicalDiagnosticService {
      * @param id ID del diagnóstico
      * @return Diagnóstico encontrado o null
      */
+    @Transactional(readOnly = true)
     public MedicalDiagnostic findById(Integer id) {
         return medicalDiagnosticRepository.findById(id).orElse(null);
     }

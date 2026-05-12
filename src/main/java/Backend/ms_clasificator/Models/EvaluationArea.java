@@ -20,6 +20,6 @@ public class EvaluationArea {
     @Column(name = "codeArea", nullable = false)
     private String codeArea;
 
-    @Column(name = "name", unique = true, nullable = false, updatable = true)
+    @Column(name = "name", unique = true, nullable = false)
     private String name;
 }

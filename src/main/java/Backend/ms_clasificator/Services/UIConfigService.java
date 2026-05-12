@@ -1,6 +1,7 @@
 package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.UIConfig.CreateUIConfigDTO;
+import Backend.ms_clasificator.DTOs.UIConfig.UpdateUIConfigDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.UIConfig.UIConfigMappers;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
@@ -9,6 +10,7 @@ import Backend.ms_clasificator.Repositories.MedicalDiagnosticRepository;
 import Backend.ms_clasificator.Repositories.UIConfigRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -28,6 +30,7 @@ public class UIConfigService {
      * Obtener todas las configuraciones UI
      * @return Lista de todas las configuraciones
      */
+    @Transactional(readOnly = true)
     public List<UIConfig> findAll() {
         return uiConfigRepository.findAll();
     }
@@ -37,6 +40,7 @@ public class UIConfigService {
      * @param id ID de la configuración
      * @return UIConfig encontrada o null
      */
+    @Transactional(readOnly = true)
     public UIConfig findById(Integer id) {
         return uiConfigRepository.findById(id).orElse(null);
     }
@@ -46,6 +50,7 @@ public class UIConfigService {
      * @param medicalDiagnosticId ID del diagnóstico médico
      * @return Lista de configuraciones del diagnóstico
      */
+    @Transactional(readOnly = true)
     public List<UIConfig> findByMedicalDiagnosticId(Integer medicalDiagnosticId) {
         return uiConfigRepository.findByMedicalDiagnosticId(medicalDiagnosticId);
     }
@@ -88,12 +93,12 @@ public class UIConfigService {
     /**
      * Actualizar una configuración UI existente
      * @param id ID de la configuración a actualizar
-     * @param createUIConfigDTO DTO con datos a actualizar
+     * @param updateUIConfigDTO DTO con datos a actualizar
      * @return ApiResponse<UIConfig> con el resultado de la operación
      */
-    public ApiResponse<UIConfig> update(Integer id, CreateUIConfigDTO createUIConfigDTO) {
+    public ApiResponse<UIConfig> update(Integer id, UpdateUIConfigDTO updateUIConfigDTO) {
         try {
-            if (createUIConfigDTO == null) {
+            if (updateUIConfigDTO == null) {
                 return ApiResponse.error("El DTO no puede ser nulo");
             }
 
@@ -102,13 +107,13 @@ public class UIConfigService {
 
             // Validar que exista el nuevo diagnóstico médico
             MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository
-                    .findById(createUIConfigDTO.getMedicalDiagnosticId())
+                    .findById(updateUIConfigDTO.getMedicalDiagnosticId())
                     .orElseThrow(() -> new IllegalArgumentException(
-                            "Diagnóstico médico no encontrado con ID: " + createUIConfigDTO.getMedicalDiagnosticId()));
+                            "Diagnóstico médico no encontrado con ID: " + updateUIConfigDTO.getMedicalDiagnosticId()));
 
             // Validar que no exista otra config para este diagnóstico (evitar duplicados)
-            if (!uiConfig.getMedicalDiagnostic().getId().equals(createUIConfigDTO.getMedicalDiagnosticId())) {
-                if (uiConfigRepository.existsByMedicalDiagnosticId(createUIConfigDTO.getMedicalDiagnosticId())) {
+            if (!uiConfig.getMedicalDiagnostic().getId().equals(updateUIConfigDTO.getMedicalDiagnosticId())) {
+                if (uiConfigRepository.existsByMedicalDiagnosticId(updateUIConfigDTO.getMedicalDiagnosticId())) {
                     return ApiResponse.error("Ya existe una configuración UI para este diagnóstico médico");
                 }
             }

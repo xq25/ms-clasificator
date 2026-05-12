@@ -7,6 +7,7 @@ import Backend.ms_clasificator.Models.Patient;
 import Backend.ms_clasificator.Repositories.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -23,6 +24,7 @@ public class PatientService {
      * Obtener todos los pacientes
      * @return Lista de todos los pacientes
      */
+    @Transactional(readOnly = true)
     public List<Patient> findAll() {
         return patientRepository.findAll();
     }
@@ -32,6 +34,7 @@ public class PatientService {
      * @param id ID del paciente
      * @return Paciente encontrado o null
      */
+    @Transactional(readOnly = true)
     public Patient findById(Integer id) {
         return patientRepository.findById(id).orElse(null);
     }
