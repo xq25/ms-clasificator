@@ -118,10 +118,18 @@ public class DoctorService {
      * @param id ID del doctor a eliminar
      * @throws IllegalArgumentException si el doctor no existe
      */
-    public void delete(Integer id) {
-        Doctor doctor = doctorRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + id));
+    public ApiResponse<Void> delete(Integer id) {
+        try {
+            Doctor doctor = doctorRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + id));
 
-        doctorRepository.delete(doctor);
+            doctorRepository.delete(doctor);
+            return ApiResponse.success("Doctor eliminado exitosamente");
+
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al eliminar doctor: " + ex.getMessage());
+        }
     }
 }
