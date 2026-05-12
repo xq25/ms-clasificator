@@ -6,7 +6,9 @@ import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.UIConfig.UIConfigMappers;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import Backend.ms_clasificator.Models.UIConfig;
+import Backend.ms_clasificator.Models.UIState;
 import Backend.ms_clasificator.Repositories.MedicalDiagnosticRepository;
+import Backend.ms_clasificator.Repositories.UIStateRepository;
 import Backend.ms_clasificator.Repositories.UIConfigRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,9 @@ public class UIConfigService {
 
     @Autowired
     private MedicalDiagnosticRepository medicalDiagnosticRepository;
+
+    @Autowired
+    private UIStateRepository uiStateRepository;
 
     /**
      * Obtener todas las configuraciones UI
@@ -148,6 +153,41 @@ public class UIConfigService {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {
             return ApiResponse.error("Error al eliminar configuración UI: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Agregar un UIState existente a una configuración UI
+     * @param uiConfigId ID de la configuración UI
+     * @param uiStateId ID del UIState a agregar
+     * @return ApiResponse<UIState> con el estado actualizado
+     */
+    public ApiResponse<UIState> addUIState(Integer uiConfigId, Integer uiStateId) {
+        try {
+            if (uiConfigId == null || uiStateId == null) {
+                return ApiResponse.error("Los IDs de la configuración UI y del estado no pueden ser nulos");
+            }
+
+            // Validar que exista la configuración UI
+            UIConfig uiConfig = uiConfigRepository.findById(uiConfigId)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Configuración UI no encontrada con ID: " + uiConfigId));
+
+            // Validar que exista el UIState
+            UIState uiState = uiStateRepository.findById(uiStateId)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Estado UI no encontrado con ID: " + uiStateId));
+
+            // Asociar el UIState a la configuración
+            uiState.setUiConfig(uiConfig);
+            UIState updated = uiStateRepository.save(uiState);
+
+            return ApiResponse.success(updated, "UIState agregado a la configuración exitosamente");
+
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al agregar UIState a la configuración: " + ex.getMessage());
         }
     }
 }
