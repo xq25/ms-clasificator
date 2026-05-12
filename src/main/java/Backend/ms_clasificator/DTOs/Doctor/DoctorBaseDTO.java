@@ -17,6 +17,7 @@ public class DoctorBaseDTO {
     @NotBlank(message = "El código del doctor no puede estar vacío")
     private String code;
 
+    @NotBlank(message = "El userId del doctor no puede estar vacío")
     @NotNull(message = "El userId no puede ser nulo")
     private String userId;
 
