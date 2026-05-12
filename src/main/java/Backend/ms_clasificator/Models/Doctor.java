@@ -16,7 +16,7 @@ public class Doctor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "code", unique = true, nullable = false, updatable = false)
+    @Column(name = "code", unique = true, nullable = false)
     private String code;
 
     @Column(name = "user_id", unique = true, nullable = false, updatable = false)
