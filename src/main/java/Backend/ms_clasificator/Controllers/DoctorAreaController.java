@@ -72,6 +72,7 @@ public class DoctorAreaController {
         } else {
             return ResponseEntity.badRequest().body(response);
         }
+
     }
 
     /**
