@@ -1,5 +1,6 @@
 package Backend.ms_clasificator.Services;
 
+import Backend.ms_clasificator.DTOs.DoctorArea.DoctorAreaCreateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Models.Doctor;
 import Backend.ms_clasificator.Models.DoctorArea;
@@ -72,15 +73,17 @@ public class DoctorAreaService {
 
     /**
      * Crear una nueva relación DoctorArea
-     * @param doctorId ID del doctor
-     * @param evaluationAreaId ID del área de evaluación
+     * @param doctorAreaCreateDTO DTO con los datos de la relación
      * @return ApiResponse<DoctorArea> con el resultado de la operación
      */
-    public ApiResponse<DoctorArea> create(Integer doctorId, Integer evaluationAreaId) {
+    public ApiResponse<DoctorArea> create(DoctorAreaCreateDTO doctorAreaCreateDTO) {
         try {
-            if (doctorId == null || evaluationAreaId == null) {
-                return ApiResponse.error("Los IDs del doctor y del área de evaluación no pueden ser nulos");
+            if (doctorAreaCreateDTO == null) {
+                return ApiResponse.error("El DTO no puede ser nulo");
             }
+
+            Integer doctorId = doctorAreaCreateDTO.getDoctorId();
+            Integer evaluationAreaId = doctorAreaCreateDTO.getEvaluationAreaId();
 
             // Validar que exista el doctor
             Doctor doctor = doctorRepository.findById(doctorId)

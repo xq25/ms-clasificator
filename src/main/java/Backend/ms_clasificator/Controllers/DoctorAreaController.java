@@ -1,8 +1,10 @@
 package Backend.ms_clasificator.Controllers;
 
+import Backend.ms_clasificator.DTOs.DoctorArea.DoctorAreaCreateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Models.DoctorArea;
 import Backend.ms_clasificator.Services.DoctorAreaService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -58,13 +60,12 @@ public class DoctorAreaController {
 
     /**
      * Crear una nueva relación DoctorArea
-     * @param doctorId ID del doctor
-     * @param evaluationAreaId ID del área de evaluación
+     * @param doctorAreaCreateDTO DTO con los datos de la relación
      * @return ResponseEntity con el resultado
      */
-    @PostMapping("doctor/{doctorId}/area/{evaluationAreaId}")
-    public ResponseEntity<ApiResponse<DoctorArea>> create(@PathVariable Integer doctorId, @PathVariable Integer evaluationAreaId) {
-        ApiResponse<DoctorArea> response = this.doctorAreaService.create(doctorId, evaluationAreaId);
+    @PostMapping("")
+    public ResponseEntity<ApiResponse<DoctorArea>> create(@Valid @RequestBody DoctorAreaCreateDTO doctorAreaCreateDTO) {
+        ApiResponse<DoctorArea> response = this.doctorAreaService.create(doctorAreaCreateDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
