@@ -30,6 +30,9 @@ public class ImageDiagnosticService {
     private DoctorRepository doctorRepository;
 
     @Autowired
+    private DoctorAreaService doctorAreaService;
+
+    @Autowired
     private MedicalImgRepository medicalImgRepository;
 
     @Autowired
@@ -75,6 +78,14 @@ public class ImageDiagnosticService {
             // Validar que exista el diagnóstico médico
             MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(imageDiagnosticCreateDTO.getMedicalDiagnosticId())
                     .orElseThrow(() -> new IllegalArgumentException("Diagnóstico médico no encontrado con ID: " + imageDiagnosticCreateDTO.getMedicalDiagnosticId()));
+
+        // Validar que el doctor pertenece al mismo evaluation area que la imagen
+            Integer evaluationAreaId = medicalImg.getEvaluationAreaId();
+            boolean doctorInArea = doctorAreaService.validateDoctorInEvaluationArea(imageDiagnosticCreateDTO.getDoctorId(), evaluationAreaId);
+
+            if (!doctorInArea) {
+                throw new IllegalArgumentException("El doctor no pertenece al área de evaluación de esta imagen médica y por lo tanto no puede clasificarla");
+            }
 
         // Validacion de correctitud de logica y preservacion de datos.
 
@@ -131,6 +142,14 @@ public class ImageDiagnosticService {
             // Validar que exista el diagnóstico médico
             MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(imageDiagnosticCreateDTO.getMedicalDiagnosticId())
                     .orElseThrow(() -> new IllegalArgumentException("Diagnóstico médico no encontrado con ID: " + imageDiagnosticCreateDTO.getMedicalDiagnosticId()));
+
+            // Validar que el doctor pertenece al mismo evaluation area que la imagen
+            Integer evaluationAreaId = medicalImg.getEvaluationAreaId();
+            boolean doctorInArea = doctorAreaService.validateDoctorInEvaluationArea(imageDiagnosticCreateDTO.getDoctorId(), evaluationAreaId);
+
+            if (!doctorInArea) {
+                throw new IllegalArgumentException("El doctor no pertenece al área de evaluación de esta imagen médica y por lo tanto no puede clasificarla");
+            }
 
             imageDiagnostic.setDoctor(doctor);
             imageDiagnostic.setMedicalImg(medicalImg);

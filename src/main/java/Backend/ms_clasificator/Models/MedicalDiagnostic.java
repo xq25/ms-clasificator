@@ -41,12 +41,14 @@ public class MedicalDiagnostic {
 
     // Relacion con los puntos de evaluacion asociados a este diagnostico
     @JsonIgnore // Para evitar problemas de serialización y referencias circulares al convertir a JSON
+    //Si se elimina un medicalDiagnostic se deben eliminar sus composiciones
     @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<UIState> uiStates;
 
     // Relación a losUIConfig asociados a este diagnóstico o enfermedad
     @JsonIgnore // Para evitar problemas de serialización y referencias circulares al convertir a JSON
     @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    //Si se elimina un medicalDiagnostic se deben eliminar sus composiciones
     private List<UIConfig> uiConfigs;
 
 

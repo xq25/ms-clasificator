@@ -1,14 +1,10 @@
 package Backend.ms_clasificator.DTOs.Patient;
 
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Pattern;
 
 @Data
 @NoArgsConstructor
@@ -22,9 +18,11 @@ public class PatientCreateDTO {
 
     @NotNull(message = "La edad del paciente no puede ser nula")
     @Positive(message = "La edad debe ser un número positivo")
+    @Max(message = "La edad no puede ser mayor a 120 años", value = 120)
     private Integer years;
 
     @NotNull(message = "El userId no puede ser nulo")
+    @NotBlank(message = "El userId no puede estar vacío")
     private String userId;
 
 }

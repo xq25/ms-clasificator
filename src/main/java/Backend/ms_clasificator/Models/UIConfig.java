@@ -1,5 +1,6 @@
 package Backend.ms_clasificator.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +25,7 @@ public class UIConfig {
     private MedicalDiagnostic medicalDiagnostic;
 
     @OneToMany(mappedBy = "uiConfig", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<UIState> uiStates;
 
 }

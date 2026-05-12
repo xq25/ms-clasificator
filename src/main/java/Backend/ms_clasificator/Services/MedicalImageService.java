@@ -97,7 +97,7 @@ public class MedicalImageService {
                     .orElseThrow(() -> new IllegalArgumentException("Área de evaluación no encontrada con ID: " + medicalImgCreateDTO.getEvaluationAreaId()));
 
             MedicalImg medicalImg = medicalImgMapper.toEntity(medicalImgCreateDTO);
-            medicalImg.setEvaluationArea(evaluationArea);
+            medicalImg.setEvaluationAreaId(evaluationArea.getId());
 
             // Si se proporciona patientId, validar que exista y asignarlo
             if (medicalImgCreateDTO.getPatientId() != null) {
@@ -136,7 +136,7 @@ public class MedicalImageService {
                     .orElseThrow(() -> new IllegalArgumentException("Área de evaluación no encontrada con ID: " + medicalImgCreateDTO.getEvaluationAreaId()));
 
             medicalImg.setUrl(medicalImgCreateDTO.getUrl());
-            medicalImg.setEvaluationArea(evaluationArea);
+            medicalImg.setEvaluationAreaId(evaluationArea.getId());
 
             // Actualizar paciente si se proporciona
             if (medicalImgCreateDTO.getPatientId() != null) {
@@ -241,7 +241,7 @@ public class MedicalImageService {
             EvaluationArea evaluationArea = evaluationAreaRepository.findById(evaluationAreaId)
                     .orElseThrow(() -> new IllegalArgumentException("Área de evaluación no encontrada con ID: " + evaluationAreaId));
 
-            medicalImg.setEvaluationArea(evaluationArea);
+            medicalImg.setEvaluationAreaId(evaluationArea.getId());
             MedicalImg updated = medicalImgRepository.save(medicalImg);
             return ApiResponse.success(updated, "Área de evaluación asignada a la imagen médica exitosamente");
 
