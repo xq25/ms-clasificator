@@ -4,6 +4,7 @@ import Backend.ms_clasificator.DTOs.UIConfig.CreateUIConfigDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.DTOs.UIConfig.UpdateUIConfigDTO;
 import Backend.ms_clasificator.Models.UIConfig;
+import Backend.ms_clasificator.Models.UIState;
 import Backend.ms_clasificator.Services.UIConfigService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,6 +98,25 @@ public class UIConfigController {
     @DeleteMapping("{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id) {
         ApiResponse<Void> response = uiConfigService.delete(id);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * Agregar un UIState existente a una configuración UI
+     * @param uiConfigId ID de la configuración UI
+     * @param uiStateId ID del UIState a agregar
+     * @return ApiResponse con el resultado
+     */
+    @PostMapping("{uiConfigId}/add-ui-state/{uiStateId}")
+    public ResponseEntity<ApiResponse<UIState>> addUIState(
+            @PathVariable Integer uiConfigId,
+            @PathVariable Integer uiStateId) {
+        ApiResponse<UIState> response = uiConfigService.addUIState(uiConfigId, uiStateId);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
