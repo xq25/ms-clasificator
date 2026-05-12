@@ -1,6 +1,7 @@
 package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaCreateDTO;
+import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Models.DoctorArea;
 import Backend.ms_clasificator.Models.EvaluationArea;
@@ -64,12 +65,12 @@ public class EvaluationAreaController {
     /**
      * Actualizar un área de evaluación existente
      * @param id ID del área a actualizar
-     * @param evaluationAreaCreateDTO DTO con datos a actualizar
+     * @param evaluationAreaUpdateDTO DTO con datos a actualizar
      * @return ApiResponse con el resultado
      */
     @PutMapping("{id}")
-    public ResponseEntity<ApiResponse<EvaluationArea>> update(@PathVariable Integer id, @Valid @RequestBody EvaluationAreaCreateDTO evaluationAreaCreateDTO) {
-        ApiResponse<EvaluationArea> response = evaluationAreaService.update(id, evaluationAreaCreateDTO);
+    public ResponseEntity<ApiResponse<EvaluationArea>> update(@PathVariable Integer id, @Valid @RequestBody EvaluationAreaUpdateDTO evaluationAreaUpdateDTO) {
+        ApiResponse<EvaluationArea> response = evaluationAreaService.update(id, evaluationAreaUpdateDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

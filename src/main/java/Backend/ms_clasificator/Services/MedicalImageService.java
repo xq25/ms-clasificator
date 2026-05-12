@@ -11,6 +11,7 @@ import Backend.ms_clasificator.Repositories.MedicalImgRepository;
 import Backend.ms_clasificator.Repositories.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -33,6 +34,7 @@ public class MedicalImageService {
      * Obtener todas las imágenes médicas
      * @return Lista de todas las imágenes
      */
+    @Transactional(readOnly = true)
     public List<MedicalImg> findAll() {
         return medicalImgRepository.findAll();
     }
@@ -42,6 +44,7 @@ public class MedicalImageService {
      * @param id ID de la imagen
      * @return Imagen encontrada o null
      */
+    @Transactional(readOnly = true)
     public MedicalImg findById(Integer id) {
         return medicalImgRepository.findById(id).orElse(null);
     }
@@ -51,6 +54,7 @@ public class MedicalImageService {
      * @param evaluationAreaId ID del área de evaluación
      * @return ApiResponse<List<MedicalImg>> con las imágenes del área
      */
+    @Transactional(readOnly = true)
     public ApiResponse<List<MedicalImg>> findByEvaluationAreaId(Integer evaluationAreaId) {
         try {
             if (evaluationAreaId == null) {

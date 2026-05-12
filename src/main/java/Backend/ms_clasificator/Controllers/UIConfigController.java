@@ -2,6 +2,7 @@ package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.UIConfig.CreateUIConfigDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.UIConfig.UpdateUIConfigDTO;
 import Backend.ms_clasificator.Models.UIConfig;
 import Backend.ms_clasificator.Services.UIConfigService;
 import jakarta.validation.Valid;
@@ -74,12 +75,12 @@ public class UIConfigController {
     /**
      * Actualizar una configuración UI existente
      * @param id ID de la configuración a actualizar
-     * @param createUIConfigDTO DTO con datos a actualizar
+     * @param updateUIConfigDTO DTO con datos a actualizar
      * @return ApiResponse con el resultado
      */
     @PutMapping("{id}")
-    public ResponseEntity<ApiResponse<UIConfig>> update(@PathVariable Integer id, @Valid @RequestBody CreateUIConfigDTO createUIConfigDTO) {
-        ApiResponse<UIConfig> response = uiConfigService.update(id, createUIConfigDTO);
+    public ResponseEntity<ApiResponse<UIConfig>> update(@PathVariable Integer id, @Valid @RequestBody UpdateUIConfigDTO updateUIConfigDTO) {
+        ApiResponse<UIConfig> response = uiConfigService.update(id, updateUIConfigDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

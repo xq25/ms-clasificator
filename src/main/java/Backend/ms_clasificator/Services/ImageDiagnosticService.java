@@ -13,6 +13,7 @@ import Backend.ms_clasificator.Repositories.MedicalDiagnosticRepository;
 import Backend.ms_clasificator.Repositories.MedicalImgRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -42,6 +43,7 @@ public class ImageDiagnosticService {
      * Obtener todos los diagnósticos de imagen
      * @return Lista de todos los diagnósticos de imagen
      */
+    @Transactional(readOnly = true)
     public List<ImageDiagnostic> findAll() {
         return imageDiagnosticRepository.findAll();
     }
@@ -51,6 +53,7 @@ public class ImageDiagnosticService {
      * @param id ID del diagnóstico de imagen
      * @return Diagnóstico encontrado o null
      */
+    @Transactional(readOnly = true)
     public ImageDiagnostic findById(Integer id) {
         return imageDiagnosticRepository.findById(id).orElse(null);
     }
