@@ -153,5 +153,10 @@ public class DoctorAreaService {
             return ApiResponse.error("Error al disociar doctor del área de evaluación: " + ex.getMessage());
         }
     }
+
+    public boolean validateDoctorInEvaluationArea(Integer doctorId, Integer evaluationAreaId) {
+        List<DoctorArea> doctorAreas = this.findByDoctorId(doctorId);
+        return doctorAreas.stream().anyMatch(da -> da.getEvaluationArea().getId().equals(evaluationAreaId));
+    }
 }
 

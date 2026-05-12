@@ -22,11 +22,10 @@ public class MedicalImg {
     @Column(name = "url", nullable = false)
     private String url;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "evaluation_area_id")
-    private EvaluationArea evaluationArea;
+    @Column(name = "evaluation_area_id", nullable = false)
+    private Integer evaluationAreaId;
 
-    @JoinColumn(name = "patient_id")
+    @Column(name = "patient_id")
     private Integer patientId;
 
     // Relación con los diagnósticos de imagen asociados

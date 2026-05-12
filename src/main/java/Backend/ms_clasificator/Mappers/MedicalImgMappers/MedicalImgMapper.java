@@ -27,7 +27,7 @@ public class MedicalImgMapper implements Mapper<MedicalImg, MedicalImgCreateDTO>
 
         return MedicalImgCreateDTO.builder()
                 .url(medicalImg.getUrl())
-                .evaluationAreaId(medicalImg.getEvaluationArea() != null ? medicalImg.getEvaluationArea().getId() : null)
+                .evaluationAreaId(medicalImg.getEvaluationAreaId() != null ? medicalImg.getEvaluationAreaId() : null)
                 .patientId(medicalImg.getPatientId() != null ? medicalImg.getPatientId() : null)
                 .build();
     }

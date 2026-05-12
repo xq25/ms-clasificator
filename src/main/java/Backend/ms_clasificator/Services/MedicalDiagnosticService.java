@@ -52,6 +52,7 @@ public class MedicalDiagnosticService {
                 return ApiResponse.error("Ya existe un diagnóstico con el código: " + medicalDiagnosticCreateDTO.getDiagnosticCode());
             }
 
+
             MedicalDiagnostic medicalDiagnostic = medicalDiagnosticMapper.toEntity(medicalDiagnosticCreateDTO);
 
             // Si se proporciona un parentDiagnosticId, validar que exista
@@ -163,7 +164,11 @@ public class MedicalDiagnosticService {
 
             // Validar que el sub-diagnóstico no tenga ya un padre diferente
             if (subDiagnostic.getParentDiagnostic() != null && !subDiagnostic.getParentDiagnostic().getId().equals(parentDiagnosticId)) {
-                return ApiResponse.error("Este sub-diagnóstico ya está asignado a otro diagnóstico padre");
+                throw new IllegalArgumentException("Este sub-diagnóstico ya está asignado a otro diagnóstico padre");
+            }
+            // Validar que un diagnostico no puede ser sub-diagnóstico de sí mismo (esto es para evitar ciclos en la jerarquía)
+            if (subDiagnosticId == parentDiagnosticId){
+                throw  new IllegalArgumentException("Un diagnóstico no puede ser sub-diagnóstico de sí mismo");
             }
 
             // Asignar el padre al sub-diagnóstico
