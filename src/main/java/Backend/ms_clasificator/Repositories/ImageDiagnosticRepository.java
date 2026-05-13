@@ -11,5 +11,5 @@ public interface ImageDiagnosticRepository extends JpaRepository<ImageDiagnostic
      * @param medicalImgId ID de la imagen médica
      * @return ImageDiagnostic encontrado o null
      */
-    ImageDiagnostic findByDoctorIdAndMedicalImgId(Integer doctorId, Integer medicalImgId);
+    ImageDiagnostic findByDoctor_IdAndMedicalImg_Id(Integer doctorId, Integer medicalImgId);
 }
