@@ -1,10 +1,13 @@
 package Backend.ms_clasificator.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Entity
@@ -22,4 +25,9 @@ public class EvaluationArea {
 
     @Column(name = "name", unique = true, nullable = false)
     private String name;
+
+    // Si se elimina una area de evaluacion se debe eliminar la relacion intermedia con doctor
+    @OneToMany(mappedBy = "evaluationArea", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<DoctorArea> doctorAreas;
 }

@@ -1,6 +1,7 @@
 package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticCreateDTO;
+import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Models.ImageDiagnostic;
 import Backend.ms_clasificator.Services.ImageDiagnosticService;
@@ -63,12 +64,12 @@ public class ImageDiagnosticController {
     /**
      * Actualizar un diagnóstico de imagen existente
      * @param id ID del diagnóstico a actualizar
-     * @param imageDiagnosticCreateDTO DTO con datos a actualizar
+     * @param imageDiagnosticUpdateDTO DTO con datos a actualizar
      * @return ApiResponse con el resultado
      */
     @PutMapping("{id}")
-    public ResponseEntity<ApiResponse<ImageDiagnostic>> update(@PathVariable Integer id, @Valid @RequestBody ImageDiagnosticCreateDTO imageDiagnosticCreateDTO) {
-        ApiResponse<ImageDiagnostic> response = imageDiagnosticService.update(id, imageDiagnosticCreateDTO);
+    public ResponseEntity<ApiResponse<ImageDiagnostic>> update(@PathVariable Integer id, @Valid @RequestBody ImageDiagnosticUpdateDTO imageDiagnosticUpdateDTO) {
+        ApiResponse<ImageDiagnostic> response = imageDiagnosticService.update(id, imageDiagnosticUpdateDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

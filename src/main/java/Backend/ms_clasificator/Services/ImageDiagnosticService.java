@@ -1,6 +1,7 @@
 package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticCreateDTO;
+import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.ImageDiagnosticMappers.ImageDiagnosticMapper;
 import Backend.ms_clasificator.Models.Doctor;
@@ -97,10 +98,8 @@ public class ImageDiagnosticService {
             }
 
 
-        // Asignar la fecha actual si no se proporciona
-            LocalDateTime diagnosticDate = imageDiagnosticCreateDTO.getDiagnosticDate() != null 
-                    ? imageDiagnosticCreateDTO.getDiagnosticDate()
-                    : LocalDateTime.now();
+        // Asignar la fecha actual al diagnostico
+            LocalDateTime diagnosticDate = LocalDateTime.now();
 
             ImageDiagnostic imageDiagnostic = ImageDiagnostic.builder()
                     .doctor(doctor)
@@ -122,45 +121,27 @@ public class ImageDiagnosticService {
     /**
      * Actualizar un diagnóstico de imagen existente
      * @param id ID del diagnóstico a actualizar
-     * @param imageDiagnosticCreateDTO DTO con datos a actualizar
+     * @param imageDiagnosticUpdateDTO DTO con datos a actualizar
      * @return ApiResponse<ImageDiagnostic> con el resultado de la operación
      */
-    public ApiResponse<ImageDiagnostic> update(Integer id, ImageDiagnosticCreateDTO imageDiagnosticCreateDTO) {
+    public ApiResponse<ImageDiagnostic> update(Integer id, ImageDiagnosticUpdateDTO imageDiagnosticUpdateDTO) {
         try {
-            if (imageDiagnosticCreateDTO == null) {
+            if (imageDiagnosticUpdateDTO == null) {
                 return ApiResponse.error("El DTO no puede ser nulo");
             }
 
             ImageDiagnostic imageDiagnostic = imageDiagnosticRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Diagnóstico de imagen no encontrado con ID: " + id));
 
-            // Validar que exista el doctor
-            Doctor doctor = doctorRepository.findById(imageDiagnosticCreateDTO.getDoctorId())
-                    .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + imageDiagnosticCreateDTO.getDoctorId()));
-
-            // Validar que exista la imagen médica
-            MedicalImg medicalImg = medicalImgRepository.findById(imageDiagnosticCreateDTO.getMedicalImgId())
-                    .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + imageDiagnosticCreateDTO.getMedicalImgId()));
-
             // Validar que exista el diagnóstico médico
-            MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(imageDiagnosticCreateDTO.getMedicalDiagnosticId())
-                    .orElseThrow(() -> new IllegalArgumentException("Diagnóstico médico no encontrado con ID: " + imageDiagnosticCreateDTO.getMedicalDiagnosticId()));
+            MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(imageDiagnosticUpdateDTO.getMedicalDiagnosticId())
+                    .orElseThrow(() -> new IllegalArgumentException("Diagnóstico médico no encontrado con ID: " + imageDiagnosticUpdateDTO.getMedicalDiagnosticId()));
 
-            // Validar que el doctor pertenece al mismo evaluation area que la imagen
-            Integer evaluationAreaId = medicalImg.getEvaluationAreaId();
-            boolean doctorInArea = doctorAreaService.validateDoctorInEvaluationArea(imageDiagnosticCreateDTO.getDoctorId(), evaluationAreaId);
-
-            if (!doctorInArea) {
-                throw new IllegalArgumentException("El doctor no pertenece al área de evaluación de esta imagen médica y por lo tanto no puede clasificarla");
-            }
-
-            imageDiagnostic.setDoctor(doctor);
-            imageDiagnostic.setMedicalImg(medicalImg);
             imageDiagnostic.setMedicalDiagnostic(medicalDiagnostic);
-            if (imageDiagnosticCreateDTO.getDiagnosticDate() != null) {
-                imageDiagnostic.setDiagnosticDate(imageDiagnosticCreateDTO.getDiagnosticDate());
-            }
 
+            LocalDateTime diagnosticDate = LocalDateTime.now();
+            imageDiagnostic.setDiagnosticDate(diagnosticDate);
+            
             ImageDiagnostic updated = imageDiagnosticRepository.save(imageDiagnostic);
             return ApiResponse.success(updated, "Diagnóstico de imagen actualizado exitosamente");
 

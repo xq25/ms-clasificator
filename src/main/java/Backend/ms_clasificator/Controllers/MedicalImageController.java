@@ -1,6 +1,7 @@
 package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgCreateDTO;
+import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Models.MedicalImg;
 import Backend.ms_clasificator.Services.MedicalImageService;
@@ -79,12 +80,12 @@ public class MedicalImageController {
     /**
      * Actualizar una imagen médica existente
      * @param id ID de la imagen a actualizar
-     * @param medicalImgCreateDTO DTO con datos a actualizar
+     * @param medicalImgUpdateDTO DTO con datos a actualizar
      * @return ApiResponse con el resultado
      */
     @PutMapping("{id}")
-    public ResponseEntity<ApiResponse<MedicalImg>> update(@PathVariable Integer id, @Valid @RequestBody MedicalImgCreateDTO medicalImgCreateDTO) {
-        ApiResponse<MedicalImg> response = medicalImageService.update(id, medicalImgCreateDTO);
+    public ResponseEntity<ApiResponse<MedicalImg>> update(@PathVariable Integer id, @Valid @RequestBody MedicalImgUpdateDTO medicalImgUpdateDTO) {
+        ApiResponse<MedicalImg> response = medicalImageService.update(id, medicalImgUpdateDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

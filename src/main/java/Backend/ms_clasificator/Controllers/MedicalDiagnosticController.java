@@ -1,6 +1,7 @@
 package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticCreateDTO;
+import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import Backend.ms_clasificator.Services.MedicalDiagnosticService;
@@ -63,12 +64,12 @@ public class MedicalDiagnosticController {
     /**
      * Actualizar un diagnóstico médico existente
      * @param id ID del diagnóstico a actualizar
-     * @param medicalDiagnosticCreateDTO DTO con datos a actualizar
+     * @param medicalDiagnosticUpdateDTO DTO con datos a actualizar
      * @return ApiResponse con el resultado
      */
     @PutMapping("{id}")
-    public ResponseEntity<ApiResponse<MedicalDiagnostic>> update(@PathVariable Integer id, @Valid @RequestBody MedicalDiagnosticCreateDTO medicalDiagnosticCreateDTO) {
-        ApiResponse<MedicalDiagnostic> response = medicalDiagnosticService.update(id, medicalDiagnosticCreateDTO);
+    public ResponseEntity<ApiResponse<MedicalDiagnostic>> update(@PathVariable Integer id, @Valid @RequestBody MedicalDiagnosticUpdateDTO medicalDiagnosticUpdateDTO) {
+        ApiResponse<MedicalDiagnostic> response = medicalDiagnosticService.update(id, medicalDiagnosticUpdateDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

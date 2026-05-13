@@ -1,10 +1,13 @@
 package Backend.ms_clasificator.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Entity
@@ -21,4 +24,8 @@ public class Doctor {
 
     @Column(name = "user_id", unique = true, nullable = false, updatable = false)
     private String userId;
+
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<DoctorArea> doctorAreas;
 }

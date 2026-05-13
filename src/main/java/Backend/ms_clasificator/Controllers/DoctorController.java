@@ -53,7 +53,14 @@ public class DoctorController {
     }
 
     @DeleteMapping("{id}")
-    public void delete(@PathVariable Integer id){
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id){
+        ApiResponse<Void> response = this.doctorService.delete(id);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
 
     }
 

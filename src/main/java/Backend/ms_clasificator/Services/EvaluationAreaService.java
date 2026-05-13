@@ -7,7 +7,9 @@ import Backend.ms_clasificator.Mappers.EvaluationAreaMappers.EvaluationAreaMappe
 import Backend.ms_clasificator.Models.EvaluationArea;
 import Backend.ms_clasificator.Repositories.EvaluationAreaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -116,6 +118,7 @@ public class EvaluationAreaService {
      * @param id ID del área a eliminar
      * @return ApiResponse con el resultado de la operación
      */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public ApiResponse<Void> delete(Integer id) {
         try {
             EvaluationArea evaluationArea = evaluationAreaRepository.findById(id)
@@ -124,6 +127,8 @@ public class EvaluationAreaService {
             evaluationAreaRepository.delete(evaluationArea);
             return ApiResponse.success("Área de evaluación eliminada exitosamente");
 
+        } catch (DataIntegrityViolationException ex) {
+            return ApiResponse.error("No se puede eliminar el Evaluation Area porque tiene Imagenes Medicas asociadas");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {

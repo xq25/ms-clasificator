@@ -7,7 +7,9 @@ import Backend.ms_clasificator.Mappers.DoctorMappers.DoctorMapper;
 import Backend.ms_clasificator.Models.Doctor;
 import Backend.ms_clasificator.Repositories.DoctorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -118,6 +120,7 @@ public class DoctorService {
      * @param id ID del doctor a eliminar
      * @throws IllegalArgumentException si el doctor no existe
      */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public ApiResponse<Void> delete(Integer id) {
         try {
             Doctor doctor = doctorRepository.findById(id)
@@ -126,7 +129,9 @@ public class DoctorService {
             doctorRepository.delete(doctor);
             return ApiResponse.success("Doctor eliminado exitosamente");
 
-        } catch (IllegalArgumentException ex) {
+        }catch (DataIntegrityViolationException ex) {
+            return ApiResponse.error("No se puede eliminar el doctor porque tiene diagnosticos asociados");
+        }catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {
             return ApiResponse.error("Error al eliminar doctor: " + ex.getMessage());

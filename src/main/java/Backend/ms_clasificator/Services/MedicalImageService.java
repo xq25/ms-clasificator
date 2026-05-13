@@ -1,6 +1,7 @@
 package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgCreateDTO;
+import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.MedicalImgMappers.MedicalImgMapper;
 import Backend.ms_clasificator.Models.EvaluationArea;
@@ -10,7 +11,9 @@ import Backend.ms_clasificator.Repositories.EvaluationAreaRepository;
 import Backend.ms_clasificator.Repositories.MedicalImgRepository;
 import Backend.ms_clasificator.Repositories.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -80,6 +83,32 @@ public class MedicalImageService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public ApiResponse<List<MedicalImg>> findByPatientId(Integer patientId) {
+        try {
+            if (patientId == null) {
+                return ApiResponse.error("El ID del paciente no puede ser nulo");
+            }
+
+            // Validar que exista el paciente
+            Patient patient = patientRepository.findById(patientId)
+                    .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado con ID: " + patientId));
+
+            List<MedicalImg> images = medicalImgRepository.findByPatientId(patientId);
+
+            if (images.isEmpty()) {
+                return ApiResponse.success(images, "No hay imágenes médicas asignadas a este paciente");
+            }
+
+            return ApiResponse.success(images, "Imágenes médicas del paciente obtenidas exitosamente");
+
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al obtener imágenes médicas del paciente: " + ex.getMessage());
+        }
+    }
+
     /**
      * Crear una nueva imagen médica
      * @param medicalImgCreateDTO DTO con datos de entrada
@@ -123,29 +152,26 @@ public class MedicalImageService {
     /**
      * Actualizar una imagen médica existente
      * @param id ID de la imagen a actualizar
-     * @param medicalImgCreateDTO DTO con datos a actualizar
+     * @param medicalImgUpdateDTO DTO con datos a actualizar
      * @return ApiResponse<MedicalImg> con el resultado de la operación
      */
-    public ApiResponse<MedicalImg> update(Integer id, MedicalImgCreateDTO medicalImgCreateDTO) {
+    public ApiResponse<MedicalImg> update(Integer id, MedicalImgUpdateDTO medicalImgUpdateDTO) {
         try {
-            if (medicalImgCreateDTO == null) {
+            if (medicalImgUpdateDTO == null) {
                 return ApiResponse.error("El DTO no puede ser nulo");
             }
 
             MedicalImg medicalImg = medicalImgRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + id));
 
-            // Validar que exista el área de evaluación
-            EvaluationArea evaluationArea = evaluationAreaRepository.findById(medicalImgCreateDTO.getEvaluationAreaId())
-                    .orElseThrow(() -> new IllegalArgumentException("Área de evaluación no encontrada con ID: " + medicalImgCreateDTO.getEvaluationAreaId()));
-
-            medicalImg.setUrl(medicalImgCreateDTO.getUrl());
-            medicalImg.setEvaluationAreaId(evaluationArea.getId());
+            // Asiganamos la URL nueva
+            medicalImg.setUrl(medicalImgUpdateDTO.getUrl());
 
             // Actualizar paciente si se proporciona
-            if (medicalImgCreateDTO.getPatientId() != null) {
-                Patient patient = patientRepository.findById(medicalImgCreateDTO.getPatientId())
-                        .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado con ID: " + medicalImgCreateDTO.getPatientId()));
+            if (medicalImgUpdateDTO.getPatientId() != null) {
+                // Validamos que ese paciente exista
+                Patient patient = patientRepository.findById(medicalImgUpdateDTO.getPatientId())
+                        .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado con ID: " + medicalImgUpdateDTO.getPatientId()));
                 medicalImg.setPatientId(patient.getId());
             } else {
                 medicalImg.setPatientId(null);
@@ -166,6 +192,7 @@ public class MedicalImageService {
      * @param id ID de la imagen a eliminar
      * @return ApiResponse con el resultado de la operación
      */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public ApiResponse<Void> delete(Integer id) {
         try {
             MedicalImg medicalImg = medicalImgRepository.findById(id)
@@ -174,6 +201,8 @@ public class MedicalImageService {
             medicalImgRepository.delete(medicalImg);
             return ApiResponse.success("Imagen médica eliminada exitosamente");
 
+        } catch (DataIntegrityViolationException ex) {
+            return ApiResponse.error("No se puede eliminar la Imagen Medica porque tiene diagnosticos asiganados por medicos");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {
@@ -181,6 +210,7 @@ public class MedicalImageService {
         }
     }
 
+    // ---------- Generacion y Eliminacion de relaciones -------------
     /**
      * Asignar un paciente a una imagen médica
      * @param medicalImgId ID de la imagen
@@ -194,6 +224,11 @@ public class MedicalImageService {
 
             Patient patient = patientRepository.findById(patientId)
                     .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado con ID: " + patientId));
+
+            //Validamos que no tenga un paciente ya asiganado.
+            if (medicalImg.getPatientId() != null){
+                throw new IllegalArgumentException("La imagen médica ya tiene un paciente asignado. Remueva el paciente actual antes de asignar uno nuevo.");
+            }
 
             medicalImg.setPatientId(patient.getId());
             MedicalImg updated = medicalImgRepository.save(medicalImg);
@@ -215,6 +250,9 @@ public class MedicalImageService {
         try {
             MedicalImg medicalImg = medicalImgRepository.findById(medicalImgId)
                     .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + medicalImgId));
+            if (medicalImg.getPatientId() == null){
+                throw new IllegalArgumentException("La imagen médica no tiene un paciente asignado.");
+            }
 
             medicalImg.setPatientId(null);
             MedicalImg updated = medicalImgRepository.save(medicalImg);

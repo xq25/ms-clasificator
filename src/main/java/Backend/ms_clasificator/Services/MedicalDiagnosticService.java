@@ -1,11 +1,13 @@
 package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticCreateDTO;
+import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.MedicalDiagnosticMappers.MedicalDiagnosticMapper;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import Backend.ms_clasificator.Repositories.MedicalDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,7 +83,7 @@ public class MedicalDiagnosticService {
      * @param medicalDiagnosticCreateDTO DTO con datos a actualizar
      * @return ApiResponse<MedicalDiagnostic> con el resultado de la operación
      */
-    public ApiResponse<MedicalDiagnostic> update(Integer id, MedicalDiagnosticCreateDTO medicalDiagnosticCreateDTO) {
+    public ApiResponse<MedicalDiagnostic> update(Integer id, MedicalDiagnosticUpdateDTO medicalDiagnosticCreateDTO) {
         try {
             if (medicalDiagnosticCreateDTO == null) {
                 return ApiResponse.error("El DTO no puede ser nulo");
@@ -131,6 +133,8 @@ public class MedicalDiagnosticService {
             medicalDiagnosticRepository.delete(medicalDiagnostic);
             return ApiResponse.success("Diagnóstico médico eliminado exitosamente");
 
+        } catch (DataIntegrityViolationException ex) {
+            return ApiResponse.error("No se puede eliminar el Diagnostico porque tiene sub-diagnosticos asociados");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {
