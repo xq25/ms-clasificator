@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.print.Doc;
 import java.util.List;
 
 @Service
@@ -42,9 +43,17 @@ public class DoctorAreaService {
      * @return DoctorArea encontrada
      */
     @Transactional(readOnly = true)
-    public DoctorArea findById(Integer id) {
-        return doctorAreaRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Relación DoctorArea no encontrada con ID: " + id));
+    public ApiResponse<DoctorArea> findById(Integer id) {
+        try {
+            DoctorArea doctorArea = doctorAreaRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Relación DoctorArea no encontrada con ID: " + id));
+
+            return ApiResponse.success(doctorArea, "Relacion encontrada exitosamente");
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar relación DoctorArea: " + ex.getMessage());
+        }
     }
 
     /**
@@ -53,10 +62,21 @@ public class DoctorAreaService {
      * @return Lista de DoctorArea del doctor
      */
     @Transactional(readOnly = true)
-    public List<DoctorArea> findByDoctorId(Integer doctorId) {
-        return doctorAreaRepository.findAll().stream()
-                .filter(da -> da.getDoctor().getId().equals(doctorId))
-                .toList();
+    public ApiResponse<List<DoctorArea>> findByDoctorId(Integer doctorId) {
+        try{
+            //Validar que el id del doctor exista
+            Doctor doctor = this.doctorRepository.findById(doctorId)
+                    .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + doctorId));
+
+            List<DoctorArea> relations = this.doctorAreaRepository.findByDoctorId(doctorId);
+
+            return ApiResponse.success(relations, "Relaciones encontradas exitosamente");
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar relaciones por doctor: " + ex.getMessage());
+        }
+
     }
 
     /**
@@ -65,10 +85,20 @@ public class DoctorAreaService {
      * @return Lista de DoctorArea en el área
      */
     @Transactional(readOnly = true)
-    public List<DoctorArea> findByEvaluationAreaId(Integer evaluationAreaId) {
-        return doctorAreaRepository.findAll().stream()
-                .filter(da -> da.getEvaluationArea().getId().equals(evaluationAreaId))
-                .toList();
+    public ApiResponse<List<DoctorArea>> findByEvaluationAreaId(Integer evaluationAreaId) {
+        try{
+            //Validar que el id del doctor exista
+            EvaluationArea evaluationArea= this.evaluationAreaRepository.findById(evaluationAreaId)
+                    .orElseThrow(() -> new IllegalArgumentException("Area de Evaluacion no encontrado con ID: " + evaluationAreaId));
+
+            List<DoctorArea> relations = this.doctorAreaRepository.findByEvaluationAreaId(evaluationAreaId);
+
+            return ApiResponse.success(relations, "Relaciones encontradas exitosamente");
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar relaciones por doctor: " + ex.getMessage());
+        }
     }
 
     /**
@@ -158,7 +188,7 @@ public class DoctorAreaService {
     }
 
     public boolean validateDoctorInEvaluationArea(Integer doctorId, Integer evaluationAreaId) {
-        List<DoctorArea> doctorAreas = this.findByDoctorId(doctorId);
+        List<DoctorArea> doctorAreas = this.doctorAreaRepository.findByDoctorId(doctorId);
         return doctorAreas.stream().anyMatch(da -> da.getEvaluationArea().getId().equals(evaluationAreaId));
     }
 }

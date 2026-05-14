@@ -26,7 +26,7 @@ public class UIStateMappers implements Mapper<UIState, CreateUIStateDTO> {
         }
 
         return CreateUIStateDTO.builder()
-                .iuConfigId(uiState.getUiConfig() != null ? uiState.getUiConfig().getId() : null)
+                .uiConfigId(uiState.getUiConfig() != null ? uiState.getUiConfig().getId() : null)
                 .medicalDiagnosticId(uiState.getMedicalDiagnostic() != null ? uiState.getMedicalDiagnostic().getId() : null)
                 .build();
     }

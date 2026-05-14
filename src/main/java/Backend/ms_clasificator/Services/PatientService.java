@@ -6,7 +6,9 @@ import Backend.ms_clasificator.Mappers.PatientMappers.PatientMapper;
 import Backend.ms_clasificator.Models.Patient;
 import Backend.ms_clasificator.Repositories.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -35,8 +37,31 @@ public class PatientService {
      * @return Paciente encontrado o null
      */
     @Transactional(readOnly = true)
-    public Patient findById(Integer id) {
-        return patientRepository.findById(id).orElse(null);
+    public ApiResponse<Patient> findById(Integer id) {
+        try{
+            Patient patient = patientRepository.findById(id).
+                    orElseThrow(() -> new IllegalArgumentException(
+                            "Paciente no encontrado con ID: " + id));
+
+            return ApiResponse.success(patient, "Paciente encontrado exitosamente");
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar paciente: " + ex.getMessage());
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<Patient> findByDocument(String document) {
+        try {
+            Patient patient = patientRepository.findByDocument(document);
+            if (patient == null) {
+                return ApiResponse.error("No se encontro paciente con el documento: " + document);
+            }
+            return ApiResponse.success(patient, "Pacientes encontrados exitosamente");
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar pacientes por documento: " + ex.getMessage());
+        }
     }
 
     /**
@@ -115,6 +140,7 @@ public class PatientService {
      * @param id ID del paciente a eliminar
      * @return ApiResponse con el resultado de la operación
      */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public ApiResponse<Void> delete(Integer id) {
         try {
             Patient patient = patientRepository.findById(id)
@@ -123,6 +149,8 @@ public class PatientService {
             patientRepository.delete(patient);
             return ApiResponse.success("Paciente eliminado exitosamente");
 
+        } catch (DataIntegrityViolationException ex) {
+            return ApiResponse.error("No se puede eliminar el paciente porque tiene imagenes medicas asociadas");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {

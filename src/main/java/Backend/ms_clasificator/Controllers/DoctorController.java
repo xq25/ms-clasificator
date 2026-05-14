@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.print.Doc;
 import java.util.List;
 
 @RestController
@@ -25,10 +26,26 @@ public class DoctorController {
     public List<Doctor> find(){ return this.doctorService.findAll();}
 
     @GetMapping("{id}")
-    public Doctor findById(@PathVariable Integer id){ return this.doctorService.findById(id);}
+    public ResponseEntity<ApiResponse<Doctor>> findById(@PathVariable Integer id){
+        ApiResponse<Doctor> response = this.doctorService.findById(id);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
 
     @GetMapping("code/{code}")
-    public Doctor findByCode(@PathVariable String code){ return this.doctorService.findByCode(code);}
+    public ResponseEntity<ApiResponse<Doctor>> findByCode(@PathVariable String code){
+        ApiResponse<Doctor> response = this.doctorService.findByCode(code);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
 
     @PostMapping("")
     public ResponseEntity<ApiResponse<Doctor>> create(@Valid @RequestBody DoctorBaseDTO doctor) {

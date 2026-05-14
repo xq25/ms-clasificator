@@ -3,6 +3,7 @@ package Backend.ms_clasificator.Controllers;
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.Models.Doctor;
 import Backend.ms_clasificator.Models.MedicalImg;
 import Backend.ms_clasificator.Services.MedicalImageService;
 import jakarta.validation.Valid;
@@ -25,9 +26,8 @@ public class MedicalImageController {
      * @return Lista de todas las imágenes
      */
     @GetMapping("")
-    public ResponseEntity<List<MedicalImg>> findAll() {
-        List<MedicalImg> images = medicalImageService.findAll();
-        return ResponseEntity.ok(images);
+    public List<MedicalImg> findAll() {
+        return medicalImageService.findAll();
     }
 
     /**
@@ -36,12 +36,13 @@ public class MedicalImageController {
      * @return Imagen encontrada
      */
     @GetMapping("{id}")
-    public ResponseEntity<MedicalImg> findById(@PathVariable Integer id) {
-        MedicalImg image = medicalImageService.findById(id);
-        if (image != null) {
-            return ResponseEntity.ok(image);
+    public ResponseEntity<ApiResponse<MedicalImg>> findById(@PathVariable Integer id) {
+        ApiResponse<MedicalImg> response = this.medicalImageService.findById(id);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().body(response);
         }
     }
 

@@ -3,6 +3,7 @@ package Backend.ms_clasificator.Controllers;
 import Backend.ms_clasificator.DTOs.UIState.CreateUIStateDTO;
 import Backend.ms_clasificator.DTOs.UIState.UpdateUIStateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.Models.Doctor;
 import Backend.ms_clasificator.Models.UIState;
 import Backend.ms_clasificator.Services.UIStateService;
 import jakarta.validation.Valid;
@@ -25,9 +26,8 @@ public class UIStateController {
      * @return Lista de todos los estados
      */
     @GetMapping("")
-    public ResponseEntity<List<UIState>> findAll() {
-        List<UIState> states = this.uiStateService.findAll();
-        return ResponseEntity.ok(states);
+    public List<UIState> findAll() {
+        return this.uiStateService.findAll();
     }
 
     /**
@@ -36,12 +36,13 @@ public class UIStateController {
      * @return Estado encontrado
      */
     @GetMapping("{id}")
-    public ResponseEntity<UIState> findById(@PathVariable Integer id) {
-        UIState state = this.uiStateService.findById(id);
-        if (state != null) {
-            return ResponseEntity.ok(state);
+    public ResponseEntity<ApiResponse<UIState>> findById(@PathVariable Integer id) {
+        ApiResponse<UIState> response = this.uiStateService.findById(id);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().body(response);
         }
     }
 
@@ -51,9 +52,14 @@ public class UIStateController {
      * @return Lista de estados de la configuración
      */
     @GetMapping("config/{uiConfigId}")
-    public ResponseEntity<List<UIState>> findByUiConfigId(@PathVariable Integer uiConfigId) {
-        List<UIState> states = this.uiStateService.findByUiConfigId(uiConfigId);
-        return ResponseEntity.ok(states);
+    public ResponseEntity<ApiResponse<List<UIState>>> findByUiConfigId(@PathVariable Integer uiConfigId) {
+        ApiResponse<List<UIState>> response = this.uiStateService.findByUiConfigId(uiConfigId);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     /**
@@ -62,9 +68,15 @@ public class UIStateController {
      * @return Lista de estados del diagnóstico
      */
     @GetMapping("diagnostic/{medicalDiagnosticId}")
-    public ResponseEntity<List<UIState>> findByMedicalDiagnosticId(@PathVariable Integer medicalDiagnosticId) {
-        List<UIState> states = this.uiStateService.findByMedicalDiagnosticId(medicalDiagnosticId);
-        return ResponseEntity.ok(states);
+    public ResponseEntity<ApiResponse<List<UIState>> >findByMedicalDiagnosticId(@PathVariable Integer medicalDiagnosticId) {
+        ApiResponse<List<UIState>> response = this.uiStateService.findByMedicalDiagnosticId(medicalDiagnosticId);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+
     }
 
     /**
@@ -90,9 +102,7 @@ public class UIStateController {
      * @return ApiResponse con el resultado
      */
     @PutMapping("{id}")
-    public ResponseEntity<ApiResponse<UIState>> update(
-            @PathVariable Integer id,
-            @Valid @RequestBody UpdateUIStateDTO updateUIStateDTO) {
+    public ResponseEntity<ApiResponse<UIState>> update(@PathVariable Integer id, @Valid @RequestBody UpdateUIStateDTO updateUIStateDTO) {
         ApiResponse<UIState> response = this.uiStateService.update(id, updateUIStateDTO);
 
         if (response.isSuccess()) {

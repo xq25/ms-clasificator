@@ -40,9 +40,18 @@ public class DoctorService {
      * @throws IllegalArgumentException si el doctor no existe
      */
     @Transactional(readOnly = true)
-    public Doctor findById(Integer id) {
-        return doctorRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + id));
+    public ApiResponse<Doctor> findById(Integer id) {
+        try{
+            Doctor doctor =  doctorRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + id));
+
+            return ApiResponse.success(doctor, "Doctor encontrado exitosamente");
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar doctor: " + ex.getMessage());
+        }
+
     }
 
     /**
@@ -51,8 +60,19 @@ public class DoctorService {
      * @return Doctor encontrado o null
      */
     @Transactional(readOnly = true)
-    public Doctor findByCode(String code) {
-        return doctorRepository.findByCode(code);
+    public ApiResponse<Doctor> findByCode(String code) {
+        try{
+            Doctor doctor =  doctorRepository.findByCode(code);
+
+            if (doctor == null){
+                throw new IllegalArgumentException("Doctor no encontrado con código: " + code);
+            }
+            return ApiResponse.success(doctor, "Doctor encontrado exitosamente");
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar doctor: " + ex.getMessage());
+        }
     }
 
     /**

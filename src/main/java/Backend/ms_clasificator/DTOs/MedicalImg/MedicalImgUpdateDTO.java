@@ -1,5 +1,6 @@
 package Backend.ms_clasificator.DTOs.MedicalImg;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -16,8 +17,6 @@ public class MedicalImgUpdateDTO {
     @NotNull(message = "La URL de la imagen médica no puede ser nulo")
     @NotBlank(message = "La URL de la imagen médica no puede estar vacía")
     private String url;
-
-    private Integer patientId;
 
 }
 

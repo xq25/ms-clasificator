@@ -35,14 +35,31 @@ public class PatientController {
      * @return Paciente encontrado
      */
     @GetMapping("{id}")
-    public ResponseEntity<Patient> findById(@PathVariable Integer id) {
-        Patient patient = patientService.findById(id);
-        if (patient != null) {
-            return ResponseEntity.ok(patient);
+    public ResponseEntity<ApiResponse<Patient>> findById(@PathVariable Integer id) {
+        ApiResponse<Patient> response = patientService.findById(id);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().body(response);
         }
     }
+
+    /**
+     * Obtener un paciente por documento
+     * @param document Documento del paciente
+     * @return Paciente encontrado
+     */
+    @GetMapping("document/{document}")
+    public ResponseEntity<ApiResponse<Patient>> findByDocument(@PathVariable String document) {
+        ApiResponse<Patient> response = patientService.findByDocument(document);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+     }
 
     /**
      * Crear un nuevo paciente

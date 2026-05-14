@@ -5,6 +5,7 @@ import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.EvaluationAreaMappers.EvaluationAreaMapper;
 import Backend.ms_clasificator.Models.EvaluationArea;
+import Backend.ms_clasificator.Models.Patient;
 import Backend.ms_clasificator.Repositories.EvaluationAreaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -39,8 +40,18 @@ public class EvaluationAreaService {
      * @return Área encontrada o null
      */
     @Transactional(readOnly = true)
-    public EvaluationArea findById(Integer id) {
-        return evaluationAreaRepository.findById(id).orElse(null);
+    public ApiResponse<EvaluationArea> findById(Integer id) {
+        try{
+            EvaluationArea evaluationArea = evaluationAreaRepository.findById(id).
+                    orElseThrow(() -> new IllegalArgumentException(
+                            "Area de Evaluacion no encontrado con ID: " + id));
+
+            return ApiResponse.success(evaluationArea, "Area de Evaluacion encontrada exitosamente");
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar Area de Evaluacion: " + ex.getMessage());
+        }
     }
 
     /**

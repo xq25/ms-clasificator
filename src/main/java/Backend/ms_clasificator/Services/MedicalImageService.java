@@ -48,8 +48,16 @@ public class MedicalImageService {
      * @return Imagen encontrada o null
      */
     @Transactional(readOnly = true)
-    public MedicalImg findById(Integer id) {
-        return medicalImgRepository.findById(id).orElse(null);
+    public ApiResponse<MedicalImg> findById(Integer id) {
+        try{
+            MedicalImg medicalImage = this.medicalImgRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + id));
+            return ApiResponse.success(medicalImage, "Imagen médica obtenida exitosamente");
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al obtener imagen médica: " + ex.getMessage());
+        }
     }
 
     /**
@@ -61,7 +69,7 @@ public class MedicalImageService {
     public ApiResponse<List<MedicalImg>> findByEvaluationAreaId(Integer evaluationAreaId) {
         try {
             if (evaluationAreaId == null) {
-                return ApiResponse.error("El ID del área de evaluación no puede ser nulo");
+                throw new IllegalArgumentException("El ID del área de evaluación no puede ser nulo");
             }
 
             // Validar que exista el área de evaluación
@@ -166,16 +174,6 @@ public class MedicalImageService {
 
             // Asiganamos la URL nueva
             medicalImg.setUrl(medicalImgUpdateDTO.getUrl());
-
-            // Actualizar paciente si se proporciona
-            if (medicalImgUpdateDTO.getPatientId() != null) {
-                // Validamos que ese paciente exista
-                Patient patient = patientRepository.findById(medicalImgUpdateDTO.getPatientId())
-                        .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado con ID: " + medicalImgUpdateDTO.getPatientId()));
-                medicalImg.setPatientId(patient.getId());
-            } else {
-                medicalImg.setPatientId(null);
-            }
 
             MedicalImg updated = medicalImgRepository.save(medicalImg);
             return ApiResponse.success(updated, "Imagen médica actualizada exitosamente");

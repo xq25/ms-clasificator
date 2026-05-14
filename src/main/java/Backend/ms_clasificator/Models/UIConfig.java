@@ -1,6 +1,7 @@
 package Backend.ms_clasificator.Models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
@@ -22,7 +23,12 @@ public class UIConfig {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "medical_diagnostic_id", nullable = false)
+    @JsonIgnore
     private MedicalDiagnostic medicalDiagnostic;
+    @JsonProperty("medicalDiagnosticId")
+    public Integer getMedicalDiagnosticId() {
+        return medicalDiagnostic != null ? medicalDiagnostic.getId() : null;
+    }
 
     @OneToMany(mappedBy = "uiConfig", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore

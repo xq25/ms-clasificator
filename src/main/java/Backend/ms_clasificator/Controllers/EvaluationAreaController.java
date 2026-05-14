@@ -37,12 +37,13 @@ public class EvaluationAreaController {
      * @return Área encontrada
      */
     @GetMapping("{id}")
-    public ResponseEntity<EvaluationArea> findById(@PathVariable Integer id) {
-        EvaluationArea area = evaluationAreaService.findById(id);
-        if (area != null) {
-            return ResponseEntity.ok(area);
+    public ResponseEntity<ApiResponse<EvaluationArea>> findById(@PathVariable Integer id) {
+        ApiResponse<EvaluationArea> response = evaluationAreaService.findById(id);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().body(response);
         }
     }
 

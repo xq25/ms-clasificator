@@ -34,8 +34,14 @@ public class DoctorAreaController {
      * @return DoctorArea encontrada
      */
     @GetMapping("{id}")
-    public DoctorArea findById(@PathVariable Integer id) {
-        return this.doctorAreaService.findById(id);
+    public ResponseEntity<ApiResponse<DoctorArea>> findById(@PathVariable Integer id) {
+        ApiResponse<DoctorArea> response = this.doctorAreaService.findById(id);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     /**
@@ -44,8 +50,14 @@ public class DoctorAreaController {
      * @return Lista de DoctorArea del doctor
      */
     @GetMapping("doctor/{doctorId}")
-    public List<DoctorArea> findByDoctorId(@PathVariable Integer doctorId) {
-        return this.doctorAreaService.findByDoctorId(doctorId);
+    public ResponseEntity<ApiResponse<List<DoctorArea>>> findByDoctorId(@PathVariable Integer doctorId) {
+        ApiResponse<List<DoctorArea>> response = this.doctorAreaService.findByDoctorId(doctorId);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     /**
@@ -54,8 +66,14 @@ public class DoctorAreaController {
      * @return Lista de DoctorArea en el área
      */
     @GetMapping("area/{evaluationAreaId}")
-    public List<DoctorArea> findByEvaluationAreaId(@PathVariable Integer evaluationAreaId) {
-        return this.doctorAreaService.findByEvaluationAreaId(evaluationAreaId);
+    public ResponseEntity<ApiResponse<List<DoctorArea>>> findByEvaluationAreaId(@PathVariable Integer evaluationAreaId) {
+        ApiResponse<List<DoctorArea>> response = this.doctorAreaService.findByEvaluationAreaId(evaluationAreaId);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     /**

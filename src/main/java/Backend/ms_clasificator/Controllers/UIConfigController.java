@@ -3,6 +3,7 @@ package Backend.ms_clasificator.Controllers;
 import Backend.ms_clasificator.DTOs.UIConfig.CreateUIConfigDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.DTOs.UIConfig.UpdateUIConfigDTO;
+import Backend.ms_clasificator.Models.Doctor;
 import Backend.ms_clasificator.Models.UIConfig;
 import Backend.ms_clasificator.Models.UIState;
 import Backend.ms_clasificator.Services.UIConfigService;
@@ -37,12 +38,13 @@ public class UIConfigController {
      * @return Configuración encontrada
      */
     @GetMapping("{id}")
-    public ResponseEntity<UIConfig> findById(@PathVariable Integer id) {
-        UIConfig config = uiConfigService.findById(id);
-        if (config != null) {
-            return ResponseEntity.ok(config);
+    public ResponseEntity<ApiResponse<UIConfig>> findById(@PathVariable Integer id) {
+        ApiResponse<UIConfig> response = this.uiConfigService.findById(id);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().body(response);
         }
     }
 
@@ -52,9 +54,14 @@ public class UIConfigController {
      * @return Lista de configuraciones del diagnóstico
      */
     @GetMapping("diagnostic/{medicalDiagnosticId}")
-    public ResponseEntity<List<UIConfig>> findByMedicalDiagnosticId(@PathVariable Integer medicalDiagnosticId) {
-        List<UIConfig> configs = uiConfigService.findByMedicalDiagnosticId(medicalDiagnosticId);
-        return ResponseEntity.ok(configs);
+    public ResponseEntity<ApiResponse<List<UIConfig>>> findByMedicalDiagnosticId(@PathVariable Integer medicalDiagnosticId) {
+        ApiResponse<List<UIConfig>> response = this.uiConfigService.findByMedicalDiagnosticId(medicalDiagnosticId);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     /**
@@ -106,22 +113,4 @@ public class UIConfigController {
         }
     }
 
-    /**
-     * Agregar un UIState existente a una configuración UI
-     * @param uiConfigId ID de la configuración UI
-     * @param uiStateId ID del UIState a agregar
-     * @return ApiResponse con el resultado
-     */
-    @PostMapping("{uiConfigId}/add-ui-state/{uiStateId}")
-    public ResponseEntity<ApiResponse<UIState>> addUIState(
-            @PathVariable Integer uiConfigId,
-            @PathVariable Integer uiStateId) {
-        ApiResponse<UIState> response = uiConfigService.addUIState(uiConfigId, uiStateId);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
 }

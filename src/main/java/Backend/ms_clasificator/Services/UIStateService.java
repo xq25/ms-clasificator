@@ -47,8 +47,17 @@ public class UIStateService {
      * @return UIState encontrado o null
      */
     @Transactional(readOnly = true)
-    public UIState findById(Integer id) {
-        return uiStateRepository.findById(id).orElse(null);
+    public ApiResponse<UIState> findById(Integer id) {
+        try {
+            UIState uiState =  uiStateRepository.findById(id).orElseThrow(() ->
+                    new IllegalArgumentException("Estado UI no encontrado con ID: " + id));
+
+            return ApiResponse.success(uiState, "Estado UI encontrado");
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar estado por ID: " + ex.getMessage());
+        }
     }
 
     /**
@@ -57,8 +66,23 @@ public class UIStateService {
      * @return Lista de estados de la configuración
      */
     @Transactional(readOnly = true)
-    public List<UIState> findByUiConfigId(Integer uiConfigId) {
-        return uiStateRepository.findByUiConfigId(uiConfigId);
+    public ApiResponse<List<UIState>> findByUiConfigId(Integer uiConfigId) {
+        try {
+            UIConfig uiConfig = this.uiConfigRepository.findById(uiConfigId).orElseThrow(() ->
+                    new IllegalArgumentException("Configuración UI no encontrada con ID: " + uiConfigId));
+
+            List<UIState> uiStates = this.uiStateRepository.findByUiConfig_Id(uiConfigId);
+            if (uiStates.isEmpty()) {
+                return ApiResponse.success(uiStates,"No se encontraron estados UI para la configuración con ID: " + uiConfigId);
+            }else{
+                return ApiResponse.success(uiStates,"Estados UI encontrados para la configuración con ID: " + uiConfigId);
+            }
+
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar estado por ID: " + ex.getMessage());
+        }
     }
 
     /**
@@ -67,8 +91,25 @@ public class UIStateService {
      * @return Lista de estados del diagnóstico
      */
     @Transactional(readOnly = true)
-    public List<UIState> findByMedicalDiagnosticId(Integer medicalDiagnosticId) {
-        return uiStateRepository.findByMedicalDiagnosticId(medicalDiagnosticId);
+    public ApiResponse<List<UIState>> findByMedicalDiagnosticId(Integer medicalDiagnosticId) {
+        try {
+
+            MedicalDiagnostic medicalDiagnostic = this.medicalDiagnosticRepository.findById(medicalDiagnosticId)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Diagnóstico médico no encontrado con ID: " + medicalDiagnosticId));
+
+            List<UIState> states = uiStateRepository.findByMedicalDiagnosticId(medicalDiagnosticId);
+            if (states.isEmpty()) {
+                return ApiResponse.success(states, "No se encontraron estados UI para el diagnóstico con ID: " + medicalDiagnosticId);
+            } else {
+                return ApiResponse.success(states, "Estados UI encontrados para el diagnóstico");
+            }
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar estados por diagnóstico: " + ex.getMessage());
+        }
+
     }
 
     /**
@@ -83,15 +124,20 @@ public class UIStateService {
             }
 
             // Validar que exista la configuración UI
-            UIConfig uiConfig = uiConfigRepository.findById(createUIStateDTO.getIuConfigId())
+            UIConfig uiConfig = uiConfigRepository.findById(createUIStateDTO.getUiConfigId())
                     .orElseThrow(() -> new IllegalArgumentException(
-                            "Configuración UI no encontrada con ID: " + createUIStateDTO.getIuConfigId()));
+                            "Configuración UI no encontrada con ID: " + createUIStateDTO.getUiConfigId()));
 
             // Validar que exista el diagnóstico médico
             MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository
                     .findById(createUIStateDTO.getMedicalDiagnosticId())
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Diagnóstico médico no encontrado con ID: " + createUIStateDTO.getMedicalDiagnosticId()));
+
+            // Validar que el diagnostico asignado a este uistate no sea el mismo de el uiconfig
+            if (medicalDiagnostic.getId().equals(uiConfig.getMedicalDiagnostic().getId())) {
+                return ApiResponse.error("El diagnóstico médico del estado UI no puede ser el mismo que el de la configuración UI, No podemos clasificar un diagnostico con su mismo diagnostico" );
+            }
 
             UIState uiState = uiStateMappers.toEntity(createUIStateDTO);
             uiState.setUiConfig(uiConfig);
@@ -122,11 +168,21 @@ public class UIStateService {
             UIState uiState = uiStateRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Estado UI no encontrado con ID: " + id));
 
+            // Hayamos la configuración UI para validar que exista y obtener su diagnóstico
+            UIConfig uiConfig = this.uiConfigRepository.findById(uiState.getUiConfigId())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Configuración UI a la que pertence este state, no encontrada con ID: " + uiState.getUiConfigId()));
+
             // Validar que exista el diagnóstico médico
             MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository
                     .findById(updateUIStateDTO.getMedicalDiagnosticId())
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Diagnóstico médico no encontrado con ID: " + updateUIStateDTO.getMedicalDiagnosticId()));
+
+            // Validamos que el nuevo diagnostico no sea el mismo del UIConfig
+            if (medicalDiagnostic.getId().equals(uiConfig.getMedicalDiagnostic().getId())) {
+                return ApiResponse.error("El diagnóstico médico del estado UI no puede ser el mismo que el de la configuración UI, No podemos clasificar un diagnostico con su mismo diagnostico" );
+            }
 
             // Solo actualizamos el diagnóstico, la configuración UI no se modifica
             uiState.setMedicalDiagnostic(medicalDiagnostic);
