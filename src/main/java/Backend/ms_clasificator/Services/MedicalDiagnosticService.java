@@ -37,8 +37,16 @@ public class MedicalDiagnosticService {
      * @return Diagnóstico encontrado o null
      */
     @Transactional(readOnly = true)
-    public MedicalDiagnostic findById(Integer id) {
-        return medicalDiagnosticRepository.findById(id).orElse(null);
+    public ApiResponse<MedicalDiagnostic> findById(Integer id) {
+        try {
+            MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(id).orElseThrow(() ->
+                    new IllegalArgumentException("Diagnóstico médico no encontrado con ID: " + id));
+            return ApiResponse.success(medicalDiagnostic, "Diagnóstico médico encontrado");
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar diagnóstico por ID: " + ex.getMessage());
+        }
     }
 
     /**
@@ -86,7 +94,7 @@ public class MedicalDiagnosticService {
     public ApiResponse<MedicalDiagnostic> update(Integer id, MedicalDiagnosticUpdateDTO medicalDiagnosticUpdateDTO) {
         try {
             if (medicalDiagnosticUpdateDTO == null) {
-                return ApiResponse.error("El DTO no puede ser nulo");
+                throw new IllegalArgumentException("El DTO no puede ser nulo");
             }
 
             MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(id)
@@ -95,20 +103,11 @@ public class MedicalDiagnosticService {
             // Validar que no exista otro diagnóstico con el mismo código
             MedicalDiagnostic existingByCode = medicalDiagnosticRepository.findByDiagnosticCode(medicalDiagnosticUpdateDTO.getDiagnosticCode());
             if (existingByCode != null && !existingByCode.getId().equals(id)) {
-                return ApiResponse.error("Ya existe un diagnóstico con el código: " + medicalDiagnosticUpdateDTO.getDiagnosticCode());
+                throw new IllegalArgumentException("Ya existe un diagnóstico con el código: " + medicalDiagnosticUpdateDTO.getDiagnosticCode());
             }
 
             medicalDiagnostic.setDiagnosticCode(medicalDiagnosticUpdateDTO.getDiagnosticCode());
             medicalDiagnostic.setDiagnosticName(medicalDiagnosticUpdateDTO.getDiagnosticName());
-
-            // Actualizar diagnóstico padre si se proporciona
-            if (medicalDiagnosticUpdateDTO.getParentDiagnosticId() != null) {
-                MedicalDiagnostic parentDiagnostic = medicalDiagnosticRepository.findById(medicalDiagnosticUpdateDTO.getParentDiagnosticId())
-                        .orElseThrow(() -> new IllegalArgumentException("Diagnóstico padre no encontrado con ID: " + medicalDiagnosticUpdateDTO.getParentDiagnosticId()));
-                medicalDiagnostic.setParentDiagnostic(parentDiagnostic);
-            } else {
-                medicalDiagnostic.setParentDiagnostic(null);
-            }
 
             MedicalDiagnostic updated = medicalDiagnosticRepository.save(medicalDiagnostic);
             return ApiResponse.success(updated, "Diagnóstico médico actualizado exitosamente");

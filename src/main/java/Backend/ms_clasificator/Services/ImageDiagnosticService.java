@@ -55,8 +55,15 @@ public class ImageDiagnosticService {
      * @return Diagnóstico encontrado o null
      */
     @Transactional(readOnly = true)
-    public ImageDiagnostic findById(Integer id) {
-        return imageDiagnosticRepository.findById(id).orElse(null);
+    public ApiResponse<ImageDiagnostic> findById(Integer id) {
+        try{
+            ImageDiagnostic imageDiagnostic = imageDiagnosticRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Diagnóstico de imagen no encontrado con ID: " + id));
+            return ApiResponse.success(imageDiagnostic, "Diagnóstico de imagen encontrado exitosamente");
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar diagnóstico de imagen: " + ex.getMessage());
+        }
     }
 
     /**

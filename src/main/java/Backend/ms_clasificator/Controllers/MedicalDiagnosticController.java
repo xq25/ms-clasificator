@@ -3,6 +3,7 @@ package Backend.ms_clasificator.Controllers;
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.Models.Doctor;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import Backend.ms_clasificator.Services.MedicalDiagnosticService;
 import jakarta.validation.Valid;
@@ -36,12 +37,13 @@ public class MedicalDiagnosticController {
      * @return Diagnóstico encontrado
      */
     @GetMapping("{id}")
-    public ResponseEntity<MedicalDiagnostic> findById(@PathVariable Integer id) {
-        MedicalDiagnostic diagnostic = medicalDiagnosticService.findById(id);
-        if (diagnostic != null) {
-            return ResponseEntity.ok(diagnostic);
+    public ResponseEntity<ApiResponse<MedicalDiagnostic>> findById(@PathVariable Integer id) {
+        ApiResponse<MedicalDiagnostic> response = this.medicalDiagnosticService.findById(id);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().body(response);
         }
     }
 

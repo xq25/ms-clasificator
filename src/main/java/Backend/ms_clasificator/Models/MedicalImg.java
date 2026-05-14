@@ -29,8 +29,7 @@ public class MedicalImg {
     private Integer patientId;
 
     // Relación con los diagnósticos de imagen asociados
-    // Si se elimina una imagen, se eliminan automáticamente sus diagnósticos (cascade)
-    @JsonIgnore
+    // Si se elimina una imagen, se eliminan automáticamente sus diagnósticos (cascade) o mejor restringir?!
     @OneToMany(mappedBy = "medicalImg", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ImageDiagnostic> imageDiagnostics;
 }

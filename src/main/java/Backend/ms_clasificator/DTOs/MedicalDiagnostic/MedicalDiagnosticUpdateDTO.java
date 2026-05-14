@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MedicalDiagnosticUpdateDTO extends MedicalDiagnosticCreateDTO{
+public class MedicalDiagnosticUpdateDTO {
 
     @NotBlank(message = "El código del diagnóstico no puede estar vacío")
     @Size(min = 3, max = 8, message = "El código del diagnóstico debe tener mínimo 3 caracteres")
@@ -20,9 +20,6 @@ public class MedicalDiagnosticUpdateDTO extends MedicalDiagnosticCreateDTO{
     //Importante para el manejo del sistema para personas no especializadas en areas medicas
     @NotBlank(message = "El nombre del diagnóstico no puede estar vacío")
     private String diagnosticName;
-
-    // ID del diagnóstico padre (opcional - nullable si es diagnosis raíz)
-    private Integer parentDiagnosticId;
 
 }
 

@@ -4,6 +4,7 @@ import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticCreateDTO;
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Models.ImageDiagnostic;
+import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import Backend.ms_clasificator.Services.ImageDiagnosticService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,12 +37,13 @@ public class ImageDiagnosticController {
      * @return Diagnóstico encontrado
      */
     @GetMapping("{id}")
-    public ResponseEntity<ImageDiagnostic> findById(@PathVariable Integer id) {
-        ImageDiagnostic diagnostic = imageDiagnosticService.findById(id);
-        if (diagnostic != null) {
-            return ResponseEntity.ok(diagnostic);
+    public ResponseEntity<ApiResponse<ImageDiagnostic>> findById(@PathVariable Integer id) {
+        ApiResponse<ImageDiagnostic> response = imageDiagnosticService.findById(id);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().body(response);
         }
     }
 

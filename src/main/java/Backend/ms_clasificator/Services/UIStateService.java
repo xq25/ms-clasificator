@@ -98,7 +98,7 @@ public class UIStateService {
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Diagnóstico médico no encontrado con ID: " + medicalDiagnosticId));
 
-            List<UIState> states = uiStateRepository.findByMedicalDiagnosticId(medicalDiagnosticId);
+            List<UIState> states = uiStateRepository.findByMedicalDiagnostic_Id(medicalDiagnosticId);
             if (states.isEmpty()) {
                 return ApiResponse.success(states, "No se encontraron estados UI para el diagnóstico con ID: " + medicalDiagnosticId);
             } else {

@@ -23,14 +23,21 @@ public class UIState {
     @JsonIgnore
     @JoinColumn(name = "ui_config_id", nullable = false, updatable = false)
     private UIConfig uiConfig;
-    @JsonProperty("medicalImgId")
+    @JsonProperty("uiConfigId")
     public Integer getUiConfigId() {
         return uiConfig != null ? uiConfig.getId() : null;
     }
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "medical_diagnostic_id", nullable = false)
     private MedicalDiagnostic medicalDiagnostic;
+    @JsonProperty("medicalDiagnosticId")
+    public Integer getMedicalDiagnosticId() {
+        return medicalDiagnostic != null
+                ? medicalDiagnostic.getId()
+                : null;
+    }
 
 }
 
