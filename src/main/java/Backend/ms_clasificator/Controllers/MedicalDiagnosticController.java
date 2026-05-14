@@ -102,7 +102,7 @@ public class MedicalDiagnosticController {
      * @param subDiagnosticId ID del sub-diagnóstico
      * @return ApiResponse con el resultado
      */
-    @PostMapping("{parentDiagnosticId}/add-sub-diagnostic/{subDiagnosticId}")
+    @PutMapping("{parentDiagnosticId}/add-sub-diagnostic/{subDiagnosticId}")
     public ResponseEntity<ApiResponse<MedicalDiagnostic>> addSubDiagnostic(@PathVariable Integer parentDiagnosticId, @PathVariable Integer subDiagnosticId) {
         ApiResponse<MedicalDiagnostic> response = medicalDiagnosticService.addSubDiagnostic(parentDiagnosticId, subDiagnosticId);
 

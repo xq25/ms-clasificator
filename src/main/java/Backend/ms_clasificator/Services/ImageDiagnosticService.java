@@ -174,7 +174,7 @@ public class ImageDiagnosticService {
 
     private boolean validateSameImgDiagnostic(Integer doctor_id, Integer img_id){
         boolean validation = false;
-        ImageDiagnostic diagnostic = imageDiagnosticRepository.findByDoctorIdAndMedicalImgId(doctor_id, img_id);
+        ImageDiagnostic diagnostic = imageDiagnosticRepository.findByDoctor_IdAndMedicalImg_Id(doctor_id, img_id);
         // Si existe un registro ya generado por ese medico a esa imagen, devolvemos true.
         if (diagnostic != null){
             validation = true;

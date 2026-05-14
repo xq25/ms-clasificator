@@ -118,7 +118,7 @@ public class MedicalImageController {
      * @param patientId ID del paciente
      * @return ApiResponse con el resultado
      */
-    @PostMapping("{medicalImgId}/assign-patient/{patientId}")
+    @PutMapping("{medicalImgId}/assign-patient/{patientId}")
     public ResponseEntity<ApiResponse<MedicalImg>> assignPatient(@PathVariable Integer medicalImgId, @PathVariable Integer patientId) {
         ApiResponse<MedicalImg> response = medicalImageService.assignPatient(medicalImgId, patientId);
 
@@ -151,7 +151,7 @@ public class MedicalImageController {
      * @param evaluationAreaId ID del área de evaluación
      * @return ApiResponse con el resultado
      */
-    @PostMapping("{medicalImgId}/change-evaluation-area/{evaluationAreaId}")
+    @PutMapping("{medicalImgId}/change-evaluation-area/{evaluationAreaId}")
     public ResponseEntity<ApiResponse<MedicalImg>> changeEvaluationArea(@PathVariable Integer medicalImgId, @PathVariable Integer evaluationAreaId) {
         ApiResponse<MedicalImg> response = medicalImageService.changeEvaluationArea(medicalImgId, evaluationAreaId);
 

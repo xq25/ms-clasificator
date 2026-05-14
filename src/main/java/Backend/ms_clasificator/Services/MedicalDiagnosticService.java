@@ -80,12 +80,12 @@ public class MedicalDiagnosticService {
     /**
      * Actualizar un diagnóstico médico existente
      * @param id ID del diagnóstico a actualizar
-     * @param medicalDiagnosticCreateDTO DTO con datos a actualizar
+     * @param medicalDiagnosticUpdateDTO DTO con datos a actualizar
      * @return ApiResponse<MedicalDiagnostic> con el resultado de la operación
      */
-    public ApiResponse<MedicalDiagnostic> update(Integer id, MedicalDiagnosticUpdateDTO medicalDiagnosticCreateDTO) {
+    public ApiResponse<MedicalDiagnostic> update(Integer id, MedicalDiagnosticUpdateDTO medicalDiagnosticUpdateDTO) {
         try {
-            if (medicalDiagnosticCreateDTO == null) {
+            if (medicalDiagnosticUpdateDTO == null) {
                 return ApiResponse.error("El DTO no puede ser nulo");
             }
 
@@ -93,18 +93,18 @@ public class MedicalDiagnosticService {
                     .orElseThrow(() -> new IllegalArgumentException("Diagnóstico médico no encontrado con ID: " + id));
 
             // Validar que no exista otro diagnóstico con el mismo código
-            MedicalDiagnostic existingByCode = medicalDiagnosticRepository.findByDiagnosticCode(medicalDiagnosticCreateDTO.getDiagnosticCode());
+            MedicalDiagnostic existingByCode = medicalDiagnosticRepository.findByDiagnosticCode(medicalDiagnosticUpdateDTO.getDiagnosticCode());
             if (existingByCode != null && !existingByCode.getId().equals(id)) {
-                return ApiResponse.error("Ya existe un diagnóstico con el código: " + medicalDiagnosticCreateDTO.getDiagnosticCode());
+                return ApiResponse.error("Ya existe un diagnóstico con el código: " + medicalDiagnosticUpdateDTO.getDiagnosticCode());
             }
 
-            medicalDiagnostic.setDiagnosticCode(medicalDiagnosticCreateDTO.getDiagnosticCode());
-            medicalDiagnostic.setDiagnosticName(medicalDiagnosticCreateDTO.getDiagnosticName());
+            medicalDiagnostic.setDiagnosticCode(medicalDiagnosticUpdateDTO.getDiagnosticCode());
+            medicalDiagnostic.setDiagnosticName(medicalDiagnosticUpdateDTO.getDiagnosticName());
 
             // Actualizar diagnóstico padre si se proporciona
-            if (medicalDiagnosticCreateDTO.getParentDiagnosticId() != null) {
-                MedicalDiagnostic parentDiagnostic = medicalDiagnosticRepository.findById(medicalDiagnosticCreateDTO.getParentDiagnosticId())
-                        .orElseThrow(() -> new IllegalArgumentException("Diagnóstico padre no encontrado con ID: " + medicalDiagnosticCreateDTO.getParentDiagnosticId()));
+            if (medicalDiagnosticUpdateDTO.getParentDiagnosticId() != null) {
+                MedicalDiagnostic parentDiagnostic = medicalDiagnosticRepository.findById(medicalDiagnosticUpdateDTO.getParentDiagnosticId())
+                        .orElseThrow(() -> new IllegalArgumentException("Diagnóstico padre no encontrado con ID: " + medicalDiagnosticUpdateDTO.getParentDiagnosticId()));
                 medicalDiagnostic.setParentDiagnostic(parentDiagnostic);
             } else {
                 medicalDiagnostic.setParentDiagnostic(null);
@@ -174,7 +174,7 @@ public class MedicalDiagnosticService {
                 throw new IllegalArgumentException("Este sub-diagnóstico ya está asignado a otro diagnóstico padre");
             }
             // Validar que un diagnostico no puede ser sub-diagnóstico de sí mismo (esto es para evitar ciclos en la jerarquía)
-            if (subDiagnosticId == parentDiagnosticId){
+            if (subDiagnosticId.equals(parentDiagnosticId)) {
                 throw  new IllegalArgumentException("Un diagnóstico no puede ser sub-diagnóstico de sí mismo");
             }
 
@@ -202,6 +202,11 @@ public class MedicalDiagnosticService {
             if (parentDiagnosticId == null || subDiagnosticId == null) {
                 return ApiResponse.error("Los IDs del diagnóstico padre y del sub-diagnóstico no pueden ser nulos");
             }
+
+            // Validar que el dianostico padre exista
+            MedicalDiagnostic parentDiagnostic = medicalDiagnosticRepository.findById(parentDiagnosticId)
+                    .orElseThrow(() -> new IllegalArgumentException("Diagnóstico padre no encontrado con ID: " + parentDiagnosticId));
+
 
             // Obtener el sub-diagnóstico
             MedicalDiagnostic subDiagnostic = medicalDiagnosticRepository.findById(subDiagnosticId)
