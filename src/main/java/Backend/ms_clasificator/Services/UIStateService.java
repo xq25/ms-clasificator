@@ -135,8 +135,14 @@ public class UIStateService {
                             "Diagnóstico médico no encontrado con ID: " + createUIStateDTO.getMedicalDiagnosticId()));
 
             // Validar que el diagnostico asignado a este uistate no sea el mismo de el uiconfig
-            if (medicalDiagnostic.getId().equals(uiConfig.getMedicalDiagnostic().getId())) {
+            Integer configDiagnosticId = uiConfig.getMedicalDiagnostic().getId();
+            if (medicalDiagnostic.getId().equals(configDiagnosticId)) {
                 return ApiResponse.error("El diagnóstico médico del estado UI no puede ser el mismo que el de la configuración UI, No podemos clasificar un diagnostico con su mismo diagnostico" );
+            }
+
+            // Validar que el diagnostico asignado sea un subDiagnostico del diagnostico asociado a la configuracion
+            if (!this.medicalDiagnosticRepository.existsByIdAndParentDiagnostic_Id( medicalDiagnostic.getId(), configDiagnosticId)){
+                return ApiResponse.error("El diagnóstico médico del estado UI debe ser un sub-diagnóstico del diagnóstico asociado a la configuración UI, No podemos clasificar un diagnostico con un diagnostico que no es su subdiagnostico" );
             }
 
             UIState uiState = uiStateMappers.toEntity(createUIStateDTO);
@@ -180,8 +186,14 @@ public class UIStateService {
                             "Diagnóstico médico no encontrado con ID: " + updateUIStateDTO.getMedicalDiagnosticId()));
 
             // Validamos que el nuevo diagnostico no sea el mismo del UIConfig
-            if (medicalDiagnostic.getId().equals(uiConfig.getMedicalDiagnostic().getId())) {
+            Integer configDiagnosticId = uiConfig.getMedicalDiagnostic().getId();
+            if (medicalDiagnostic.getId().equals(configDiagnosticId)) {
                 return ApiResponse.error("El diagnóstico médico del estado UI no puede ser el mismo que el de la configuración UI, No podemos clasificar un diagnostico con su mismo diagnostico" );
+            }
+
+            // Validar que el diagnostico asignado sea un subDiagnostico del diagnostico asociado a la configuracion
+            if (!this.medicalDiagnosticRepository.existsByIdAndParentDiagnostic_Id( medicalDiagnostic.getId(), configDiagnosticId)){
+                return ApiResponse.error("El diagnóstico médico del estado UI debe ser un sub-diagnóstico del diagnóstico asociado a la configuración UI, No podemos clasificar un diagnostico con un diagnostico que no es su subdiagnostico" );
             }
 
             // Solo actualizamos el diagnóstico, la configuración UI no se modifica

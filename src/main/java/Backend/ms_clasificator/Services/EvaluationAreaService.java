@@ -5,8 +5,10 @@ import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.EvaluationAreaMappers.EvaluationAreaMapper;
 import Backend.ms_clasificator.Models.EvaluationArea;
+import Backend.ms_clasificator.Models.MedicalImg;
 import Backend.ms_clasificator.Models.Patient;
 import Backend.ms_clasificator.Repositories.EvaluationAreaRepository;
+import Backend.ms_clasificator.Repositories.MedicalImgRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,9 @@ public class EvaluationAreaService {
 
     @Autowired
     private EvaluationAreaMapper evaluationAreaMapper;
+
+    @Autowired
+    private MedicalImgRepository medicalImgRepository;
 
 
     /**
@@ -135,11 +140,17 @@ public class EvaluationAreaService {
             EvaluationArea evaluationArea = evaluationAreaRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Área de evaluación no encontrada con ID: " + id));
 
+            // Validamos que no tenga imagenes medicas asociadas a esta area
+            List<MedicalImg> medicalImgs = this.medicalImgRepository.findByEvaluationAreaId(id);
+            if (!medicalImgs.isEmpty()) {
+                return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene imágenes médicas asociadas");
+            }
+
             evaluationAreaRepository.delete(evaluationArea);
             return ApiResponse.success("Área de evaluación eliminada exitosamente");
 
         } catch (DataIntegrityViolationException ex) {
-            return ApiResponse.error("No se puede eliminar el Evaluation Area porque tiene Imagenes Medicas asociadas");
+            return ApiResponse.error("Violacion de integridad de la base de datos: " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {

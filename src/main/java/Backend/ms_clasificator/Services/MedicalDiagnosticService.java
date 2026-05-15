@@ -4,11 +4,16 @@ import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticCreateDTO
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.MedicalDiagnosticMappers.MedicalDiagnosticMapper;
+import Backend.ms_clasificator.Models.ImageDiagnostic;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
+import Backend.ms_clasificator.Models.UIState;
+import Backend.ms_clasificator.Repositories.ImageDiagnosticRepository;
 import Backend.ms_clasificator.Repositories.MedicalDiagnosticRepository;
+import Backend.ms_clasificator.Repositories.UIStateRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -20,7 +25,13 @@ public class MedicalDiagnosticService {
     private MedicalDiagnosticRepository medicalDiagnosticRepository;
 
     @Autowired
+    private ImageDiagnosticRepository imageDiagnosticRepository;
+
+    @Autowired
     private MedicalDiagnosticMapper medicalDiagnosticMapper;
+
+    @Autowired
+    private UIStateRepository uiStateRepository;
 
     /**
      * Obtener todos los diagnósticos médicos
@@ -124,16 +135,28 @@ public class MedicalDiagnosticService {
      * @param id ID del diagnóstico a eliminar
      * @return ApiResponse con el resultado de la operación
      */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public ApiResponse<Void> delete(Integer id) {
+
         try {
             MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Diagnóstico médico no encontrado con ID: " + id));
+
+            List<MedicalDiagnostic> subDiagnosticList = medicalDiagnosticRepository.findByParentDiagnostic_Id(id);
+            if (!subDiagnosticList.isEmpty()) {
+                return ApiResponse.error("El diagnóstico médico no se puede eliminar porque tiene sub-diagnósticos asociados. Elimine o reasigne los sub-diagnósticos antes de eliminar este diagnóstico.");
+            }
+
+            List<ImageDiagnostic> imageDiagnosticList = imageDiagnosticRepository.findByMedicalDiagnostic_Id(id);
+            if(!imageDiagnosticList.isEmpty()) {
+                return ApiResponse.error("El diagnóstico médico no se puede eliminar porque tiene diagnósticos de imagen asociados. Elimine o reasigne los diagnósticos de imagen antes de eliminar este diagnóstico.");
+            }
 
             medicalDiagnosticRepository.delete(medicalDiagnostic);
             return ApiResponse.success("Diagnóstico médico eliminado exitosamente");
 
         } catch (DataIntegrityViolationException ex) {
-            return ApiResponse.error("No se puede eliminar el Diagnostico porque tiene sub-diagnosticos asociados");
+            return ApiResponse.error("Violacion a la integridad de la base de datos:" + ex.getMessage());
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {
@@ -214,6 +237,12 @@ public class MedicalDiagnosticService {
             // Validar que el sub-diagnóstico tenga el padre indicado
             if (subDiagnostic.getParentDiagnostic() == null || !subDiagnostic.getParentDiagnostic().getId().equals(parentDiagnosticId)) {
                 return ApiResponse.error("Este sub-diagnóstico no pertenece al diagnóstico padre indicado");
+            }
+
+            // Validar que sub-diagnostico no este dentro de una configuracion en UIState (No podemos remover un subdiagnostico que ya esta asignado a un uiState)
+            List<UIState> uiStateList = uiStateRepository.findByMedicalDiagnostic_Id(subDiagnosticId);
+            if (!uiStateList.isEmpty()){
+                return ApiResponse.error("No se puede remover este sub-diagnóstico porque está asignado a una configuración de UI. Elimine dentro de la Config UI antes de remover este sub-diagnóstico.");
             }
 
             // Remover el padre del sub-diagnóstico

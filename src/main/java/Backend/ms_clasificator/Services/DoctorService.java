@@ -5,7 +5,9 @@ import Backend.ms_clasificator.DTOs.Doctor.DoctorUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.DoctorMappers.DoctorMapper;
 import Backend.ms_clasificator.Models.Doctor;
+import Backend.ms_clasificator.Models.ImageDiagnostic;
 import Backend.ms_clasificator.Repositories.DoctorRepository;
+import Backend.ms_clasificator.Repositories.ImageDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,9 @@ public class DoctorService {
 
     @Autowired
     private DoctorMapper doctorMapper;
+
+    @Autowired
+    private ImageDiagnosticRepository imageDiagnosticRepository;
 
     /**
      * Obtener todos los doctores
@@ -146,11 +151,17 @@ public class DoctorService {
             Doctor doctor = doctorRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + id));
 
+            // Validamos que el medico no tenga diagnosticos de imagenes asociados.
+            List<ImageDiagnostic> imageDiagnostics = this.imageDiagnosticRepository.findByDoctor_Id(id);
+            if (!imageDiagnostics.isEmpty()){
+                return ApiResponse.error("No se puede eliminar el doctor porque tiene diagnosticos asociados");
+            }
+
             doctorRepository.delete(doctor);
             return ApiResponse.success("Doctor eliminado exitosamente");
 
         }catch (DataIntegrityViolationException ex) {
-            return ApiResponse.error("No se puede eliminar el doctor porque tiene diagnosticos asociados");
+            return ApiResponse.error("Violacion de integridad en la base de datos: " + ex.getMessage());
         }catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {

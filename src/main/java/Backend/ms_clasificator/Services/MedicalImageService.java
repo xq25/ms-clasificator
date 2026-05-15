@@ -200,7 +200,7 @@ public class MedicalImageService {
             return ApiResponse.success("Imagen médica eliminada exitosamente");
 
         } catch (DataIntegrityViolationException ex) {
-            return ApiResponse.error("No se puede eliminar la Imagen Medica porque tiene diagnosticos asiganados por medicos");
+            return ApiResponse.error("No se puede eliminar la Imagen Medica porque tiene diagnosticos asiganados por doctores");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {

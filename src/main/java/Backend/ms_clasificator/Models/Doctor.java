@@ -25,7 +25,11 @@ public class Doctor {
     @Column(name = "user_id", unique = true, nullable = false, updatable = false)
     private String userId;
 
-    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<DoctorArea> doctorAreas;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    private List<ImageDiagnostic> imageDiagnostics;
 }

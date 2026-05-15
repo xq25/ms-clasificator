@@ -1,7 +1,5 @@
 package Backend.ms_clasificator.Models;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -58,6 +56,10 @@ public class MedicalDiagnostic {
     @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     //Si se elimina un medicalDiagnostic se deben eliminar sus composiciones
     private List<UIConfig> uiConfigs;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    private List<ImageDiagnostic> imageDiagnostics;
 
 
 

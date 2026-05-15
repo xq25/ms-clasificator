@@ -7,5 +7,9 @@ import java.util.List;
 
 public interface MedicalDiagnosticRepository extends JpaRepository<MedicalDiagnostic, Integer> {
     MedicalDiagnostic findByDiagnosticCode(String diagnosticCode);
-    List<MedicalDiagnostic> findByParentDiagnosticId(Integer parentDiagnosticId);
+    List<MedicalDiagnostic> findByParentDiagnostic_Id(Integer parentDiagnosticId);
+    boolean existsByIdAndParentDiagnostic_Id(
+            Integer subDiagnosticId,
+            Integer parentDiagnosticId
+    );
 }
