@@ -1,0 +1,35 @@
+# ============================================================
+# PERFIL DEV — MinIO local
+# Actívalo con: --spring.profiles.active=dev
+# o SPRING_PROFILES_ACTIVE=dev en variables de entorno
+# ============================================================
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  # Límite de tamaño para uploads multipart
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 15MB
+
+# ============================================================
+# STORAGE — MinIO
+# ============================================================
+storage:
+  minio:
+    endpoint: http://localhost:9000
+    access-key: minioadmin          # usuario por defecto de MinIO
+    secret-key: minioadmin          # contraseña por defecto de MinIO
+    bucket: ms-clasificator-dev     # se crea automáticamente si no existe
+
+# ============================================================
+# LOGGING EXTRA EN DEV
+# ============================================================
+logging:
+  level:
+    Backend.ms_clasificator: DEBUG
+    io.minio: INFO

@@ -1,0 +1,50 @@
+# ============================================================
+# PERFIL PROD — AWS S3 o Cloudflare R2
+# Actívalo con: SPRING_PROFILES_ACTIVE=prod
+# Las credenciales van SIEMPRE en variables de entorno o secrets manager.
+# NUNCA hardcodear credentials aquí.
+# ============================================================
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 15MB
+
+# ============================================================
+# STORAGE — AWS S3
+# ============================================================
+storage:
+  s3:
+    access-key: ${AWS_ACCESS_KEY_ID}           # Variable de entorno obligatoria
+    secret-key: ${AWS_SECRET_ACCESS_KEY}       # Variable de entorno obligatoria
+    region: us-east-1                          # Cambia según tu región
+    bucket: ${S3_BUCKET_NAME:ms-clasificator}  # Defaultea a ms-clasificator
+    # endpoint: ""                             # Dejar vacío para AWS S3 nativo
+    public-bucket: false                       # true = URLs directas | false = pre-signed
+    public-base-url: ""                        # Solo si public-bucket=true
+    presigned-url-expiry-hours: 24             # Tiempo de vida de URLs pre-signed
+
+# ============================================================
+# STORAGE — Cloudflare R2 (descomentar y usar en vez de S3)
+# ============================================================
+# storage:
+#   s3:
+#     access-key: ${R2_ACCESS_KEY_ID}
+#     secret-key: ${R2_SECRET_ACCESS_KEY}
+#     region: auto                             # R2 usa "auto" como región
+#     bucket: ${R2_BUCKET_NAME:ms-clasificator}
+#     endpoint: https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+#     public-bucket: true                      # R2 soporta dominio público custom
+#     public-base-url: https://images.tu-dominio.com
+#     presigned-url-expiry-hours: 24
+
+logging:
+  level:
+    Backend.ms_clasificator: INFO
+    software.amazon.awssdk: WARN
