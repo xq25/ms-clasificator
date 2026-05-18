@@ -145,6 +145,13 @@ public class UIStateService {
                 return ApiResponse.error("El diagnóstico médico del estado UI debe ser un sub-diagnóstico del diagnóstico asociado a la configuración UI, No podemos clasificar un diagnostico con un diagnostico que no es su subdiagnostico" );
             }
 
+            // Validar que no exista ya un uiState con ese mismo medicalDianostic para esa uiConfig
+            List<UIState> existingStates = this.uiStateRepository.findByUiConfig_Id(uiConfig.getId());
+            boolean duplicateDiagnostic = existingStates.stream()                    .anyMatch(state -> state.getMedicalDiagnostic().getId().equals(medicalDiagnostic.getId()));
+            if (duplicateDiagnostic){
+                return ApiResponse.error("Ya existe un estado UI para esta configuración con el mismo diagnóstico médico, No puede haber dos estados con el mismo diagnostico para una misma configuracion" );
+            }
+
             UIState uiState = uiStateMappers.toEntity(createUIStateDTO);
             uiState.setUiConfig(uiConfig);
             uiState.setMedicalDiagnostic(medicalDiagnostic);
@@ -194,6 +201,13 @@ public class UIStateService {
             // Validar que el diagnostico asignado sea un subDiagnostico del diagnostico asociado a la configuracion
             if (!this.medicalDiagnosticRepository.existsByIdAndParentDiagnostic_Id( medicalDiagnostic.getId(), configDiagnosticId)){
                 return ApiResponse.error("El diagnóstico médico del estado UI debe ser un sub-diagnóstico del diagnóstico asociado a la configuración UI, No podemos clasificar un diagnostico con un diagnostico que no es su subdiagnostico" );
+            }
+
+            // Validar que ya no exista un uiState con ese mismo medicalDianostic para esa uiConfig
+            List<UIState> existingStates = this.uiStateRepository.findByUiConfig_Id(uiConfig.getId());
+            boolean duplicateDiagnostic = existingStates.stream()                    .anyMatch(state -> state.getMedicalDiagnostic().getId().equals(medicalDiagnostic.getId()) && !state.getId().equals(uiState.getId()));
+            if (duplicateDiagnostic){
+                return ApiResponse.error("Ya existe un estado UI para esta configuración con el mismo diagnóstico médico, No puede haber dos estados con el mismo diagnostico para una misma configuracion" );
             }
 
             // Solo actualizamos el diagnóstico, la configuración UI no se modifica

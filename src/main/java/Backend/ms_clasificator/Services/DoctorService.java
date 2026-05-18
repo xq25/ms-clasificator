@@ -29,6 +29,9 @@ public class DoctorService {
     @Autowired
     private ImageDiagnosticRepository imageDiagnosticRepository;
 
+    @Autowired
+    private SecurityServices securityServices;
+
     /**
      * Obtener todos los doctores
      * @return Lista de todos los doctores
@@ -94,6 +97,13 @@ public class DoctorService {
             // Validar que no exista doctor con el mismo código
             if (doctorRepository.findByCode(doctorCreateDTO.getCode()) != null) {
                 return ApiResponse.error("Ya existe un doctor con el código: " + doctorCreateDTO.getCode());
+            }
+
+            // Validar con ms-security que exista ese usuario
+            boolean exists = securityServices.existUserById(doctorCreateDTO.getUserId());
+
+            if (!exists) {
+                return ApiResponse.error("El usuario no existe con este user_id" + doctorCreateDTO.getUserId());
             }
 
             // Validar que no exista doctor con el mismo userId

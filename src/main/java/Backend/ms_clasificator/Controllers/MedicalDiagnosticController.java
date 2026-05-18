@@ -47,6 +47,17 @@ public class MedicalDiagnosticController {
         }
     }
 
+    @GetMapping("parentId/{parentId}")
+    public ResponseEntity<ApiResponse<List<MedicalDiagnostic>>> findByParentId(@PathVariable Integer parentId) {
+        ApiResponse<List<MedicalDiagnostic>> response = this.medicalDiagnosticService.findByParentDiagnosticId(parentId);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
     /**
      * Crear un nuevo diagnóstico médico
      * @param medicalDiagnosticCreateDTO DTO con datos de entrada

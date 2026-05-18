@@ -60,6 +60,16 @@ public class MedicalDiagnosticService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public ApiResponse<List<MedicalDiagnostic>> findByParentDiagnosticId(Integer parentDiagnosticId) {
+        try {
+            List<MedicalDiagnostic> diagnostics = medicalDiagnosticRepository.findByParentDiagnostic_Id(parentDiagnosticId);
+            return ApiResponse.success(diagnostics, "Diagnósticos médicos encontrados para el diagnóstico padre ID: " + parentDiagnosticId);
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar diagnósticos por ID de diagnóstico padre: " + ex.getMessage());
+        }
+    }
+
     /**
      * Crear un nuevo diagnóstico médico
      * @param medicalDiagnosticCreateDTO DTO con datos de entrada
@@ -194,10 +204,6 @@ public class MedicalDiagnosticService {
             // Validar que el sub-diagnóstico no tenga ya un padre diferente
             if (subDiagnostic.getParentDiagnostic() != null && !subDiagnostic.getParentDiagnostic().getId().equals(parentDiagnosticId)) {
                 throw new IllegalArgumentException("Este sub-diagnóstico ya está asignado a otro diagnóstico padre");
-            }
-            // Validar que un diagnostico no puede ser sub-diagnóstico de sí mismo (esto es para evitar ciclos en la jerarquía)
-            if (subDiagnosticId.equals(parentDiagnosticId)) {
-                throw  new IllegalArgumentException("Un diagnóstico no puede ser sub-diagnóstico de sí mismo");
             }
 
             // Asignar el padre al sub-diagnóstico

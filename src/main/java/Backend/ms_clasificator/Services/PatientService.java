@@ -27,6 +27,8 @@ public class PatientService {
     @Autowired
     private MedicalImgRepository medicalImgRepository;
 
+    @Autowired SecurityServices securityServices;
+
     /**
      * Obtener todos los pacientes
      * @return Lista de todos los pacientes
@@ -83,6 +85,13 @@ public class PatientService {
             // Validar que no exista paciente con el mismo documento
             if (patientRepository.findByDocument(patientCreateDTO.getDocument()) != null) {
                 return ApiResponse.error("Ya existe un paciente con el documento: " + patientCreateDTO.getDocument());
+            }
+
+            // Validar que exista este user_id en ms-security
+            boolean exist = this.securityServices.existUserById(patientCreateDTO.getUserId());
+
+            if(!exist){
+                return ApiResponse.error("No existe un usuario con id" + patientCreateDTO.getUserId());
             }
 
             // Validar que no exista paciente con el mismo userId
