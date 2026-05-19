@@ -31,7 +31,7 @@ import java.util.List;
  * Los demás endpoints siguen siendo JSON normal.
  */
 @RestController
-@RequestMapping("/medical-images")
+@RequestMapping("/api/medical-images")
 @RequiredArgsConstructor
 public class MedicalImageController {
 

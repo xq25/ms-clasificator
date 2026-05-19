@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/image-diagnostics")
+@RequestMapping("/api/image-diagnostics")
 public class ImageDiagnosticController {
 
     @Autowired

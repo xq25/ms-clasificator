@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/ui-states")
+@RequestMapping("/api/ui-states")
 public class UIStateController {
 
     @Autowired
