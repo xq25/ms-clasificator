@@ -1,165 +1,142 @@
 package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgCreateDTO;
-import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgUpdateDTO;
+import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgResponseDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
-import Backend.ms_clasificator.Models.Doctor;
-import Backend.ms_clasificator.Models.MedicalImg;
 import Backend.ms_clasificator.Services.MedicalImageService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+/**
+ * Controller actualizado para manejo de imágenes médicas con storage desacoplado.
+ *
+ * CAMBIO PRINCIPAL vs original:
+ * - El endpoint POST ahora recibe multipart/form-data en lugar de JSON.
+ * - El archivo va como @RequestPart("file") MultipartFile.
+ * - Los metadatos del DTO van como @RequestPart("data") o como @RequestParam individuales.
+ *
+ * Por qué multipart y no base64 en JSON:
+ * - Base64 en JSON infla el payload ~33% → más lento y más memoria.
+ * - Multipart es el estándar para file upload en HTTP.
+ * - Spring MVC lo maneja nativamente con MultipartFile.
+ *
+ * CONSUMES = multipart/form-data solo en el endpoint de upload.
+ * Los demás endpoints siguen siendo JSON normal.
+ */
 @RestController
 @RequestMapping("/medical-images")
+@RequiredArgsConstructor
 public class MedicalImageController {
 
-    @Autowired
-    private MedicalImageService medicalImageService;
+    private final MedicalImageService medicalImageService;
+
+    // =====================================================================
+    // UPLOAD — multipart/form-data
+    // =====================================================================
 
     /**
-     * Obtener todas las imágenes médicas
-     * @return Lista de todas las imágenes
+     * POST /medical-images/upload
+     *
+     * Ejemplo con curl:
+     * curl -X POST http://localhost:8081/medical-images/upload \
+     *   -F "file=@imagen.jpg;type=image/jpeg" \
+     *   -F "evaluationAreaId=1" \
+     *   -F "folder=diagnostics"
      */
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<MedicalImgResponseDTO>> upload(
+            @RequestPart("file") MultipartFile file,
+            @RequestParam("evaluationAreaId") Integer evaluationAreaId,
+            @RequestParam(value = "patientId", required = false) Integer patientId,
+            @RequestParam(value = "folder", defaultValue = "diagnostics") String folder) {
+
+        MedicalImgCreateDTO dto = MedicalImgCreateDTO.builder()
+                .evaluationAreaId(evaluationAreaId)
+                .patientId(patientId)
+                .folder(folder)
+                .build();
+
+        ApiResponse<MedicalImgResponseDTO> response = medicalImageService.uploadImage(file, dto);
+
+        return response.isSuccess()
+                ? ResponseEntity.status(HttpStatus.CREATED).body(response)
+                : ResponseEntity.badRequest().body(response);
+    }
+
+    // =====================================================================
+    // LECTURA
+    // =====================================================================
+
     @GetMapping("")
-    public List<MedicalImg> findAll() {
-        return medicalImageService.findAll();
+    public ResponseEntity<ApiResponse<List<MedicalImgResponseDTO>>> findAll() {
+        return ResponseEntity.ok(medicalImageService.findAll());
     }
 
-    /**
-     * Obtener una imagen médica por ID
-     * @param id ID de la imagen
-     * @return Imagen encontrada
-     */
     @GetMapping("{id}")
-    public ResponseEntity<ApiResponse<MedicalImg>> findById(@PathVariable Integer id) {
-        ApiResponse<MedicalImg> response = this.medicalImageService.findById(id);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<ApiResponse<MedicalImgResponseDTO>> findById(@PathVariable Integer id) {
+        ApiResponse<MedicalImgResponseDTO> response = medicalImageService.findById(id);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.badRequest().body(response);
     }
 
-    /**
-     * Obtener todas las imágenes médicas de un área de evaluación
-     * @param evaluationAreaId ID del área de evaluación
-     * @return ApiResponse con la lista de imágenes
-     */
     @GetMapping("area/{evaluationAreaId}")
-    public ResponseEntity<ApiResponse<List<MedicalImg>>> findByEvaluationAreaId(@PathVariable Integer evaluationAreaId) {
-        ApiResponse<List<MedicalImg>> response = medicalImageService.findByEvaluationAreaId(evaluationAreaId);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<ApiResponse<List<MedicalImgResponseDTO>>> findByEvaluationAreaId(
+            @PathVariable Integer evaluationAreaId) {
+        ApiResponse<List<MedicalImgResponseDTO>> response =
+                medicalImageService.findByEvaluationAreaId(evaluationAreaId);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.badRequest().body(response);
     }
 
-    /**
-     * Crear una nueva imagen médica
-     * @param medicalImgCreateDTO DTO con datos de entrada
-     * @return ApiResponse con el resultado
-     */
-    @PostMapping("")
-    public ResponseEntity<ApiResponse<MedicalImg>> create(@Valid @RequestBody MedicalImgCreateDTO medicalImgCreateDTO) {
-        ApiResponse<MedicalImg> response = medicalImageService.create(medicalImgCreateDTO);
+    // =====================================================================
+    // DELETE
+    // =====================================================================
 
-        if (response.isSuccess()) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * Actualizar una imagen médica existente
-     * @param id ID de la imagen a actualizar
-     * @param medicalImgUpdateDTO DTO con datos a actualizar
-     * @return ApiResponse con el resultado
-     */
-    @PutMapping("{id}")
-    public ResponseEntity<ApiResponse<MedicalImg>> update(@PathVariable Integer id, @Valid @RequestBody MedicalImgUpdateDTO medicalImgUpdateDTO) {
-        ApiResponse<MedicalImg> response = medicalImageService.update(id, medicalImgUpdateDTO);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * Eliminar una imagen médica
-     * @param id ID de la imagen a eliminar
-     * @return ApiResponse con el resultado
-     */
     @DeleteMapping("{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id) {
         ApiResponse<Void> response = medicalImageService.delete(id);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.badRequest().body(response);
     }
 
-    // ===== Relaciones con otras entidades =====
+    // =====================================================================
+    // RELACIONES
+    // =====================================================================
 
-    /**
-     * Asignar un paciente a una imagen médica
-     * @param medicalImgId ID de la imagen
-     * @param patientId ID del paciente
-     * @return ApiResponse con el resultado
-     */
     @PutMapping("{medicalImgId}/assign-patient/{patientId}")
-    public ResponseEntity<ApiResponse<MedicalImg>> assignPatient(@PathVariable Integer medicalImgId, @PathVariable Integer patientId) {
-        ApiResponse<MedicalImg> response = medicalImageService.assignPatient(medicalImgId, patientId);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<ApiResponse<MedicalImgResponseDTO>> assignPatient(
+            @PathVariable Integer medicalImgId, @PathVariable Integer patientId) {
+        ApiResponse<MedicalImgResponseDTO> response = medicalImageService.assignPatient(medicalImgId, patientId);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.badRequest().body(response);
     }
 
-    /**
-     * Remover un paciente de una imagen médica
-     * @param medicalImgId ID de la imagen
-     * @return ApiResponse con el resultado
-     */
     @DeleteMapping("{medicalImgId}/remove-patient")
-    public ResponseEntity<ApiResponse<MedicalImg>> removePatient(@PathVariable Integer medicalImgId) {
-        ApiResponse<MedicalImg> response = medicalImageService.removePatient(medicalImgId);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<ApiResponse<MedicalImgResponseDTO>> removePatient(@PathVariable Integer medicalImgId) {
+        ApiResponse<MedicalImgResponseDTO> response = medicalImageService.removePatient(medicalImgId);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.badRequest().body(response);
     }
 
-    /**
-     * Cambiar el área de evaluación de una imagen médica
-     * @param medicalImgId ID de la imagen
-     * @param evaluationAreaId ID del área de evaluación
-     * @return ApiResponse con el resultado
-     */
     @PutMapping("{medicalImgId}/change-evaluation-area/{evaluationAreaId}")
-    public ResponseEntity<ApiResponse<MedicalImg>> changeEvaluationArea(@PathVariable Integer medicalImgId, @PathVariable Integer evaluationAreaId) {
-        ApiResponse<MedicalImg> response = medicalImageService.changeEvaluationArea(medicalImgId, evaluationAreaId);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<ApiResponse<MedicalImgResponseDTO>> changeEvaluationArea(
+            @PathVariable Integer medicalImgId, @PathVariable Integer evaluationAreaId) {
+        ApiResponse<MedicalImgResponseDTO> response =
+                medicalImageService.changeEvaluationArea(medicalImgId, evaluationAreaId);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.badRequest().body(response);
     }
 }
