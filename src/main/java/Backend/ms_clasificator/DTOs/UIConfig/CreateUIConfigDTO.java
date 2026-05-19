@@ -15,4 +15,5 @@ public class CreateUIConfigDTO {
     @Min(message = "El ID del diagnosstico | enfermedad para la que esta diseñada la configuracion debe ser un numero positivo", value = 1)
     @NotNull(message = "El ID del diagnosstico | enfermedad para la que esta diseñada la configuracion no puede ser null")
     private Integer medicalDiagnosticId;
+
 }

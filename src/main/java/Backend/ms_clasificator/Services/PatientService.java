@@ -3,11 +3,13 @@ package Backend.ms_clasificator.Services;
 import Backend.ms_clasificator.DTOs.Patient.PatientCreateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.PatientMappers.PatientMapper;
+import Backend.ms_clasificator.Models.Doctor;
 import Backend.ms_clasificator.Models.MedicalImg;
 import Backend.ms_clasificator.Models.Patient;
 import Backend.ms_clasificator.Repositories.MedicalImgRepository;
 import Backend.ms_clasificator.Repositories.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -17,6 +19,7 @@ import java.util.List;
 
 @Service
 public class PatientService {
+
 
     @Autowired
     private PatientRepository patientRepository;
@@ -191,4 +194,6 @@ public class PatientService {
             return ApiResponse.error("Error al eliminar paciente: " + ex.getMessage());
         }
     }
+
+
 }

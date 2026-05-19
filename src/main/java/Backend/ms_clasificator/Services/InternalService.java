@@ -27,4 +27,16 @@ public class InternalService {
         }
         return validation;
     }
+
+    public boolean existRelationWithDoctor(String userId){
+        Doctor doctorRelation = this.theDoctorRepository.findByUserId(userId);
+        return doctorRelation != null;
+
+    }
+
+    public boolean existRelationWithPatient(String userId){
+        Patient patientRelation = this.thePatientRepository.findByUserId(userId);
+        return patientRelation != null;
+
+    }
 }

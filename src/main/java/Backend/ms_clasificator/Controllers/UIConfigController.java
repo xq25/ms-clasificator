@@ -64,6 +64,17 @@ public class UIConfigController {
         }
     }
 
+    @GetMapping("area/{evaluationAreaId}")
+    public ResponseEntity<ApiResponse<UIConfig>> findByEvaluationAreaId(@PathVariable Integer evaluationAreaId){
+        ApiResponse<UIConfig> response = this.uiConfigService.findByEvaluationAreaId(evaluationAreaId);
+
+        if (response.isSuccess()){
+            return ResponseEntity.ok(response);
+        }else{
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
     /**
      * Crear una nueva configuración UI
      * @param createUIConfigDTO DTO con datos de entrada
@@ -111,6 +122,22 @@ public class UIConfigController {
         } else {
             return ResponseEntity.badRequest().body(response);
         }
+    }
+
+    @PutMapping("{uiConfigId}/evaluation-area/{evaluationAreaId}")
+    public ResponseEntity<ApiResponse<UIConfig>> assignEvaluationArea(@PathVariable Integer uiConfigId, @PathVariable Integer evaluationAreaId) {
+        ApiResponse<UIConfig> response = uiConfigService.assingToEvaluationArea(uiConfigId, evaluationAreaId);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.badRequest().body(response);
+    }
+
+    @PutMapping("removeFromArea/{uiConfigId}")
+    public ResponseEntity<ApiResponse<UIConfig>> removeFromEvaluationArea(@PathVariable Integer uiConfigId) {
+        ApiResponse<UIConfig> response = uiConfigService.removeFromEvaluationArea(uiConfigId);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.badRequest().body(response);
     }
 
 }

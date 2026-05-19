@@ -34,4 +34,7 @@ public class UIConfig {
     @JsonIgnore
     private List<UIState> uiStates;
 
+    @Column(name = "evaluation_area_id")
+    private Integer evaluationAreaId;
+
 }

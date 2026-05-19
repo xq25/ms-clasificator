@@ -9,6 +9,7 @@ import Backend.ms_clasificator.Models.ImageDiagnostic;
 import Backend.ms_clasificator.Repositories.DoctorRepository;
 import Backend.ms_clasificator.Repositories.ImageDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -194,4 +195,6 @@ public class DoctorService {
             return ApiResponse.error("Error al eliminar doctor: " + ex.getMessage());
         }
     }
+
+
 }

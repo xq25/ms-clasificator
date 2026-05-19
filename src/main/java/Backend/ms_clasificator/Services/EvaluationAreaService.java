@@ -6,9 +6,10 @@ import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.EvaluationAreaMappers.EvaluationAreaMapper;
 import Backend.ms_clasificator.Models.EvaluationArea;
 import Backend.ms_clasificator.Models.MedicalImg;
-import Backend.ms_clasificator.Models.Patient;
+import Backend.ms_clasificator.Models.UIConfig;
 import Backend.ms_clasificator.Repositories.EvaluationAreaRepository;
 import Backend.ms_clasificator.Repositories.MedicalImgRepository;
+import Backend.ms_clasificator.Repositories.UIConfigRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,9 @@ public class EvaluationAreaService {
 
     @Autowired
     private MedicalImgRepository medicalImgRepository;
+
+    @Autowired
+    private UIConfigRepository uiConfigRepository;
 
 
     /**
@@ -144,6 +148,11 @@ public class EvaluationAreaService {
             List<MedicalImg> medicalImgs = this.medicalImgRepository.findByEvaluationAreaId(id);
             if (!medicalImgs.isEmpty()) {
                 return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene imágenes médicas asociadas");
+            }
+            // Validamos que no tenga una configuracionUI asociada
+            UIConfig uiConfig = this.uiConfigRepository.findByEvaluationAreaId(id);
+            if (uiConfig != null) {
+                return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene una configuración UI asociada");
             }
 
             evaluationAreaRepository.delete(evaluationArea);

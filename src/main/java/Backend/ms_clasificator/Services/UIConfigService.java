@@ -4,11 +4,11 @@ import Backend.ms_clasificator.DTOs.UIConfig.CreateUIConfigDTO;
 import Backend.ms_clasificator.DTOs.UIConfig.UpdateUIConfigDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.UIConfig.UIConfigMappers;
+import Backend.ms_clasificator.Models.EvaluationArea;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import Backend.ms_clasificator.Models.UIConfig;
-import Backend.ms_clasificator.Models.UIState;
+import Backend.ms_clasificator.Repositories.EvaluationAreaRepository;
 import Backend.ms_clasificator.Repositories.MedicalDiagnosticRepository;
-import Backend.ms_clasificator.Repositories.UIStateRepository;
 import Backend.ms_clasificator.Repositories.UIConfigRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class UIConfigService {
     private MedicalDiagnosticRepository medicalDiagnosticRepository;
 
     @Autowired
-    private UIStateRepository uiStateRepository;
+    private EvaluationAreaRepository evaluationAreaRepository;
 
     /**
      * Obtener todas las configuraciones UI
@@ -56,6 +56,20 @@ public class UIConfigService {
         } catch (Exception ex) {
             return ApiResponse.error("Error al buscar configuración por ID: " + ex.getMessage());
         }
+    }
+
+    @Transactional
+    public ApiResponse<UIConfig> findByEvaluationAreaId(Integer evaluationAreaId){
+        // Validamos que el area de evaluacion exista
+        EvaluationArea evaluationArea = this.evaluationAreaRepository.findById(evaluationAreaId).orElse(null);
+        if (evaluationArea == null){
+            return ApiResponse.error("Area de Evaluacion no encontrada con ID: " + evaluationAreaId);
+        }
+        UIConfig uiConfig = this.uiConfigRepository.findByEvaluationAreaId(evaluationAreaId);
+        if(uiConfig == null){
+            return ApiResponse.error("No se encontró una configuración UI asociada al área de evaluación con ID: " + evaluationAreaId);
+        }
+        return ApiResponse.success(uiConfig, "Configuración UI encontrada para el área de evaluación con ID: " + evaluationAreaId);
     }
 
     /**
@@ -189,5 +203,49 @@ public class UIConfigService {
         }
     }
 
+    public ApiResponse<UIConfig> assingToEvaluationArea(Integer uiConfigId, Integer evaluationAreaId) {
+        try {
+            UIConfig uiConfig = uiConfigRepository.findById(uiConfigId)
+                    .orElseThrow(() -> new IllegalArgumentException("Configuración UI no encontrada con ID: " + uiConfigId));
+
+            // Validamos que el area al que se va asignar dicha configuracion existe
+            EvaluationArea evaluationArea = this.evaluationAreaRepository.findById(evaluationAreaId).orElse(null);
+            if (evaluationArea == null){
+                return ApiResponse.error("Area de Evaluacion no encontrada con ID: " + evaluationAreaId);
+            }
+
+            uiConfig.setEvaluationAreaId(evaluationAreaId);
+            UIConfig updated = uiConfigRepository.save(uiConfig);
+
+            return ApiResponse.success(updated, "Configuración UI asignada exitosamente al área de evaluación");
+
+
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al asignar configuración UI al área de evaluación: " + ex.getMessage());
+        }
+    }
+
+    public ApiResponse<UIConfig> removeFromEvaluationArea(Integer uiConfigId) {
+        try {
+            UIConfig uiConfig = uiConfigRepository.findById(uiConfigId)
+                    .orElseThrow(() -> new IllegalArgumentException("Configuración UI no encontrada con ID: " + uiConfigId));
+            // Validamos que si tenga Area de evaluacion asignada
+            if (uiConfig.getEvaluationAreaId() == null){
+                return ApiResponse.error("La configuración UI con ID: " + uiConfigId + " no tiene un área de evaluación asignada que remover");
+            }
+
+            uiConfig.setEvaluationAreaId(null);
+            UIConfig updated = uiConfigRepository.save(uiConfig);
+
+            return ApiResponse.success(updated, "Configuración UI desvinculada exitosamente del área de evaluación");
+
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al desvincular configuración UI del área de evaluación: " + ex.getMessage());
+        }
+    }
 
 }
