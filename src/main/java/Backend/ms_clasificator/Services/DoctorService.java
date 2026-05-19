@@ -83,6 +83,22 @@ public class DoctorService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public ApiResponse<Doctor> findByUserId(String userId) {
+        try{
+            Doctor doctor =  doctorRepository.findByUserId(userId);
+
+            if (doctor == null){
+                throw new IllegalArgumentException("Doctor no encontrado con userId: " + userId);
+            }
+            return ApiResponse.success(doctor, "Doctor encontrado exitosamente");
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar doctor: " + ex.getMessage());
+        }
+    }
+
     /**
      * Crear un nuevo doctor
      * @param doctorCreateDTO DTO con datos de entrada

@@ -36,6 +36,17 @@ public class DoctorController {
         }
     }
 
+    @GetMapping("user-id/{userId}")
+    public ResponseEntity<ApiResponse<Doctor>> findByUserId(@PathVariable String userId){
+        ApiResponse<Doctor> response = this.doctorService.findByUserId(userId);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
     @GetMapping("code/{code}")
     public ResponseEntity<ApiResponse<Doctor>> findByCode(@PathVariable String code){
         ApiResponse<Doctor> response = this.doctorService.findByCode(code);

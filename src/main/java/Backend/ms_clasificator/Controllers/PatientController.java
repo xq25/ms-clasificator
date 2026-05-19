@@ -45,6 +45,17 @@ public class PatientController {
         }
     }
 
+    @GetMapping("user-id/{userId}")
+    public ResponseEntity<ApiResponse<Patient>> findByUserId(@PathVariable String userId){
+        ApiResponse<Patient> response = patientService.findByUserId(userId);
+
+        if(response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
     /**
      * Obtener un paciente por documento
      * @param document Documento del paciente

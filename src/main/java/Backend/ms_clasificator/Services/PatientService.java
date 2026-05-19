@@ -71,6 +71,19 @@ public class PatientService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public ApiResponse<Patient> findByUserId(String userId) {
+        try {
+            Patient patient = patientRepository.findByUserId(userId);
+            if (patient == null) {
+                return ApiResponse.error("No se encontro paciente con el userId: " + userId);
+            }
+            return ApiResponse.success(patient, "Paciente encontrado exitosamente");
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar paciente por userId: " + ex.getMessage());
+        }
+    }
+
     /**
      * Crear un nuevo paciente
      * @param patientCreateDTO DTO con datos de entrada
