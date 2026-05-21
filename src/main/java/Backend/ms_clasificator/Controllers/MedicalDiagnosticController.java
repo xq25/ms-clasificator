@@ -3,7 +3,6 @@ package Backend.ms_clasificator.Controllers;
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
-import Backend.ms_clasificator.Models.Doctor;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import Backend.ms_clasificator.Services.MedicalDiagnosticService;
 import jakarta.validation.Valid;

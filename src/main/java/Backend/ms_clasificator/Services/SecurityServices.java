@@ -16,17 +16,38 @@ public class SecurityServices {
     @Value("${ms.security.url}")
     private String securityUrl;
 
-    // Funcionalidad de comunicacion publicc a con nuestro otro ms para validar existencia de usuarios.
+    @Value("${ms.secret.key}")
+    private String secretKey;
+
+
+    // HEADERS CONFIG
+    private HttpEntity<Void> buildRequestEntity() {
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("secretKey", secretKey);
+
+        return new HttpEntity<>(headers);
+    }
+
+
+    // EXIST USER BY ID
     public boolean existUserById(String userId) {
 
         try {
 
-            String url = securityUrl + "/api/public/security/" + userId + "/exist";
+            String url =
+                    securityUrl +
+                            "/getway/security/api/" +
+                            userId +
+                            "/exist";
 
-            ResponseEntity<ApiResponse> response = restTemplate.getForEntity(
-                    url,
-                    ApiResponse.class
-            );
+            ResponseEntity<ApiResponse> response =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.GET,
+                            buildRequestEntity(),
+                            ApiResponse.class
+                    );
 
             if (response.getBody() != null) {
 
@@ -44,27 +65,23 @@ public class SecurityServices {
         }
     }
 
-    public boolean assignDefaultRole(String userId, String defaultRoleId) {
+    // EXIST USER BY EMAIL
+    public boolean existUserByEmail(String email) {
 
         try {
 
-            String url = securityUrl +
-                    "/api/public/security/user/" +
-                    userId +
-                    "/default-role/" +
-                    defaultRoleId;
+            String url =
+                    securityUrl +
+                            "/getway/security/api/user-exist/email/" +
+                            email;
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-            ResponseEntity<ApiResponse> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.PUT,
-                    entity,
-                    ApiResponse.class
-            );
+            ResponseEntity<ApiResponse> response =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.GET,
+                            buildRequestEntity(),
+                            ApiResponse.class
+                    );
 
             if (response.getBody() != null) {
 
@@ -76,6 +93,39 @@ public class SecurityServices {
             }
 
             return false;
+
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    // ASSIGN DEFAULT ROLE
+    /**Nosotros desde logica no conocemos los ids de los roles por defecto, nada mas las entidades que nos corresponden
+     * Por eso solo enviamos el key o name del role que queremos asignar, y el getway se encarga de resolverlo y asignarlo,
+     * si es que es un role permitido.
+     */
+    public boolean assignDefaultRole(String userId, String defaultRoleKey) {
+
+        try {
+
+            String url =
+                    securityUrl +
+                            "/getway/security/api/" +
+                            userId +
+                            "/assign-role/" +
+                            defaultRoleKey;
+
+            ResponseEntity<ApiResponse> response =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.POST,
+                            buildRequestEntity(),
+                            ApiResponse.class
+                    );
+
+            return response.getStatusCode().is2xxSuccessful()
+                    && response.getBody() != null
+                    && response.getBody().isSuccess();
 
         } catch (Exception ex) {
             return false;

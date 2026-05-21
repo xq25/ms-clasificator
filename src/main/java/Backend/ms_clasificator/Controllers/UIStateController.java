@@ -3,7 +3,6 @@ package Backend.ms_clasificator.Controllers;
 import Backend.ms_clasificator.DTOs.UIState.CreateUIStateDTO;
 import Backend.ms_clasificator.DTOs.UIState.UpdateUIStateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
-import Backend.ms_clasificator.Models.Doctor;
 import Backend.ms_clasificator.Models.UIState;
 import Backend.ms_clasificator.Services.UIStateService;
 import jakarta.validation.Valid;

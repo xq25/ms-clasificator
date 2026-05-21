@@ -4,15 +4,12 @@ import Backend.ms_clasificator.DTOs.Doctor.DoctorBaseDTO;
 import Backend.ms_clasificator.DTOs.Doctor.DoctorUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Models.Doctor;
-import Backend.ms_clasificator.Models.DoctorArea;
 import Backend.ms_clasificator.Services.DoctorService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.print.Doc;
 import java.util.List;
 
 @RestController

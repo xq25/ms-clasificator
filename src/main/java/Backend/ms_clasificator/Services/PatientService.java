@@ -3,13 +3,11 @@ package Backend.ms_clasificator.Services;
 import Backend.ms_clasificator.DTOs.Patient.PatientCreateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.PatientMappers.PatientMapper;
-import Backend.ms_clasificator.Models.Doctor;
 import Backend.ms_clasificator.Models.MedicalImg;
 import Backend.ms_clasificator.Models.Patient;
 import Backend.ms_clasificator.Repositories.MedicalImgRepository;
 import Backend.ms_clasificator.Repositories.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -115,9 +113,15 @@ public class PatientService {
                 return ApiResponse.error("Ya existe un paciente con el userId: " + patientCreateDTO.getUserId() + ". El userId debe ser único.");
             }
 
+            // Asignamos el rol por defecto a este paciente
+            boolean assingRole = this.securityServices.assignDefaultRole(patientCreateDTO.getUserId(), "patient");
+            String roleInfo = assingRole?"Rol 'patient' asignado correctamente al usuario.": "No se pudo asignar el rol 'doctor' al usuario.";
+
+
             Patient patient = patientMapper.toEntity(patientCreateDTO);
             Patient saved = patientRepository.save(patient);
-            return ApiResponse.success(saved, "Paciente creado exitosamente");
+
+            return ApiResponse.success(saved, "Paciente creado exitosamente. " + roleInfo);
 
         } catch (Exception ex) {
             return ApiResponse.error("Error al crear paciente: " + ex.getMessage());

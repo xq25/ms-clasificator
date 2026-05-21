@@ -4,7 +4,6 @@ import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgResponseDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Services.MedicalImageService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,17 +15,14 @@ import java.util.List;
 
 /**
  * Controller actualizado para manejo de imágenes médicas con storage desacoplado.
- *
  * CAMBIO PRINCIPAL vs original:
  * - El endpoint POST ahora recibe multipart/form-data en lugar de JSON.
  * - El archivo va como @RequestPart("file") MultipartFile.
  * - Los metadatos del DTO van como @RequestPart("data") o como @RequestParam individuales.
- *
  * Por qué multipart y no base64 en JSON:
  * - Base64 en JSON infla el payload ~33% → más lento y más memoria.
  * - Multipart es el estándar para file upload en HTTP.
  * - Spring MVC lo maneja nativamente con MultipartFile.
- *
  * CONSUMES = multipart/form-data solo en el endpoint de upload.
  * Los demás endpoints siguen siendo JSON normal.
  */
@@ -43,9 +39,8 @@ public class MedicalImageController {
 
     /**
      * POST /medical-images/upload
-     *
      * Ejemplo con curl:
-     * curl -X POST http://localhost:8081/medical-images/upload \
+     * curl -X POST http://localhost:8081/medical-images/upload
      *   -F "file=@imagen.jpg;type=image/jpeg" \
      *   -F "evaluationAreaId=1" \
      *   -F "folder=diagnostics"

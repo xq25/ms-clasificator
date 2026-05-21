@@ -128,10 +128,16 @@ public class DoctorService {
             if (doctorByUserId != null) {
                 return ApiResponse.error("Ya existe un doctor con el userId: " + doctorCreateDTO.getUserId() + ". El userId debe ser único.");
             }
+            // Asignamos el rol a este usuario para que pueda acceder a los endpoints de doctor
+            boolean roleAssing = this.securityServices.assignDefaultRole(doctorCreateDTO.getUserId(), "doctor");
+            String roleInfo = roleAssing ? "Rol 'doctor' asignado correctamente al usuario." : "No se pudo asignar el rol 'doctor' al usuario.";
+
 
             Doctor doctor = doctorMapper.toEntity(doctorCreateDTO);
             Doctor saved = doctorRepository.save(doctor);
-            return ApiResponse.success(saved, "Doctor creado exitosamente");
+
+            // Si hay algun error debemos de mostrarlo, pero realmente para llegar a este punto el unico fallo seria para asignar el rol, por los cual solo agregariamos al mensaje que no se pudo asignar el role
+            return ApiResponse.success(saved, "Doctor creado exitosamente. " + roleInfo);
 
         } catch (Exception ex) {
             return ApiResponse.error("Error al crear doctor: " + ex.getMessage());

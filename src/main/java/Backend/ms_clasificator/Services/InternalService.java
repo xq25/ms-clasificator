@@ -1,6 +1,5 @@
 package Backend.ms_clasificator.Services;
 
-import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Models.Doctor;
 import Backend.ms_clasificator.Models.Patient;
 import Backend.ms_clasificator.Repositories.DoctorRepository;
