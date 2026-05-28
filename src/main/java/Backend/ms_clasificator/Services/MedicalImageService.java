@@ -9,7 +9,7 @@ import Backend.ms_clasificator.Models.Patient;
 import Backend.ms_clasificator.Repositories.EvaluationAreaRepository;
 import Backend.ms_clasificator.Repositories.MedicalImgRepository;
 import Backend.ms_clasificator.Repositories.PatientRepository;
-import Backend.ms_clasificator.domain.port.ImageStoragePort;
+import Backend.ms_clasificator.Services.storage.ImageStorageService;
 import Backend.ms_clasificator.exceptions.ImageStorageException;
 import Backend.ms_clasificator.exceptions.InvalidImageTypeException;
 import lombok.RequiredArgsConstructor;
@@ -52,7 +52,7 @@ public class MedicalImageService {
     private final MedicalImgRepository medicalImgRepository;
     private final EvaluationAreaRepository evaluationAreaRepository;
     private final PatientRepository patientRepository;
-    private final ImageStoragePort imageStoragePort;  // ← INYECCIÓN POR INTERFAZ
+    private final ImageStorageService imageStorageService;  // ← INYECCIÓN POR INTERFAZ
 
     private static final String DEFAULT_FOLDER = "diagnostics";
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -94,14 +94,14 @@ public class MedicalImageService {
                     : DEFAULT_FOLDER;
 
             // 1. Subir al storage — si falla, la excepción se propaga y no toca la BD
-            String imageKey = imageStoragePort.uploadImage(file, folder);
+            String imageKey = imageStorageService.uploadImage(file, folder);
             log.info("[MedicalImageService] Imagen subida. provider={}, key={}",
-                    imageStoragePort.getProviderName(), imageKey);
+                    imageStorageService.getProviderName(), imageKey);
 
             // 2. Persistir en MySQL solo si el upload fue exitoso
             MedicalImg medicalImg = MedicalImg.builder()
                     .imageKey(imageKey)
-                    .provider(imageStoragePort.getProviderName())
+                    .provider(imageStorageService.getProviderName())
                     .contentType(file.getContentType())
                     .fileSize(file.getSize())
                     .evaluationAreaId(evaluationArea.getId())
@@ -185,7 +185,7 @@ public class MedicalImageService {
                     .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + id));
 
             // 1. Primero eliminar del storage
-            imageStoragePort.deleteImage(img.getImageKey());
+            imageStorageService.deleteImage(img.getImageKey());
             log.info("[MedicalImageService] Imagen eliminada del storage: key={}", img.getImageKey());
 
             // 2. Luego eliminar de la BD
@@ -284,7 +284,7 @@ public class MedicalImageService {
     private MedicalImgResponseDTO buildResponseDTO(MedicalImg img) {
         String imageUrl = null;
         try {
-            imageUrl = imageStoragePort.generatePublicUrl(img.getImageKey());
+            imageUrl = imageStorageService.generatePublicUrl(img.getImageKey());
         } catch (Exception e) {
             log.warn("[MedicalImageService] No se pudo generar URL para key={}: {}", img.getImageKey(), e.getMessage());
             // No fallamos la respuesta entera solo porque no se pudo generar la URL

@@ -1,6 +1,5 @@
-//package Backend.ms_clasificator.infrastructure.storage.s3;
-//
-//import Backend.ms_clasificator.domain.port.ImageStoragePort;
+package Backend.ms_clasificator.Services.storage;
+
 //import Backend.ms_clasificator.exceptions.ImageStorageException;
 //import Backend.ms_clasificator.util.ImageStorageUtils;
 //import lombok.extern.slf4j.Slf4j;
@@ -15,36 +14,18 @@
 //import java.io.IOException;
 //import java.time.Duration;
 //
-///**
-// * Adaptador S3/R2 — implementación de producción del puerto ImageStoragePort.
-// *
-// * COMPATIBILIDAD:
-// * - AWS S3: solo configura la región y credenciales normales.
-// * - Cloudflare R2: configura endpoint customizado en StorageConfig.
-// *   R2 es 100% compatible con la API de S3 — solo cambia el endpoint URL.
-// *
-// * DECISIÓN ARQUITECTÓNICA — Por qué NO auto-crear buckets aquí:
-// * En producción los buckets se crean por IaC (Terraform/CDK).
-// * La app no debe tener permisos de creación de buckets en prod (principio
-// * de mínimo privilegio). Si el bucket no existe, falla rápido con error claro.
-// *
-// * DECISIÓN — URLs públicas vs pre-signed:
-// * Si el bucket es PÚBLICO → generamos URL directa sin pre-sign (más performante).
-// * Si el bucket es PRIVADO → pre-signed URLs con expiración (más seguro para médico).
-// * Controlado por el flag `storage.s3.public-bucket` en application-prod.yml.
-// */
 //@Slf4j
-//public class S3ImageStorageAdapter implements ImageStoragePort {
+//public class S3ImageStorageService implements ImageStorageService {
 //
 //    private final S3Client s3Client;
 //    private final S3Presigner s3Presigner;
 //    private final String bucketName;
 //    private final boolean isPublicBucket;
-//    private final String publicBaseUrl;  // Solo si isPublicBucket=true
+//    private final String publicBaseUrl;
 //    private final long presignedUrlExpiryHours;
 //    private static final String PROVIDER = "s3";
 //
-//    public S3ImageStorageAdapter(S3Client s3Client,
+//    public S3ImageStorageService(S3Client s3Client,
 //                                 S3Presigner s3Presigner,
 //                                 String bucketName,
 //                                 boolean isPublicBucket,
@@ -61,7 +42,7 @@
 //    @Override
 //    public String uploadImage(MultipartFile file, String folder) {
 //        ImageStorageUtils.validateImageType(file);
-//        ImageStorageUtils.validateImageSize(file, 10 * 1024 * 1024); // 10 MB
+//        ImageStorageUtils.validateImageSize(file, 10 * 1024 * 1024);
 //
 //        String imageKey = ImageStorageUtils.generateImageKey(file.getOriginalFilename(), folder);
 //
@@ -71,8 +52,6 @@
 //                    .key(imageKey)
 //                    .contentType(file.getContentType())
 //                    .contentLength(file.getSize())
-//                    // En imágenes médicas privadas: NO ponemos ACL public-read
-//                    // Si el bucket es público, ya hereda eso del bucket policy
 //                    .build();
 //
 //            s3Client.putObject(request, RequestBody.fromInputStream(
@@ -92,12 +71,10 @@
 //
 //    @Override
 //    public String generatePublicUrl(String imageKey) {
-//        // Opción 1: bucket público — URL directa, sin expiración
 //        if (isPublicBucket) {
 //            return publicBaseUrl + "/" + imageKey;
 //        }
 //
-//        // Opción 2: bucket privado — URL pre-signed con expiración
 //        try {
 //            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
 //                    .signatureDuration(Duration.ofHours(presignedUrlExpiryHours))
