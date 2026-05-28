@@ -1,6 +1,5 @@
-package Backend.ms_clasificator.infrastructure.storage.minio;
+package Backend.ms_clasificator.Services.storage;
 
-import Backend.ms_clasificator.domain.port.ImageStoragePort;
 import Backend.ms_clasificator.exceptions.ImageStorageException;
 import Backend.ms_clasificator.util.ImageStorageUtils;
 import io.minio.*;
@@ -11,25 +10,15 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Adaptador MinIO — implementación local del puerto ImageStoragePort.
- *
- * DECISIÓN ARQUITECTÓNICA:
- * Esta clase SOLO existe en el perfil "dev". Spring no la instancia en prod.
- * Se registra como bean condicionalmente desde StorageConfig.
- *
- * MinIO es API-compatible con S3, así que si mañana quieres apuntar a S3
- * en dev también, solo cambias el endpoint en application-dev.yml.
- */
 @Slf4j
-public class MinioImageStorageAdapter implements ImageStoragePort {
+public class MinioImageStorageService implements ImageStorageService {
 
     private final MinioClient minioClient;
     private final String bucketName;
     private final String publicEndpoint;
     private static final String PROVIDER = "minio";
 
-    public MinioImageStorageAdapter(MinioClient minioClient,
+    public MinioImageStorageService(MinioClient minioClient,
                                     String bucketName,
                                     String publicEndpoint) {
         this.minioClient = minioClient;
@@ -41,7 +30,7 @@ public class MinioImageStorageAdapter implements ImageStoragePort {
     @Override
     public String uploadImage(MultipartFile file, String folder) {
         ImageStorageUtils.validateImageType(file);
-        ImageStorageUtils.validateImageSize(file, 10 * 1024 * 1024); // 10 MB
+        ImageStorageUtils.validateImageSize(file, 10 * 1024 * 1024);
 
         String imageKey = ImageStorageUtils.generateImageKey(file.getOriginalFilename(), folder);
 
@@ -66,8 +55,6 @@ public class MinioImageStorageAdapter implements ImageStoragePort {
     @Override
     public String generatePublicUrl(String imageKey) {
         try {
-            // Pre-signed URL válida por 7 días.
-            // En dev con MinIO local, esto te da acceso directo.
             String url = minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Method.GET)
@@ -122,13 +109,6 @@ public class MinioImageStorageAdapter implements ImageStoragePort {
         return PROVIDER;
     }
 
-    /**
-     * Crea el bucket si no existe.
-     * En dev esto es conveniente para no tener que configurar MinIO manualmente.
-     *
-     * DECISIÓN: En producción (S3Adapter) NO hacemos esto — los buckets
-     * en AWS se crean por IaC (Terraform/CloudFormation), no por la app.
-     */
     private void ensureBucketExists() {
         try {
             boolean exists = minioClient.bucketExists(

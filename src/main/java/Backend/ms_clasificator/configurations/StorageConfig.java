@@ -1,8 +1,8 @@
 package Backend.ms_clasificator.configurations;
 
-import Backend.ms_clasificator.domain.port.ImageStoragePort;
-import Backend.ms_clasificator.infrastructure.storage.minio.MinioImageStorageAdapter;
-//import Backend.ms_clasificator.infrastructure.storage.s3.S3ImageStorageAdapter;
+import Backend.ms_clasificator.Services.storage.ImageStorageService;
+import Backend.ms_clasificator.Services.storage.MinioImageStorageService;
+//import Backend.ms_clasificator.Services.storage.S3ImageStorageService;
 import io.minio.MinioClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,31 +16,11 @@ import org.springframework.context.annotation.Profile;
 //import software.amazon.awssdk.services.s3.S3Configuration;
 //import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
-import java.net.URI;
+//import java.net.URI;
 
-/**
- * Configuración de beans de storage.
- *
- * DECISIÓN ARQUITECTÓNICA — Por qué @Profile y no @ConditionalOnProperty:
- * Los profiles de Spring son el mecanismo idiomático para separar entornos.
- * application-dev.yml activa MinIO, application-prod.yml activa S3/R2.
- * El equipo solo cambia SPRING_PROFILES_ACTIVE=prod en el deployment.
- *
- * Si prefieres @ConditionalOnProperty (ej: storage.provider=minio),
- * también funciona — pero profiles es más explícito y menos propenso a error.
- *
- * MIGRACIÓN ENTRE PROVIDERS:
- * 1. Los beans están aquí — el resto del código usa ImageStoragePort.
- * 2. Cambiar de MinIO a S3: cambiar el profile activo. FIN.
- * 3. MedicalImageService no toca nada.
- */
 @Slf4j
 @Configuration
 public class StorageConfig {
-
-    // ============================================================
-    // PERFIL DEV — MinIO local
-    // ============================================================
 
     @Bean
     @Profile("dev")
@@ -58,18 +38,17 @@ public class StorageConfig {
 
     @Bean
     @Profile("dev")
-    public ImageStoragePort imageStoragePort(
+    public ImageStorageService imageStorageService(
             MinioClient minioClient,
             @Value("${storage.minio.bucket}") String bucket,
             @Value("${storage.minio.endpoint}") String endpoint) {
 
         log.info("[Storage] Provider activo: MinIO | bucket={}", bucket);
-        return new MinioImageStorageAdapter(minioClient, bucket, endpoint);
+        return new MinioImageStorageService(minioClient, bucket, endpoint);
     }
-}
 
     // ============================================================
-    // PERFIL PROD — AWS S3 o Cloudflare R2
+    // PERFIL PROD — AWS S3 o Cloudflare R2 (descomentar cuando se necesite)
     // ============================================================
 
 //    @Bean
@@ -86,12 +65,10 @@ public class StorageConfig {
 //                .credentialsProvider(StaticCredentialsProvider.create(credentials))
 //                .region(Region.of(region));
 //
-//        // Si hay endpoint custom → es Cloudflare R2 u otro S3-compatible
 //        if (!endpoint.isBlank()) {
 //            log.info("[Storage] Usando endpoint custom S3-compatible: {}", endpoint);
 //            builder
 //                    .endpointOverride(URI.create(endpoint))
-//                    // R2 requiere path-style para funcionar bien
 //                    .serviceConfiguration(S3Configuration.builder()
 //                            .pathStyleAccessEnabled(true)
 //                            .build());
@@ -123,7 +100,7 @@ public class StorageConfig {
 //
 //    @Bean
 //    @Profile("prod")
-//    public ImageStoragePort imageStoragePortProd(
+//    public ImageStorageService imageStorageServiceProd(
 //            S3Client s3Client,
 //            S3Presigner s3Presigner,
 //            @Value("${storage.s3.bucket}") String bucket,
@@ -132,6 +109,6 @@ public class StorageConfig {
 //            @Value("${storage.s3.presigned-url-expiry-hours:24}") long expiryHours) {
 //
 //        log.info("[Storage] Provider activo: S3/R2 | bucket={} | public={}", bucket, isPublicBucket);
-//        return new S3ImageStorageAdapter(s3Client, s3Presigner, bucket, isPublicBucket, publicBaseUrl, expiryHours);
+//        return new S3ImageStorageService(s3Client, s3Presigner, bucket, isPublicBucket, publicBaseUrl, expiryHours);
 //    }
-//}
+}
