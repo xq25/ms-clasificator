@@ -1,5 +1,6 @@
 package Backend.ms_clasificator.Interceptors;
 
+import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -37,7 +38,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
         String method = request.getMethod();
         String authHeader = request.getHeader("Authorization");
 
-        // Si no trae headers de autorización, lanzamos excepción
+        // Si NO trae headers de autorización, lanzamos excepción
         if (authHeader == null || authHeader.isEmpty()) {
             logger.warn("Token de autorización faltante para: {} {}", method, url);
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
@@ -50,51 +51,79 @@ public class SecurityInterceptor implements HandlerInterceptor {
         String token = authHeader.replace("Bearer ", "");
 
         try {
-            // Preparamos los datos de permiso a validar
+
+            // DATOS DE VALIDACIÓN
             Map<String, String> permissionData = new HashMap<>();
             permissionData.put("url", url);
             permissionData.put("method", method);
 
-            // Ruta o endpoint del Permission-Validation
+            // URL PARA VALIDACION
             String validationUrl = securityUrl + "/api/public/security/permissions-validation";
 
-            // Preparamos headers con el token y content-type
+            // HEADERS
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            //Agregamos el token al header a la peticion del otro microservicio
-            headers.set("Authorization", authHeader);
+            headers.set("Authorization", authHeader); // reenviamos JWT al MS Security
 
-            // Creamos la entidad de la petición con headers
-            HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(permissionData, headers);
+            // ENTITY
+            HttpEntity<Map<String, String>> requestEntity =
+                    new HttpEntity<>(permissionData, headers);
 
-        // Disparador de la peticion al otro ms.
-            // Hacemos la petición POST al servicio de seguridad PASANDO HEADERS
-            ResponseEntity<Boolean> responseEntity = restTemplate.exchange(
-                validationUrl,
-                HttpMethod.POST,
-                requestEntity,
-                Boolean.class
-            );
+            // REQUEST AL MS SECURITY
+            ResponseEntity<ApiResponse> responseEntity =
+                    restTemplate.exchange(
+                            validationUrl,
+                            HttpMethod.POST,
+                            requestEntity,
+                            ApiResponse.class
+                    );
 
-            Boolean isAuthorized = responseEntity.getBody();
+            // RESPONSE BODY
+            ApiResponse apiResponse = responseEntity.getBody();
 
-            if (isAuthorized != null && isAuthorized) {
-                logger.info("Acceso autorizado para: {} {}", method, url);
-                return true;
-            } else {
-                logger.warn("Permisos insuficientes para: {} {}", method, url);
-                response.setStatus(HttpStatus.FORBIDDEN.value());
+            if (apiResponse == null) {
+
+                logger.error("Respuesta vacía del MS Security");
+
+                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
                 response.setContentType("application/json");
-                response.getWriter().write("{\"message\": \"Permisos insuficientes\"}");
+
+                response.getWriter().write(
+                        "{\"message\": \"Respuesta inválida del servicio de seguridad\"}"
+                );
+
                 return false;
             }
 
+            // EXTRAER DATA
+            Boolean isAuthorized =
+                    (Boolean) apiResponse.getData();
+
+            // ACCESS GRANTED ( Acceso concedido)
+            if (Boolean.TRUE.equals(isAuthorized)) {
+
+                logger.info("Acceso autorizado para: {} {}", method, url);
+                return true;
+            }
+
+            // ACCESS DENIED ( Token Invalido o Permisos insuficientes )
+            logger.warn("{} para: {} {}", apiResponse.getMessage(), method, url);
+
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            response.setContentType("application/json");
+
+            response.getWriter().write("{\"message\": \"" + apiResponse.getMessage() + "\"}");
+            return false;
+
         } catch (Exception error) {
+
             logger.error("Error al validar permisos: {}", error.getMessage());
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType("application/json");
+
             response.getWriter().write("{\"message\": \"Error al validar permisos\"}");
             return false;
+
         }
     }
 }
