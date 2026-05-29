@@ -3,7 +3,6 @@ package Backend.ms_clasificator.Services;
 import Backend.ms_clasificator.DTOs.Patient.PatientCreateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.PatientMappers.PatientMapper;
-import Backend.ms_clasificator.Models.MedicalImg;
 import Backend.ms_clasificator.Models.Patient;
 import Backend.ms_clasificator.Repositories.MedicalImgRepository;
 import Backend.ms_clasificator.Repositories.PatientRepository;
@@ -179,13 +178,6 @@ public class PatientService {
         try {
             Patient patient = patientRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado con ID: " + id));
-
-            // Validamos que el paciente no tenga imagenes asociadas
-            List<MedicalImg> medicalImgs = this.medicalImgRepository.findByPatientId(id);
-            if (!medicalImgs.isEmpty()) {
-                return ApiResponse.error("No se puede eliminar el paciente porque tiene imagenes medicas asociadas");
-            }
-
 
             patientRepository.delete(patient);
             return ApiResponse.success("Paciente eliminado exitosamente");

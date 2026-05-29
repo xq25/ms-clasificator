@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.print.Doc;
 import java.util.List;
 
 @Service
@@ -65,7 +64,7 @@ public class DoctorAreaService {
     public ApiResponse<List<DoctorArea>> findByDoctorId(Integer doctorId) {
         try{
             //Validar que el id del doctor exista
-            Doctor doctor = this.doctorRepository.findById(doctorId)
+            this.doctorRepository.findById(doctorId)
                     .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + doctorId));
 
             List<DoctorArea> relations = this.doctorAreaRepository.findByDoctorId(doctorId);
@@ -88,7 +87,7 @@ public class DoctorAreaService {
     public ApiResponse<List<DoctorArea>> findByEvaluationAreaId(Integer evaluationAreaId) {
         try{
             //Validar que el id del doctor exista
-            EvaluationArea evaluationArea= this.evaluationAreaRepository.findById(evaluationAreaId)
+            this.evaluationAreaRepository.findById(evaluationAreaId)
                     .orElseThrow(() -> new IllegalArgumentException("Area de Evaluacion no encontrado con ID: " + evaluationAreaId));
 
             List<DoctorArea> relations = this.doctorAreaRepository.findByEvaluationAreaId(evaluationAreaId);

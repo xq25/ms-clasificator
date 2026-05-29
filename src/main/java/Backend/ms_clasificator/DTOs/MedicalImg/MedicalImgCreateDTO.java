@@ -25,11 +25,10 @@ import jakarta.validation.constraints.NotNull;
 @Builder
 public class MedicalImgCreateDTO {
 
-    @NotNull(message = "El ID del área de evaluación no puede ser nulo")
-    private Integer evaluationAreaId;
+    @NotNull(message = "El ID del tipo de imagen medica no puede ser nulo")
+    private Integer medicalImageTypeId;
 
-    // Opcional: puede crearse sin paciente y asignarse después
-    private Integer patientId;
+    private Integer clinicalRecordId;
 
     /**
      * Carpeta lógica donde se almacenará en el storage.

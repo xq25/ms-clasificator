@@ -6,17 +6,17 @@ import java.util.List;
 
 public interface MedicalImgRepository extends JpaRepository<MedicalImg, Integer> {
 
-    /**
-     * Buscar todas las imágenes médicas por evaluation_area_id
-     * @param evaluationAreaId ID del área de evaluación
-     * @return Lista de imágenes médicas del área
-     */
-    List<MedicalImg> findByEvaluationAreaId(Integer evaluationAreaId);
 
-    /** Buscar todas las imagenes de un paciente en especifico
-     * @param patientId ID del paciente
-     * @return Lista de imagenes del paciente
+    /** Buscar todas las imágenes médicas por medical_image_type_id
+     * @param medicalImageTypeId ID del tipo de imagen médica
+     * @return Lista de imágenes médicas del tipo
      * */
-    List<MedicalImg> findByPatientId(Integer patientId);
+    List<MedicalImg> findByMedicalImageTypeId(Integer medicalImageTypeId);
+
+    /** Buscar todas las imágenes médicas por evaluation_area_id
+     * @param evaluationAreaId ID del área de evaluación
+     * @return Lista de imágenes médicas de la área
+     * */
+    List<MedicalImg> findByEvaluationAreaId(Integer evaluationAreaId);
 
 }

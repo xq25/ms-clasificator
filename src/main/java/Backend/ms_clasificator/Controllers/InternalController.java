@@ -40,7 +40,7 @@ public class InternalController {
 
     @PostMapping("register/doctor")
     public boolean registerDoctor(@RequestBody DoctorBaseDTO doctorBaseDTO){
-        ApiResponse<Doctor> registerResponse =  this.doctorService.create(doctorBaseDTO);
+        ApiResponse<Backend.ms_clasificator.DTOs.Doctor.DoctorResponseDTO> registerResponse =  this.doctorService.create(doctorBaseDTO);
         return registerResponse.isSuccess();
     }
 

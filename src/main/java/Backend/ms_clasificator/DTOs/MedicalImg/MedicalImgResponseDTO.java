@@ -30,8 +30,7 @@ public class MedicalImgResponseDTO {
     private String imageUrl;       // URL generada on-demand — esta es la que el frontend usa
     private String provider;       // "minio" | "s3" | "r2"
     private String contentType;
+    private String medicalImageType;
     private Long fileSize;
-    private Integer evaluationAreaId;
-    private Integer patientId;
     private LocalDateTime createdAt;
 }

@@ -3,12 +3,14 @@ package Backend.ms_clasificator.Services;
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgResponseDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
-import Backend.ms_clasificator.Models.EvaluationArea;
+import Backend.ms_clasificator.Models.ClinicalRecord;
+import Backend.ms_clasificator.Models.ImageDiagnostic;
+import Backend.ms_clasificator.Models.MedicalImageType;
 import Backend.ms_clasificator.Models.MedicalImg;
-import Backend.ms_clasificator.Models.Patient;
-import Backend.ms_clasificator.Repositories.EvaluationAreaRepository;
+import Backend.ms_clasificator.Repositories.ClinicalRecordRepository;
+import Backend.ms_clasificator.Repositories.ImageDiagnosticRepository;
+import Backend.ms_clasificator.Repositories.MedicalImageTypeRepository;
 import Backend.ms_clasificator.Repositories.MedicalImgRepository;
-import Backend.ms_clasificator.Repositories.PatientRepository;
 import Backend.ms_clasificator.Services.storage.ImageStorageService;
 import Backend.ms_clasificator.exceptions.ImageStorageException;
 import Backend.ms_clasificator.exceptions.InvalidImageTypeException;
@@ -50,9 +52,11 @@ import java.util.List;
 public class MedicalImageService {
 
     private final MedicalImgRepository medicalImgRepository;
-    private final EvaluationAreaRepository evaluationAreaRepository;
-    private final PatientRepository patientRepository;
-    private final ImageStorageService imageStorageService;  // ← INYECCIÓN POR INTERFAZ
+    private final MedicalImageTypeRepository medicalImageTypeRepository;
+    private final ImageDiagnosticRepository imageDiagnosticRepository;
+    private final ClinicalRecordRepository clinicalRecordRepository;
+
+    private final ImageStorageService imageStorageService;
 
     private static final String DEFAULT_FOLDER = "diagnostics";
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -74,17 +78,18 @@ public class MedicalImageService {
                 return ApiResponse.error("El archivo de imagen no puede estar vacío");
             }
 
-            // Validar que existe el área de evaluación
-            EvaluationArea evaluationArea = evaluationAreaRepository.findById(dto.getEvaluationAreaId())
+            // Validar que existe el tipo de imagen medica
+            MedicalImageType medicalImageType = medicalImageTypeRepository.findById(dto.getMedicalImageTypeId())
                     .orElseThrow(() -> new IllegalArgumentException(
-                            "Área de evaluación no encontrada con ID: " + dto.getEvaluationAreaId()
+                            "Tipo de imagen medica no encontrada con ID: " + dto.getMedicalImageTypeId()
                     ));
 
-            // Validar paciente si viene
-            if (dto.getPatientId() != null) {
-                patientRepository.findById(dto.getPatientId())
+            ClinicalRecord clinicalRecord = null;
+            // Validar que exista el clinical Record
+            if (dto.getClinicalRecordId() != null) {
+                clinicalRecord = this.clinicalRecordRepository.findById(dto.getClinicalRecordId())
                         .orElseThrow(() -> new IllegalArgumentException(
-                                "Paciente no encontrado con ID: " + dto.getPatientId()
+                                "Clinical record no encontrado con ID: " + dto.getClinicalRecordId()
                         ));
             }
 
@@ -104,8 +109,8 @@ public class MedicalImageService {
                     .provider(imageStorageService.getProviderName())
                     .contentType(file.getContentType())
                     .fileSize(file.getSize())
-                    .evaluationAreaId(evaluationArea.getId())
-                    .patientId(dto.getPatientId())
+                    .medicalImageType(medicalImageType)
+                    .clinicalRecord(clinicalRecord) // Se puede asociar después, no es obligatorio en la creación
                     .build();
 
             MedicalImg saved = medicalImgRepository.save(medicalImg);
@@ -127,10 +132,7 @@ public class MedicalImageService {
         }
     }
 
-    // =====================================================================
     // LECTURAS
-    // =====================================================================
-
     @Transactional(readOnly = true)
     public ApiResponse<MedicalImgResponseDTO> findById(Integer id) {
         try {
@@ -145,6 +147,27 @@ public class MedicalImageService {
     }
 
     @Transactional(readOnly = true)
+    public ApiResponse<List<MedicalImgResponseDTO>> findByMedicalImageType(Integer medicalImageTypeId) {
+        try {
+            // Validamos que el tipo de imagen medica eixsta
+            // Validar que existe el tipo de imagen medica
+            MedicalImageType medicalImageType = medicalImageTypeRepository.findById(medicalImageTypeId)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Tipo de imagen medica no encontrada con ID: " + medicalImageTypeId
+                    ));
+
+            List<MedicalImgResponseDTO> dtos = medicalImgRepository.findByMedicalImageTypeId(medicalImageTypeId)
+                    .stream()
+                    .map(this::buildResponseDTO)
+                    .toList();
+            return ApiResponse.success(dtos, "Imágenes médicas obtenidas exitosamente");
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al obtener imágenes médicas por tipo: " + ex.getMessage());
+        }
+
+    }
+
+    @Transactional(readOnly = true)
     public ApiResponse<List<MedicalImgResponseDTO>> findAll() {
         List<MedicalImgResponseDTO> dtos = medicalImgRepository.findAll()
                 .stream()
@@ -153,36 +176,18 @@ public class MedicalImageService {
         return ApiResponse.success(dtos, "Imágenes médicas obtenidas exitosamente");
     }
 
-    @Transactional(readOnly = true)
-    public ApiResponse<List<MedicalImgResponseDTO>> findByEvaluationAreaId(Integer evaluationAreaId) {
-        try {
-            evaluationAreaRepository.findById(evaluationAreaId)
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Área de evaluación no encontrada con ID: " + evaluationAreaId
-                    ));
-
-            List<MedicalImgResponseDTO> dtos = medicalImgRepository.findByEvaluationAreaId(evaluationAreaId)
-                    .stream()
-                    .map(this::buildResponseDTO)
-                    .toList();
-
-            return ApiResponse.success(dtos, "Imágenes médicas obtenidas exitosamente");
-        } catch (IllegalArgumentException ex) {
-            return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al obtener imágenes: " + ex.getMessage());
-        }
-    }
-
-    // =====================================================================
     // DELETE — elimina del storage Y de la BD
-    // =====================================================================
-
     @Transactional
     public ApiResponse<Void> delete(Integer id) {
         try {
             MedicalImg img = medicalImgRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + id));
+
+            // Validamos que la imagen no tenga diagnosticos asociados
+            List<ImageDiagnostic> diagnostics = imageDiagnosticRepository.findByMedicalImg_Id(id);
+            if(!diagnostics.isEmpty()){
+                return ApiResponse.error("No se puede eliminar: la imagen tiene diagnósticos asignados");
+            }
 
             // 1. Primero eliminar del storage
             imageStorageService.deleteImage(img.getImageKey());
@@ -193,7 +198,7 @@ public class MedicalImageService {
             return ApiResponse.success("Imagen médica eliminada exitosamente");
 
         } catch (DataIntegrityViolationException ex) {
-            return ApiResponse.error("No se puede eliminar: la imagen tiene diagnósticos asignados");
+            return ApiResponse.error("Violacion a la integridad de la base de datos:" + ex.getMessage());
         } catch (ImageStorageException ex) {
             log.error("[MedicalImageService] Error eliminando del storage: {}", ex.getMessage());
             return ApiResponse.error("Error al eliminar imagen del storage. El registro no fue eliminado.");
@@ -204,79 +209,7 @@ public class MedicalImageService {
         }
     }
 
-    // =====================================================================
-    // RELACIONES (sin cambios de lógica respecto al original)
-    // =====================================================================
-
-    @Transactional
-    public ApiResponse<MedicalImgResponseDTO> assignPatient(Integer medicalImgId, Integer patientId) {
-        try {
-            MedicalImg img = medicalImgRepository.findById(medicalImgId)
-                    .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + medicalImgId));
-
-            patientRepository.findById(patientId)
-                    .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado con ID: " + patientId));
-
-            if (img.getPatientId() != null) {
-                throw new IllegalArgumentException("La imagen ya tiene paciente asignado. Remuévalo primero.");
-            }
-
-            img.setPatientId(patientId);
-            return ApiResponse.success(buildResponseDTO(medicalImgRepository.save(img)),
-                    "Paciente asignado exitosamente");
-
-        } catch (IllegalArgumentException ex) {
-            return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al asignar paciente: " + ex.getMessage());
-        }
-    }
-
-    @Transactional
-    public ApiResponse<MedicalImgResponseDTO> removePatient(Integer medicalImgId) {
-        try {
-            MedicalImg img = medicalImgRepository.findById(medicalImgId)
-                    .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + medicalImgId));
-
-            if (img.getPatientId() == null) {
-                throw new IllegalArgumentException("La imagen no tiene paciente asignado.");
-            }
-
-            img.setPatientId(null);
-            return ApiResponse.success(buildResponseDTO(medicalImgRepository.save(img)),
-                    "Paciente removido exitosamente");
-
-        } catch (IllegalArgumentException ex) {
-            return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al remover paciente: " + ex.getMessage());
-        }
-    }
-
-    @Transactional
-    public ApiResponse<MedicalImgResponseDTO> changeEvaluationArea(Integer medicalImgId, Integer evaluationAreaId) {
-        try {
-            MedicalImg img = medicalImgRepository.findById(medicalImgId)
-                    .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + medicalImgId));
-
-            evaluationAreaRepository.findById(evaluationAreaId)
-                    .orElseThrow(() -> new IllegalArgumentException("Área de evaluación no encontrada con ID: " + evaluationAreaId));
-
-            img.setEvaluationAreaId(evaluationAreaId);
-            return ApiResponse.success(buildResponseDTO(medicalImgRepository.save(img)),
-                    "Área de evaluación cambiada exitosamente");
-
-        } catch (IllegalArgumentException ex) {
-            return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al cambiar área: " + ex.getMessage());
-        }
-    }
-
-    // =====================================================================
     // HELPER — construye el DTO de respuesta con URL dinámica
-    // =====================================================================
-
     /**
      * Genera la URL on-demand desde el storage port.
      * Nunca guardamos la URL en BD — siempre se genera aquí.
@@ -297,8 +230,7 @@ public class MedicalImageService {
                 .provider(img.getProvider())
                 .contentType(img.getContentType())
                 .fileSize(img.getFileSize())
-                .evaluationAreaId(img.getEvaluationAreaId())
-                .patientId(img.getPatientId())
+                .medicalImageType(img.getMedicalImageType() != null ? img.getMedicalImageType().getName() : null)
                 .createdAt(img.getCreatedAt())
                 .build();
     }
