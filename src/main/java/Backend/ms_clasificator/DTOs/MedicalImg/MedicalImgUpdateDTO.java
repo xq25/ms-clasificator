@@ -12,10 +12,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class MedicalImgUpdateDTO {
-
-    @NotNull(message = "La URL de la imagen médica no puede ser nulo")
-    @NotBlank(message = "La URL de la imagen médica no puede estar vacía")
-    private String url;
+    @NotNull(message = "La imageKey de la imagen médica no puede ser nula")
+    @NotBlank(message = "La imageKey de la imagen médica no puede estar vacía")
+    private String imageKey;
 
 }
 

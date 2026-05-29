@@ -1,12 +1,13 @@
 package Backend.ms_clasificator.Mappers.UIConfig;
 
 import Backend.ms_clasificator.DTOs.UIConfig.CreateUIConfigDTO;
+import Backend.ms_clasificator.DTOs.UIConfig.UIConfigResponseDTO;
 import Backend.ms_clasificator.Mappers.Mapper;
 import Backend.ms_clasificator.Models.UIConfig;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UIConfigMappers implements Mapper<UIConfig, CreateUIConfigDTO> {
+public class UIConfigMappers implements Mapper<UIConfig, CreateUIConfigDTO, UIConfigResponseDTO> {
 
     @Override
     public UIConfig toEntity(CreateUIConfigDTO createUIConfigDTO) {
@@ -27,6 +28,17 @@ public class UIConfigMappers implements Mapper<UIConfig, CreateUIConfigDTO> {
 
         return CreateUIConfigDTO.builder()
                 .medicalDiagnosticId(uiConfig.getMedicalDiagnostic() != null ? uiConfig.getMedicalDiagnostic().getId() : null)
+                .build();
+    }
+    @Override
+    public UIConfigResponseDTO toResponseDTO(UIConfig uiConfig){
+        if( uiConfig == null ){
+            return null;
+        }
+        return UIConfigResponseDTO.builder()
+                .id(uiConfig.getId())
+                .evaluationAreaId(uiConfig.getEvaluationAreaId())
+                .medicalDiagnosticId(uiConfig.getMedicalDiagnosticId())
                 .build();
     }
 }

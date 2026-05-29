@@ -1,10 +1,7 @@
 package Backend.ms_clasificator.Models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -32,7 +29,8 @@ import java.util.List;
  * No tiene sentido una entidad separada solo para el registro de storage
  * si el modelo ya existe.
  */
-@Data
+@Getter
+@Setter
 @Entity
 @Builder
 @NoArgsConstructor
@@ -73,17 +71,22 @@ public class MedicalImg {
     @Column(name = "file_size")
     private Long fileSize;
 
-    @Column(name = "evaluation_area_id", nullable = false)
-    private Integer evaluationAreaId;
-
-    @Column(name = "patient_id")
-    private Integer patientId;
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY) // Cargamos el tipo de imagen medica que es esta imagen
+    @JoinColumn(name = "medical_image_type_id", nullable = false)
+    private MedicalImageType medicalImageType;
+
+    @JsonIgnore // No queremos cargar todos los diagnosticos de la imagen
     @OneToMany(mappedBy = "medicalImg", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     private List<ImageDiagnostic> imageDiagnostics;
+
+    @JsonIgnore // No cargamos el clinical record, es inecesario
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "clinical_record_id")
+    private ClinicalRecord clinicalRecord;
+
+
 }

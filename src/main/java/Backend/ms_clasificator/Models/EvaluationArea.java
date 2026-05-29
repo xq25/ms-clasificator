@@ -30,4 +30,8 @@ public class EvaluationArea {
     @OneToMany(mappedBy = "evaluationArea", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<DoctorArea> doctorAreas;
+
+    // Cargamos los tipos de imagenes que tienen  para evaluar esas areas
+    @OneToMany(mappedBy = "evaluationArea", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    private List<MedicalImageType> medicalImageTypes;
 }

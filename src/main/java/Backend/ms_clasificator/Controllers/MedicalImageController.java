@@ -33,10 +33,7 @@ public class MedicalImageController {
 
     private final MedicalImageService medicalImageService;
 
-    // =====================================================================
     // UPLOAD — multipart/form-data
-    // =====================================================================
-
     /**
      * POST /medical-images/upload
      * Ejemplo con curl:
@@ -48,13 +45,11 @@ public class MedicalImageController {
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<MedicalImgResponseDTO>> upload(
             @RequestPart("file") MultipartFile file,
-            @RequestParam("evaluationAreaId") Integer evaluationAreaId,
-            @RequestParam(value = "patientId", required = false) Integer patientId,
+            @RequestParam("medicalImageTypeId") Integer medicalImageTypeId,
             @RequestParam(value = "folder", defaultValue = "diagnostics") String folder) {
 
         MedicalImgCreateDTO dto = MedicalImgCreateDTO.builder()
-                .evaluationAreaId(evaluationAreaId)
-                .patientId(patientId)
+                .medicalImageTypeId(medicalImageTypeId)
                 .folder(folder)
                 .build();
 
@@ -65,10 +60,7 @@ public class MedicalImageController {
                 : ResponseEntity.badRequest().body(response);
     }
 
-    // =====================================================================
     // LECTURA
-    // =====================================================================
-
     @GetMapping("")
     public ResponseEntity<ApiResponse<List<MedicalImgResponseDTO>>> findAll() {
         return ResponseEntity.ok(medicalImageService.findAll());
@@ -82,20 +74,16 @@ public class MedicalImageController {
                 : ResponseEntity.badRequest().body(response);
     }
 
-    @GetMapping("area/{evaluationAreaId}")
-    public ResponseEntity<ApiResponse<List<MedicalImgResponseDTO>>> findByEvaluationAreaId(
-            @PathVariable Integer evaluationAreaId) {
+    @GetMapping("image-type/{medicalImageTypeId}")
+    public ResponseEntity<ApiResponse<List<MedicalImgResponseDTO>>> findByMedicalImageType(@PathVariable Integer medicalImageTypeId) {
         ApiResponse<List<MedicalImgResponseDTO>> response =
-                medicalImageService.findByEvaluationAreaId(evaluationAreaId);
+                medicalImageService.findByMedicalImageType(medicalImageTypeId);
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.badRequest().body(response);
     }
 
-    // =====================================================================
     // DELETE
-    // =====================================================================
-
     @DeleteMapping("{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id) {
         ApiResponse<Void> response = medicalImageService.delete(id);
@@ -104,34 +92,4 @@ public class MedicalImageController {
                 : ResponseEntity.badRequest().body(response);
     }
 
-    // =====================================================================
-    // RELACIONES
-    // =====================================================================
-
-    @PutMapping("{medicalImgId}/assign-patient/{patientId}")
-    public ResponseEntity<ApiResponse<MedicalImgResponseDTO>> assignPatient(
-            @PathVariable Integer medicalImgId, @PathVariable Integer patientId) {
-        ApiResponse<MedicalImgResponseDTO> response = medicalImageService.assignPatient(medicalImgId, patientId);
-        return response.isSuccess()
-                ? ResponseEntity.ok(response)
-                : ResponseEntity.badRequest().body(response);
-    }
-
-    @DeleteMapping("{medicalImgId}/remove-patient")
-    public ResponseEntity<ApiResponse<MedicalImgResponseDTO>> removePatient(@PathVariable Integer medicalImgId) {
-        ApiResponse<MedicalImgResponseDTO> response = medicalImageService.removePatient(medicalImgId);
-        return response.isSuccess()
-                ? ResponseEntity.ok(response)
-                : ResponseEntity.badRequest().body(response);
-    }
-
-    @PutMapping("{medicalImgId}/change-evaluation-area/{evaluationAreaId}")
-    public ResponseEntity<ApiResponse<MedicalImgResponseDTO>> changeEvaluationArea(
-            @PathVariable Integer medicalImgId, @PathVariable Integer evaluationAreaId) {
-        ApiResponse<MedicalImgResponseDTO> response =
-                medicalImageService.changeEvaluationArea(medicalImgId, evaluationAreaId);
-        return response.isSuccess()
-                ? ResponseEntity.ok(response)
-                : ResponseEntity.badRequest().body(response);
-    }
 }

@@ -1,6 +1,7 @@
 package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.Doctor.DoctorBaseDTO;
+import Backend.ms_clasificator.DTOs.Doctor.DoctorResponseDTO;
 import Backend.ms_clasificator.DTOs.Doctor.DoctorUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.DoctorMappers.DoctorMapper;
@@ -9,7 +10,6 @@ import Backend.ms_clasificator.Models.ImageDiagnostic;
 import Backend.ms_clasificator.Repositories.DoctorRepository;
 import Backend.ms_clasificator.Repositories.ImageDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -38,8 +38,17 @@ public class DoctorService {
      * @return Lista de todos los doctores
      */
     @Transactional(readOnly = true)
-    public List<Doctor> findAll() {
-        return doctorRepository.findAll();
+    public ApiResponse<List<DoctorResponseDTO>> findAll() {
+        try {
+            java.util.List<Doctor> doctors = doctorRepository.findAll();
+            java.util.List<Backend.ms_clasificator.DTOs.Doctor.DoctorResponseDTO> dtos = new java.util.ArrayList<>();
+            for (Doctor d : doctors) {
+                dtos.add(doctorMapper.toResponseDTO(d));
+            }
+            return ApiResponse.success(dtos, "Doctores encontrados exitosamente");
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al listar doctores: " + ex.getMessage());
+        }
     }
 
     /**
@@ -49,18 +58,17 @@ public class DoctorService {
      * @throws IllegalArgumentException si el doctor no existe
      */
     @Transactional(readOnly = true)
-    public ApiResponse<Doctor> findById(Integer id) {
+    public ApiResponse<DoctorResponseDTO> findById(Integer id) {
         try{
             Doctor doctor =  doctorRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + id));
 
-            return ApiResponse.success(doctor, "Doctor encontrado exitosamente");
+            return ApiResponse.success(doctorMapper.toResponseDTO(doctor), "Doctor encontrado exitosamente");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {
             return ApiResponse.error("Error al buscar doctor: " + ex.getMessage());
         }
-
     }
 
     /**
@@ -69,14 +77,14 @@ public class DoctorService {
      * @return Doctor encontrado o null
      */
     @Transactional(readOnly = true)
-    public ApiResponse<Doctor> findByCode(String code) {
+    public ApiResponse<DoctorResponseDTO> findByCode(String code) {
         try{
             Doctor doctor =  doctorRepository.findByCode(code);
 
             if (doctor == null){
                 throw new IllegalArgumentException("Doctor no encontrado con código: " + code);
             }
-            return ApiResponse.success(doctor, "Doctor encontrado exitosamente");
+            return ApiResponse.success(doctorMapper.toResponseDTO(doctor), "Doctor encontrado exitosamente");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {
@@ -85,14 +93,14 @@ public class DoctorService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<Doctor> findByUserId(String userId) {
+    public ApiResponse<DoctorResponseDTO> findByUserId(String userId) {
         try{
             Doctor doctor =  doctorRepository.findByUserId(userId);
 
             if (doctor == null){
                 throw new IllegalArgumentException("Doctor no encontrado con userId: " + userId);
             }
-            return ApiResponse.success(doctor, "Doctor encontrado exitosamente");
+            return ApiResponse.success(doctorMapper.toResponseDTO(doctor), "Doctor encontrado exitosamente");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {
@@ -105,7 +113,7 @@ public class DoctorService {
      * @param doctorCreateDTO DTO con datos de entrada
      * @return ApiResponse<Doctor> con el resultado de la operación
      */
-    public ApiResponse<Doctor> create(DoctorBaseDTO doctorCreateDTO) {
+    public ApiResponse<DoctorResponseDTO> create(DoctorBaseDTO doctorCreateDTO) {
         try {
             if (doctorCreateDTO == null) {
                 return ApiResponse.error("El DTO no puede ser nulo");
@@ -137,7 +145,7 @@ public class DoctorService {
             Doctor saved = doctorRepository.save(doctor);
 
             // Si hay algun error debemos de mostrarlo, pero realmente para llegar a este punto el unico fallo seria para asignar el rol, por los cual solo agregariamos al mensaje que no se pudo asignar el role
-            return ApiResponse.success(saved, "Doctor creado exitosamente. " + roleInfo);
+            return ApiResponse.success(doctorMapper.toResponseDTO(saved), "Doctor creado exitosamente. " + roleInfo);
 
         } catch (Exception ex) {
             return ApiResponse.error("Error al crear doctor: " + ex.getMessage());
@@ -150,7 +158,7 @@ public class DoctorService {
      * @param doctorUpdateDTO DTO con datos a actualizar
      * @return ApiResponse<Doctor> con el resultado de la operación
      */
-    public ApiResponse<Doctor> update(Integer id, DoctorUpdateDTO doctorUpdateDTO) {
+    public ApiResponse<DoctorResponseDTO> update(Integer id, DoctorUpdateDTO doctorUpdateDTO) {
         try {
             if (doctorUpdateDTO == null) {
                 return ApiResponse.error("El DTO no puede ser nulo");
@@ -164,7 +172,7 @@ public class DoctorService {
             doctor.setCode(doctorUpdateDTO.getCode() != null ? doctorUpdateDTO.getCode() : doctor.getCode());
 
             Doctor updated = doctorRepository.save(doctor);
-            return ApiResponse.success(updated, "Doctor actualizado exitosamente");
+            return ApiResponse.success(doctorMapper.toResponseDTO(updated), "Doctor actualizado exitosamente");
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
