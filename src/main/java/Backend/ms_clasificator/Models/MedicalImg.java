@@ -36,11 +36,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "medical_img")
-public class MedicalImg {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+public class MedicalImg extends SystemDatum{
 
     /**
      * Clave única del objeto en el storage.
@@ -75,7 +71,8 @@ public class MedicalImg {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Cargamos el tipo de imagen medica que es esta imagen
+    // Cargamos el tipo imagen medica
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "medical_image_type_id", nullable = false)
     private MedicalImageType medicalImageType;
 
@@ -84,8 +81,9 @@ public class MedicalImg {
     private List<ImageDiagnostic> imageDiagnostics;
 
     @JsonIgnore // No cargamos el clinical record, es inecesario
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "clinical_record_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    // Las imagenes puedenn vivir sin la asociacion con las historia medicas (composicion pasiva)
+    @JoinColumn(name = "clinical_record_id", nullable = true )
     private ClinicalRecord clinicalRecord;
 
 

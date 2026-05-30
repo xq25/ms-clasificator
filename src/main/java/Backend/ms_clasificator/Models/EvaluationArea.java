@@ -33,5 +33,6 @@ public class EvaluationArea {
 
     // Cargamos los tipos de imagenes que tienen  para evaluar esas areas
     @OneToMany(mappedBy = "evaluationArea", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<MedicalImageType> medicalImageTypes;
 }
