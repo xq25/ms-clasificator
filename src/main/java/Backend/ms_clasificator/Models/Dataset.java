@@ -28,7 +28,7 @@ public class Dataset {
     // No necesitamos cargar el cada datasetCategory.
     // Si se elimina el datase, se deben eliminar toda su configuracion interna
     @JsonIgnore
-    @OneToMany(mappedBy = "uiConfig", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "dataset", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<DatasetCategory> datasetCategories;
 
     // Podemos primero generar el dataset y despues asignarle un area de evaluacion

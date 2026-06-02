@@ -180,7 +180,7 @@ public class DatasetService {
             // Validar que el Dataset no tenga ya categorias definidas para clasificacion.
             // Al cambiar el diagnostico, todos las categorias quedan inutiles,
             // ya que deben tener unicamente subDiagnosticos de este diagnostico padre.
-            List<DatasetCategory> datasetCategories = this.datasetCategoryRepository.findByUiConfig_Id(id);
+            List<DatasetCategory> datasetCategories = this.datasetCategoryRepository.findByDatasetId(id);
             if (!datasetCategories.isEmpty()){
                 return ApiResponse.error("No se puede cambiar el diagnóstico médico de un Dataset que ya tiene categorías definidas para clasificación. Por favor, elimine primero las categorías asociadas a este Dataset antes");
             }

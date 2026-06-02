@@ -1,17 +1,10 @@
 package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticCreateDTO;
-import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.ImageDiagnosticMappers.ImageDiagnosticMapper;
-import Backend.ms_clasificator.Models.Doctor;
-import Backend.ms_clasificator.Models.ImageDiagnostic;
-import Backend.ms_clasificator.Models.MedicalDiagnostic;
-import Backend.ms_clasificator.Models.MedicalImg;
-import Backend.ms_clasificator.Repositories.DoctorRepository;
-import Backend.ms_clasificator.Repositories.ImageDiagnosticRepository;
-import Backend.ms_clasificator.Repositories.MedicalDiagnosticRepository;
-import Backend.ms_clasificator.Repositories.MedicalImgRepository;
+import Backend.ms_clasificator.Models.*;
+import Backend.ms_clasificator.Repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,13 +25,10 @@ public class ImageDiagnosticService {
     private DoctorRepository doctorRepository;
 
     @Autowired
-    private DoctorAreaService doctorAreaService;
-
-    @Autowired
     private MedicalImgRepository medicalImgRepository;
 
     @Autowired
-    private MedicalDiagnosticRepository medicalDiagnosticRepository;
+    private DoctorAreaRepository doctorAreaRepository;
 
     /**
      * Obtener todos los diagnósticos de imagen
@@ -71,6 +61,7 @@ public class ImageDiagnosticService {
      * @param imageDiagnosticCreateDTO DTO con datos de entrada
      * @return ApiResponse<ImageDiagnostic> con el resultado de la operación
      */
+    @Transactional
     public ApiResponse<ImageDiagnostic> create(ImageDiagnosticCreateDTO imageDiagnosticCreateDTO) {
         try {
             if (imageDiagnosticCreateDTO == null) {
@@ -86,12 +77,13 @@ public class ImageDiagnosticService {
             MedicalImg medicalImg = medicalImgRepository.findById(imageDiagnosticCreateDTO.getMedicalImgId())
                     .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + imageDiagnosticCreateDTO.getMedicalImgId()));
 
-            // Validar que exista el diagnóstico médico
-            MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(imageDiagnosticCreateDTO.getMedicalDiagnosticId())
-                    .orElseThrow(() -> new IllegalArgumentException("Diagnóstico médico no encontrado con ID: " + imageDiagnosticCreateDTO.getMedicalDiagnosticId()));
 
-        // Validar que el doctor pertenece al mismo evaluation que el tipo de imagen
-
+        // Validar que el doctor pertenece al mismo area de evalaucion que el tipo de imagen que esta por clasificar
+            MedicalImageType imageType = medicalImg.getMedicalImageType();
+            DoctorArea doctorArea = this.doctorAreaRepository.findByDoctorIdAndEvaluationAreaId(doctor.getId(), imageType.getEvaluationArea().getId());
+            if (doctorArea == null) {
+                throw new IllegalArgumentException("El doctor no pertenece al área de evaluación correspondiente al tipo de imagen");
+            }
 
         // Validacion de correctitud de logica y preservacion de datos.
 
@@ -106,7 +98,6 @@ public class ImageDiagnosticService {
             ImageDiagnostic imageDiagnostic = ImageDiagnostic.builder()
                     .doctor(doctor)
                     .medicalImg(medicalImg)
-                    .medicalDiagnostic(medicalDiagnostic)
                     .diagnosticDate(diagnosticDate)
                     .build();
 
@@ -117,40 +108,6 @@ public class ImageDiagnosticService {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {
             return ApiResponse.error("Error al crear diagnóstico de imagen: " + ex.getMessage());
-        }
-    }
-
-    /**
-     * Actualizar un diagnóstico de imagen existente
-     * @param id ID del diagnóstico a actualizar
-     * @param imageDiagnosticUpdateDTO DTO con datos a actualizar
-     * @return ApiResponse<ImageDiagnostic> con el resultado de la operación
-     */
-    public ApiResponse<ImageDiagnostic> update(Integer id, ImageDiagnosticUpdateDTO imageDiagnosticUpdateDTO) {
-        try {
-            if (imageDiagnosticUpdateDTO == null) {
-                return ApiResponse.error("El DTO no puede ser nulo");
-            }
-
-            ImageDiagnostic imageDiagnostic = imageDiagnosticRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Diagnóstico de imagen no encontrado con ID: " + id));
-
-            // Validar que exista el diagnóstico médico
-            MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(imageDiagnosticUpdateDTO.getMedicalDiagnosticId())
-                    .orElseThrow(() -> new IllegalArgumentException("Diagnóstico médico no encontrado con ID: " + imageDiagnosticUpdateDTO.getMedicalDiagnosticId()));
-
-            imageDiagnostic.setMedicalDiagnostic(medicalDiagnostic);
-
-            LocalDateTime diagnosticDate = LocalDateTime.now();
-            imageDiagnostic.setDiagnosticDate(diagnosticDate);
-            
-            ImageDiagnostic updated = imageDiagnosticRepository.save(imageDiagnostic);
-            return ApiResponse.success(updated, "Diagnóstico de imagen actualizado exitosamente");
-
-        } catch (IllegalArgumentException ex) {
-            return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al actualizar diagnóstico de imagen: " + ex.getMessage());
         }
     }
 

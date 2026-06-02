@@ -21,8 +21,5 @@ public class ImageDiagnosticCreateDTO {
     @NotNull(message = "El ID de la imagen médica no puede ser nulo")
     private Integer medicalImgId;
 
-    @NotNull(message = "El ID del diagnóstico médico no puede ser nulo")
-    private Integer medicalDiagnosticId;
-
 }
 

@@ -42,7 +42,6 @@ public class DatasetMappers implements Mapper<Dataset, DatasetCreateDTO, Dataset
         }
         return DatasetResponseDTO.builder()
                 .id(dataset.getId())
-                .name(dataset.getName())
                 .medicalDiagnostic(dataset.getMedicalDiagnostic() != null ? medicalDiagnosticMapper.toResponseDTO(dataset.getMedicalDiagnostic()) : null)
                 .evaluationAreaId(dataset.getEvaluationArea() != null ? dataset.getEvaluationArea().getId() : null)
                 .evaluationAreaName(dataset.getEvaluationArea() != null ? dataset.getEvaluationArea().getName() : null)

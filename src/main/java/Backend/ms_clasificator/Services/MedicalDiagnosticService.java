@@ -4,12 +4,12 @@ import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticCreateDTO
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.MedicalDiagnosticMappers.MedicalDiagnosticMapper;
+import Backend.ms_clasificator.Models.DiagnosticCategoryDataset;
 import Backend.ms_clasificator.Models.ImageDiagnostic;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
-import Backend.ms_clasificator.Models.DatasetCategory;
+import Backend.ms_clasificator.Repositories.DiagnosticCategoryDatasetRepository;
 import Backend.ms_clasificator.Repositories.ImageDiagnosticRepository;
 import Backend.ms_clasificator.Repositories.MedicalDiagnosticRepository;
-import Backend.ms_clasificator.Repositories.DatasetCategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,9 @@ public class MedicalDiagnosticService {
     private MedicalDiagnosticMapper medicalDiagnosticMapper;
 
     @Autowired
-    private DatasetCategoryRepository datasetCategoryRepository;
+    private DiagnosticCategoryDatasetRepository diagnosticCategoryDatasetRepository;
+
+
 
     /**
      * Obtener todos los diagnósticos médicos
@@ -245,10 +247,10 @@ public class MedicalDiagnosticService {
                 return ApiResponse.error("Este sub-diagnóstico no pertenece al diagnóstico padre indicado");
             }
 
-            // Validar que sub-diagnostico no este dentro de una configuracion en UIState (No podemos remover un subdiagnostico que ya esta asignado a un uiState)
-            List<DatasetCategory> datasetCategoryList = datasetCategoryRepository.findByMedicalDiagnostic_Id(subDiagnosticId);
-            if (!datasetCategoryList.isEmpty()){
-                return ApiResponse.error("No se puede remover este sub-diagnóstico porque está asignado a una configuración de UI. Elimine dentro de la Config UI antes de remover este sub-diagnóstico.");
+            // Validar que sub-diagnostico no este dentro de una categoria de un dataset (No podemos remover un subdiagnostico que ya esta asignado a un uiState)
+            List<DiagnosticCategoryDataset> diagnosticCategoryDatasets = this.diagnosticCategoryDatasetRepository.findByMedicalDiagnosticId(subDiagnosticId);
+            if (!diagnosticCategoryDatasets.isEmpty()){
+                return ApiResponse.error("No se puede remover este sub-diagnóstico porque está asignado a una categoria dentro de un dataset.");
             }
 
             // Remover el padre del sub-diagnóstico

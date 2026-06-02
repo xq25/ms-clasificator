@@ -7,16 +7,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.query.common.FetchClauseType;
-
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"doctor_id", "medical_img_id", "medical_diagnostic_id"}))
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"doctor_id", "medical_img_id"}))
 public class ImageDiagnostic {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,15 +39,11 @@ public class ImageDiagnostic {
         return medicalImg != null ? medicalImg.getId() : null;
     }
 
+    // No necesitamos cargar todos los diagnosticos que se le dieron a esta imagen por este medico.
+    // Si se elimina el diagnostico que dio el medico, se debe eliminar toda la informacion que a este compone
     @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "medical_diagnostic_id", nullable = false)
-    private MedicalDiagnostic medicalDiagnostic;
-    @JsonProperty("medicalDiagnosticId")
-    public Integer getMedicalDiagnosticId() {
-        return medicalDiagnostic != null ? medicalDiagnostic.getId() : null;
-    }
-
+    @OneToMany(mappedBy = "imageDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ImageDoctorDiagnostics> imageDoctorDiagnostics;
 
     @Column(name = "diagnostic_date", nullable = false)
     private LocalDateTime diagnosticDate;
