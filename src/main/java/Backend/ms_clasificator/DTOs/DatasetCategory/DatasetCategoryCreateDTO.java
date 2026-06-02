@@ -17,9 +17,4 @@ public class DatasetCategoryCreateDTO {
     @NotNull(message = "El ID del Dataset a la cual pertence no puede ser null")
     private Integer datasetId;
 
-    @NotNull(message = "Se debe especificar el numero de categoria al que corresponde")
-    @Min(message = "El valor numerico de la posicion de la categoria tiene que se mayor que 0", value = 1)
-    private Integer numValue;
-
-
 }

@@ -16,7 +16,6 @@ public class DatasetCategoryMappers implements Mapper<DatasetCategory, DatasetCa
         }
 
         return DatasetCategory.builder()
-                .numValue(datasetCategoryCreateDTO.getNumValue())
                 // Las relaciones se asignan en el Service
                 .build();
     }

@@ -1,9 +1,9 @@
 package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticCreateDTO;
+import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticResponseDTO;
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
-import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import Backend.ms_clasificator.Services.MedicalDiagnosticService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +25,8 @@ public class MedicalDiagnosticController {
      * @return Lista de todos los diagnósticos
      */
     @GetMapping("")
-    public ResponseEntity<List<MedicalDiagnostic>> findAll() {
-        List<MedicalDiagnostic> diagnostics = medicalDiagnosticService.findAll();
+    public ResponseEntity<List<MedicalDiagnosticResponseDTO>> findAll() {
+        List<MedicalDiagnosticResponseDTO> diagnostics = medicalDiagnosticService.findAll();
         return ResponseEntity.ok(diagnostics);
     }
 
@@ -36,8 +36,8 @@ public class MedicalDiagnosticController {
      * @return Diagnóstico encontrado
      */
     @GetMapping("{id}")
-    public ResponseEntity<ApiResponse<MedicalDiagnostic>> findById(@PathVariable Integer id) {
-        ApiResponse<MedicalDiagnostic> response = this.medicalDiagnosticService.findById(id);
+    public ResponseEntity<ApiResponse<MedicalDiagnosticResponseDTO>> findById(@PathVariable Integer id) {
+        ApiResponse<MedicalDiagnosticResponseDTO> response = this.medicalDiagnosticService.findById(id);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -47,8 +47,8 @@ public class MedicalDiagnosticController {
     }
 
     @GetMapping("parentId/{parentId}")
-    public ResponseEntity<ApiResponse<List<MedicalDiagnostic>>> findByParentId(@PathVariable Integer parentId) {
-        ApiResponse<List<MedicalDiagnostic>> response = this.medicalDiagnosticService.findByParentDiagnosticId(parentId);
+    public ResponseEntity<ApiResponse<List<MedicalDiagnosticResponseDTO>>> findByParentId(@PathVariable Integer parentId) {
+        ApiResponse<List<MedicalDiagnosticResponseDTO>> response = this.medicalDiagnosticService.findByParentDiagnosticId(parentId);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -63,8 +63,8 @@ public class MedicalDiagnosticController {
      * @return ApiResponse con el resultado
      */
     @PostMapping("")
-    public ResponseEntity<ApiResponse<MedicalDiagnostic>> create(@Valid @RequestBody MedicalDiagnosticCreateDTO medicalDiagnosticCreateDTO) {
-        ApiResponse<MedicalDiagnostic> response = medicalDiagnosticService.create(medicalDiagnosticCreateDTO);
+    public ResponseEntity<ApiResponse<MedicalDiagnosticResponseDTO>> create(@Valid @RequestBody MedicalDiagnosticCreateDTO medicalDiagnosticCreateDTO) {
+        ApiResponse<MedicalDiagnosticResponseDTO> response = medicalDiagnosticService.create(medicalDiagnosticCreateDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -80,8 +80,8 @@ public class MedicalDiagnosticController {
      * @return ApiResponse con el resultado
      */
     @PutMapping("{id}")
-    public ResponseEntity<ApiResponse<MedicalDiagnostic>> update(@PathVariable Integer id, @Valid @RequestBody MedicalDiagnosticUpdateDTO medicalDiagnosticUpdateDTO) {
-        ApiResponse<MedicalDiagnostic> response = medicalDiagnosticService.update(id, medicalDiagnosticUpdateDTO);
+    public ResponseEntity<ApiResponse<MedicalDiagnosticResponseDTO>> update(@PathVariable Integer id, @Valid @RequestBody MedicalDiagnosticUpdateDTO medicalDiagnosticUpdateDTO) {
+        ApiResponse<MedicalDiagnosticResponseDTO> response = medicalDiagnosticService.update(id, medicalDiagnosticUpdateDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -115,8 +115,8 @@ public class MedicalDiagnosticController {
      * @return ApiResponse con el resultado
      */
     @PutMapping("{parentDiagnosticId}/add-sub-diagnostic/{subDiagnosticId}")
-    public ResponseEntity<ApiResponse<MedicalDiagnostic>> addSubDiagnostic(@PathVariable Integer parentDiagnosticId, @PathVariable Integer subDiagnosticId) {
-        ApiResponse<MedicalDiagnostic> response = medicalDiagnosticService.addSubDiagnostic(parentDiagnosticId, subDiagnosticId);
+    public ResponseEntity<ApiResponse<MedicalDiagnosticResponseDTO>> addSubDiagnostic(@PathVariable Integer parentDiagnosticId, @PathVariable Integer subDiagnosticId) {
+        ApiResponse<MedicalDiagnosticResponseDTO> response = medicalDiagnosticService.addSubDiagnostic(parentDiagnosticId, subDiagnosticId);
 
         if (response.isSuccess()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -132,8 +132,8 @@ public class MedicalDiagnosticController {
      * @return ApiResponse con el resultado
      */
     @DeleteMapping("{parentDiagnosticId}/remove-sub-diagnostic/{subDiagnosticId}")
-    public ResponseEntity<ApiResponse<MedicalDiagnostic>> removeSubDiagnostic(@PathVariable Integer parentDiagnosticId, @PathVariable Integer subDiagnosticId) {
-        ApiResponse<MedicalDiagnostic> response = medicalDiagnosticService.removeSubDiagnostic(parentDiagnosticId, subDiagnosticId);
+    public ResponseEntity<ApiResponse<MedicalDiagnosticResponseDTO>> removeSubDiagnostic(@PathVariable Integer parentDiagnosticId, @PathVariable Integer subDiagnosticId) {
+        ApiResponse<MedicalDiagnosticResponseDTO> response = medicalDiagnosticService.removeSubDiagnostic(parentDiagnosticId, subDiagnosticId);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

@@ -1,8 +1,8 @@
 package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticCreateDTO;
+import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticResponseDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
-import Backend.ms_clasificator.Models.ImageDiagnostic;
 import Backend.ms_clasificator.Services.ImageDiagnosticService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +24,8 @@ public class ImageDiagnosticController {
      * @return Lista de todos los diagnósticos
      */
     @GetMapping("")
-    public ResponseEntity<List<ImageDiagnostic>> findAll() {
-        List<ImageDiagnostic> diagnostics = imageDiagnosticService.findAll();
+    public ResponseEntity<List<ImageDiagnosticResponseDTO>> findAll() {
+        List<ImageDiagnosticResponseDTO> diagnostics = imageDiagnosticService.findAll();
         return ResponseEntity.ok(diagnostics);
     }
 
@@ -35,8 +35,8 @@ public class ImageDiagnosticController {
      * @return Diagnóstico encontrado
      */
     @GetMapping("{id}")
-    public ResponseEntity<ApiResponse<ImageDiagnostic>> findById(@PathVariable Integer id) {
-        ApiResponse<ImageDiagnostic> response = imageDiagnosticService.findById(id);
+    public ResponseEntity<ApiResponse<ImageDiagnosticResponseDTO>> findById(@PathVariable Integer id) {
+        ApiResponse<ImageDiagnosticResponseDTO> response = imageDiagnosticService.findById(id);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -51,8 +51,8 @@ public class ImageDiagnosticController {
      * @return ApiResponse con el resultado
      */
     @PostMapping("")
-    public ResponseEntity<ApiResponse<ImageDiagnostic>> create(@Valid @RequestBody ImageDiagnosticCreateDTO imageDiagnosticCreateDTO) {
-        ApiResponse<ImageDiagnostic> response = imageDiagnosticService.create(imageDiagnosticCreateDTO);
+    public ResponseEntity<ApiResponse<ImageDiagnosticResponseDTO>> create(@Valid @RequestBody ImageDiagnosticCreateDTO imageDiagnosticCreateDTO) {
+        ApiResponse<ImageDiagnosticResponseDTO> response = imageDiagnosticService.create(imageDiagnosticCreateDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
