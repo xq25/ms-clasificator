@@ -28,7 +28,6 @@ public class ImageDiagnosticMapper implements Mapper<ImageDiagnostic, ImageDiagn
         return ImageDiagnosticCreateDTO.builder()
                 .doctorId(imageDiagnostic.getDoctor() != null ? imageDiagnostic.getDoctor().getId() : null)
                 .medicalImgId(imageDiagnostic.getMedicalImg() != null ? imageDiagnostic.getMedicalImg().getId() : null)
-                .medicalDiagnosticId(imageDiagnostic.getMedicalDiagnostic() != null ? imageDiagnostic.getMedicalDiagnostic().getId() : null)
                 .build();
     }
 

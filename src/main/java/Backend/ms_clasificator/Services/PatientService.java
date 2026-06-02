@@ -4,7 +4,6 @@ import Backend.ms_clasificator.DTOs.Patient.PatientCreateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.PatientMappers.PatientMapper;
 import Backend.ms_clasificator.Models.Patient;
-import Backend.ms_clasificator.Repositories.MedicalImgRepository;
 import Backend.ms_clasificator.Repositories.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,9 +22,6 @@ public class PatientService {
 
     @Autowired
     private PatientMapper patientMapper;
-
-    @Autowired
-    private MedicalImgRepository medicalImgRepository;
 
     @Autowired SecurityServices securityServices;
 
@@ -178,6 +174,8 @@ public class PatientService {
         try {
             Patient patient = patientRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado con ID: " + id));
+
+
 
             patientRepository.delete(patient);
             return ApiResponse.success("Paciente eliminado exitosamente");

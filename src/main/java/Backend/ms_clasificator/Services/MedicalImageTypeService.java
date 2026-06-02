@@ -165,6 +165,11 @@ public class MedicalImageTypeService {
             MedicalImageType medicalImageType = medicalImageTypeRepository.findById(medicalImageTypeId)
                     .orElseThrow(() -> new IllegalArgumentException("Tipo de imagen médica no encontrado con ID: " + medicalImageTypeId));
 
+            //Validamos que si tenga un area de evaluacion que quitar
+            if (medicalImageType.getEvaluationArea() == null) {
+                return ApiResponse.error("El tipo de imagen médica no tiene un área de evaluación asignada para ser eliminada");
+            }
+
             medicalImageType.setEvaluationArea(null);
             MedicalImageType updated = medicalImageTypeRepository.save(medicalImageType);
             return ApiResponse.success(medicalImageTypeMapper.toResponseDTO(updated), "Área de evaluación removida exitosamente");

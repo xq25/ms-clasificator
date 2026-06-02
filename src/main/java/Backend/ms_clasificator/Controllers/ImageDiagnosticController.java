@@ -1,10 +1,8 @@
 package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticCreateDTO;
-import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Models.ImageDiagnostic;
-import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import Backend.ms_clasificator.Services.ImageDiagnosticService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,23 +56,6 @@ public class ImageDiagnosticController {
 
         if (response.isSuccess()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * Actualizar un diagnóstico de imagen existente
-     * @param id ID del diagnóstico a actualizar
-     * @param imageDiagnosticUpdateDTO DTO con datos a actualizar
-     * @return ApiResponse con el resultado
-     */
-    @PutMapping("{id}")
-    public ResponseEntity<ApiResponse<ImageDiagnostic>> update(@PathVariable Integer id, @Valid @RequestBody ImageDiagnosticUpdateDTO imageDiagnosticUpdateDTO) {
-        ApiResponse<ImageDiagnostic> response = imageDiagnosticService.update(id, imageDiagnosticUpdateDTO);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.badRequest().body(response);
         }
