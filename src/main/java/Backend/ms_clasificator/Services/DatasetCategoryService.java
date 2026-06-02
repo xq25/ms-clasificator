@@ -2,7 +2,6 @@ package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryCreateDTO;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryResponseDTO;
-import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.DatasetCategory.DatasetCategoryMappers;
 import Backend.ms_clasificator.Models.Dataset;
@@ -111,6 +110,11 @@ public class DatasetCategoryService {
             DatasetCategory datasetCategory = datasetCategoryMappers.toEntity(datasetCategoryCreateDTO);
             datasetCategory.setDataset(dataset);
 
+            // Validar el numero de categorias que tiene el dataset para asiganrle el siguiente en secuencia.
+            List<DatasetCategory> datasetCategories = datasetCategoryRepository.findByDatasetId(dataset.getId());
+            int nextNumValue = datasetCategories.size() + 1;
+            datasetCategory.setNumValue(nextNumValue);
+
             DatasetCategory saved = datasetCategoryRepository.save(datasetCategory);
             return ApiResponse.success(datasetCategoryMappers.toResponseDTO(saved), "Categoria de dataset creado exitosamente");
 
@@ -118,34 +122,6 @@ public class DatasetCategoryService {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {
             return ApiResponse.error("Error al crear categoria de dataset: " + ex.getMessage());
-        }
-    }
-
-    /**
-     * Actualizar un estado UI existente
-     * @param id ID del estado a actualizar
-     * @param datasetCategoryUpdateDTO DTO con datos a actualizar
-     * @return ApiResponse<UIState> con el resultado de la operación
-     */
-    public ApiResponse<DatasetCategoryResponseDTO> update(Integer id, DatasetCategoryUpdateDTO datasetCategoryUpdateDTO) {
-        try {
-            if (datasetCategoryUpdateDTO == null) {
-                return ApiResponse.error("El DTO no puede ser nulo");
-            }
-
-            DatasetCategory datasetCategory = datasetCategoryRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Categoria de dataset no encontrada con ID: " + id));
-
-            // Validar temas del numValue (secuencia)
-            datasetCategory.setNumValue(datasetCategoryUpdateDTO.getNumValue());
-
-            DatasetCategory updated = datasetCategoryRepository.save(datasetCategory);
-            return ApiResponse.success(datasetCategoryMappers.toResponseDTO(updated), "Categoria de dataset actualizado exitosamente");
-
-        } catch (IllegalArgumentException ex) {
-            return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al actualizar Categoria de dataset: " + ex.getMessage());
         }
     }
 
@@ -158,6 +134,13 @@ public class DatasetCategoryService {
         try {
             DatasetCategory datasetCategory = datasetCategoryRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Categoria de dataset no encontrada con ID: " + id));
+
+            // Solo se puede eliminar la ultima categoria generada de un Dataset, por coherencia secuencia de los numValues
+                List<DatasetCategory> datasetCategories = datasetCategoryRepository.findByDatasetId(datasetCategory.getDataset().getId());
+                int maxNumValue = datasetCategories.stream().mapToInt(DatasetCategory::getNumValue).max().orElse(0);
+                if (datasetCategory.getNumValue() != maxNumValue) {
+                    return ApiResponse.error("Solo se puede eliminar la ultima categoria generada de un Dataset, por coherencia secuencia de los numValues");
+                }
 
             datasetCategoryRepository.delete(datasetCategory);
             return ApiResponse.success("Categoria de dataset eliminada exitosamente");

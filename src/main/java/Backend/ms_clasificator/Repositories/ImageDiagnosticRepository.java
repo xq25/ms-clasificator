@@ -19,5 +19,4 @@ public interface ImageDiagnosticRepository extends JpaRepository<ImageDiagnostic
 
     List<ImageDiagnostic> findByMedicalImg_Id(Integer medicalImgId);
 
-    List<ImageDiagnostic> findByMedicalDiagnostic_Id(Integer medicalDiagnosticId);
 }

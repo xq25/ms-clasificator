@@ -13,10 +13,5 @@ public interface MedicalImgRepository extends JpaRepository<MedicalImg, Integer>
      * */
     List<MedicalImg> findByMedicalImageTypeId(Integer medicalImageTypeId);
 
-    /** Buscar todas las imágenes médicas por evaluation_area_id
-     * @param evaluationAreaId ID del área de evaluación
-     * @return Lista de imágenes médicas de la área
-     * */
-    List<MedicalImg> findByEvaluationAreaId(Integer evaluationAreaId);
 
 }

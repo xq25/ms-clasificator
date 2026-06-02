@@ -33,7 +33,7 @@ public class EvaluationArea {
 
     // Las cargas de los tipos de imagenes medicas lo hacemos mediante consultas, ya que pueden ser varias
     @JsonIgnore
-    @OneToMany(mappedBy = "evaluationArea", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "evaluationArea", fetch = FetchType.LAZY)
     private List<MedicalImageType> medicalImageTypes;
 
     // No es necesario cargar la configuracion(Dataset) para clasificar, que tiene asiganada esta area de evaluacion.
