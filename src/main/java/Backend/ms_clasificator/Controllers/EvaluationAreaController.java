@@ -3,8 +3,7 @@ package Backend.ms_clasificator.Controllers;
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaCreateDTO;
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
-import Backend.ms_clasificator.Models.DoctorArea;
-import Backend.ms_clasificator.Models.EvaluationArea;
+import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaResponseDTO;
 import Backend.ms_clasificator.Services.EvaluationAreaService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +25,10 @@ public class EvaluationAreaController {
      * @return Lista de todas las áreas de evaluación
      */
     @GetMapping("")
-    public ResponseEntity<List<EvaluationArea>> findAll() {
-        List<EvaluationArea> areas = evaluationAreaService.findAll();
-        return ResponseEntity.ok(areas);
+    public ResponseEntity<ApiResponse<List<EvaluationAreaResponseDTO>>> findAll() {
+        ApiResponse<List<EvaluationAreaResponseDTO>> response = evaluationAreaService.findAll();
+        if (response.isSuccess()) return ResponseEntity.ok(response);
+        return ResponseEntity.badRequest().body(response);
     }
 
     /**
@@ -37,8 +37,8 @@ public class EvaluationAreaController {
      * @return Área encontrada
      */
     @GetMapping("{id}")
-    public ResponseEntity<ApiResponse<EvaluationArea>> findById(@PathVariable Integer id) {
-        ApiResponse<EvaluationArea> response = evaluationAreaService.findById(id);
+    public ResponseEntity<ApiResponse<EvaluationAreaResponseDTO>> findById(@PathVariable Integer id) {
+        ApiResponse<EvaluationAreaResponseDTO> response = evaluationAreaService.findById(id);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -53,8 +53,8 @@ public class EvaluationAreaController {
      * @return ApiResponse con el resultado
      */
     @PostMapping("")
-    public ResponseEntity<ApiResponse<EvaluationArea>> create(@Valid @RequestBody EvaluationAreaCreateDTO evaluationAreaCreateDTO) {
-        ApiResponse<EvaluationArea> response = evaluationAreaService.create(evaluationAreaCreateDTO);
+    public ResponseEntity<ApiResponse<EvaluationAreaResponseDTO>> create(@Valid @RequestBody EvaluationAreaCreateDTO evaluationAreaCreateDTO) {
+        ApiResponse<EvaluationAreaResponseDTO> response = evaluationAreaService.create(evaluationAreaCreateDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -70,8 +70,8 @@ public class EvaluationAreaController {
      * @return ApiResponse con el resultado
      */
     @PutMapping("{id}")
-    public ResponseEntity<ApiResponse<EvaluationArea>> update(@PathVariable Integer id, @Valid @RequestBody EvaluationAreaUpdateDTO evaluationAreaUpdateDTO) {
-        ApiResponse<EvaluationArea> response = evaluationAreaService.update(id, evaluationAreaUpdateDTO);
+    public ResponseEntity<ApiResponse<EvaluationAreaResponseDTO>> update(@PathVariable Integer id, @Valid @RequestBody EvaluationAreaUpdateDTO evaluationAreaUpdateDTO) {
+        ApiResponse<EvaluationAreaResponseDTO> response = evaluationAreaService.update(id, evaluationAreaUpdateDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

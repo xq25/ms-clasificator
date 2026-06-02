@@ -3,15 +3,14 @@ package Backend.ms_clasificator.Services;
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaCreateDTO;
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaResponseDTO;
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaUpdateDTO;
-import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeResponseDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.EvaluationAreaMappers.EvaluationAreaMapper;
 import Backend.ms_clasificator.Models.EvaluationArea;
-import Backend.ms_clasificator.Models.MedicalImg;
-import Backend.ms_clasificator.Models.UIConfig;
+import Backend.ms_clasificator.Models.MedicalImageType;
+import Backend.ms_clasificator.Models.Dataset;
 import Backend.ms_clasificator.Repositories.EvaluationAreaRepository;
-import Backend.ms_clasificator.Repositories.MedicalImgRepository;
-import Backend.ms_clasificator.Repositories.UIConfigRepository;
+import Backend.ms_clasificator.Repositories.MedicalImageTypeRepository;
+import Backend.ms_clasificator.Repositories.DatasetRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -30,10 +29,10 @@ public class EvaluationAreaService {
     private EvaluationAreaMapper evaluationAreaMapper;
 
     @Autowired
-    private MedicalImgRepository medicalImgRepository;
+    private MedicalImageTypeRepository medicalImageTypeRepository;
 
     @Autowired
-    private UIConfigRepository uiConfigRepository;
+    private DatasetRepository datasetRepository;
 
 
     /**
@@ -110,7 +109,7 @@ public class EvaluationAreaService {
      * @param evaluationAreaUpdateDTO DTO con datos a actualizar
      * @return ApiResponse<EvaluationArea> con el resultado de la operación
      */
-    public ApiResponse<EvaluationArea> update(Integer id, EvaluationAreaUpdateDTO evaluationAreaUpdateDTO) {
+    public ApiResponse<EvaluationAreaResponseDTO> update(Integer id, EvaluationAreaUpdateDTO evaluationAreaUpdateDTO) {
         try {
             if (evaluationAreaUpdateDTO == null) {
                 return ApiResponse.error("El DTO no puede ser nulo");
@@ -135,7 +134,7 @@ public class EvaluationAreaService {
             evaluationArea.setName(evaluationAreaUpdateDTO.getName());
 
             EvaluationArea updated = evaluationAreaRepository.save(evaluationArea);
-            return ApiResponse.success(updated, "Área de evaluación actualizada exitosamente");
+            return ApiResponse.success(evaluationAreaMapper.toResponseDTO(updated), "Área de evaluación actualizada exitosamente");
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
@@ -155,15 +154,15 @@ public class EvaluationAreaService {
             EvaluationArea evaluationArea = evaluationAreaRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Área de evaluación no encontrada con ID: " + id));
 
-            // Validamos que no tenga imagenes medicas asociadas a esta area
-            List<MedicalImg> medicalImgs = this.medicalImgRepository.findByEvaluationAreaId(id);
-            if (!medicalImgs.isEmpty()) {
-                return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene imágenes médicas asociadas");
+            // Validamos que no tenga tipos de imagenes medicas asociadas a esta area
+            List<MedicalImageType> medicalImgTypes = this.medicalImageTypeRepository.findByEvaluationAreaId(id);
+            if (!medicalImgTypes.isEmpty()) {
+                return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene tipos de imágenes médicas asociadas");
             }
             // Validamos que no tenga una configuracionUI asociada
-            UIConfig uiConfig = this.uiConfigRepository.findByEvaluationAreaId(id);
-            if (uiConfig != null) {
-                return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene una configuración UI asociada");
+            Dataset dataset = this.datasetRepository.findByEvaluationAreaId(id);
+            if (dataset != null) {
+                return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene un Dataset asociado");
             }
 
             evaluationAreaRepository.delete(evaluationArea);

@@ -6,10 +6,10 @@ import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.MedicalDiagnosticMappers.MedicalDiagnosticMapper;
 import Backend.ms_clasificator.Models.ImageDiagnostic;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
-import Backend.ms_clasificator.Models.UIState;
+import Backend.ms_clasificator.Models.DatasetCategory;
 import Backend.ms_clasificator.Repositories.ImageDiagnosticRepository;
 import Backend.ms_clasificator.Repositories.MedicalDiagnosticRepository;
-import Backend.ms_clasificator.Repositories.UIStateRepository;
+import Backend.ms_clasificator.Repositories.DatasetCategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,7 @@ public class MedicalDiagnosticService {
     private MedicalDiagnosticMapper medicalDiagnosticMapper;
 
     @Autowired
-    private UIStateRepository uiStateRepository;
+    private DatasetCategoryRepository datasetCategoryRepository;
 
     /**
      * Obtener todos los diagnósticos médicos
@@ -246,8 +246,8 @@ public class MedicalDiagnosticService {
             }
 
             // Validar que sub-diagnostico no este dentro de una configuracion en UIState (No podemos remover un subdiagnostico que ya esta asignado a un uiState)
-            List<UIState> uiStateList = uiStateRepository.findByMedicalDiagnostic_Id(subDiagnosticId);
-            if (!uiStateList.isEmpty()){
+            List<DatasetCategory> datasetCategoryList = datasetCategoryRepository.findByMedicalDiagnostic_Id(subDiagnosticId);
+            if (!datasetCategoryList.isEmpty()){
                 return ApiResponse.error("No se puede remover este sub-diagnóstico porque está asignado a una configuración de UI. Elimine dentro de la Config UI antes de remover este sub-diagnóstico.");
             }
 

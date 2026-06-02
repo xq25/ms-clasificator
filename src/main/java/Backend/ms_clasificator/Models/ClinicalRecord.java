@@ -25,7 +25,6 @@ public class ClinicalRecord {
     private Date visitDate;
 
     // Se permite eliminar la historia clinica, pero las imagenes persisten. Se aplica desde el service.
-
     @JsonIgnore
     @OneToMany(mappedBy = "clinicalRecord", fetch = FetchType.LAZY)
     private List<MedicalImg> medicalImages;
@@ -38,5 +37,10 @@ public class ClinicalRecord {
     // Es obliatorio tener un paciente a la hora de generar la historia clinica
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Patient patient;
+
+    // Si se elimina una visita medica, tambien debemos de eliminar todos los diagnosticos que se le hicieron a ese paciente durante ella.
+    @JsonIgnore
+    @OneToMany(mappedBy = "clinicalRecord", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<Diagnosis> diagnoses;
 
 }

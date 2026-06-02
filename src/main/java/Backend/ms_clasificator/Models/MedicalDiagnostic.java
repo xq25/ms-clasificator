@@ -31,9 +31,9 @@ public class MedicalDiagnostic {
 
     // Relación al diagnostico padre (self-referencing) - nullable
     // Foreing key del diagnostico padre, si lo hay
+    @JsonIgnore // Para evitar problemas de serialización y referencias circulares al convertir a JSON
     @ManyToOne()
     @JoinColumn(name = "parent_diagnostic_id", nullable = true)
-    @JsonIgnore // Para evitar problemas de serialización y referencias circulares al convertir a JSON
     private MedicalDiagnostic parentDiagnostic;
     public Integer getParentDiagnosticId() {
         return parentDiagnostic != null ? parentDiagnostic.getId() : null;
@@ -49,17 +49,23 @@ public class MedicalDiagnostic {
     @JsonIgnore // Para evitar problemas de serialización y referencias circulares al convertir a JSON
     //Si se elimina un medicalDiagnostic se deben eliminar sus composiciones
     @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<UIState> uiStates;
+    private List<DiagnosticCategoryDataset> stateDatasetCategories;
 
-    // Relación a losUIConfig asociados a este diagnóstico o enfermedad
+    // Relación a los datasets asociados a este diagnóstico o enfermedad
     @JsonIgnore // Para evitar problemas de serialización y referencias circulares al convertir a JSON
     @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     //Si se elimina un medicalDiagnostic se deben eliminar sus composiciones
-    private List<UIConfig> uiConfigs;
+    private List<Dataset> datasets;
 
     @JsonIgnore
     @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     private List<ImageDiagnostic> imageDiagnostics;
+
+    // Relacion con visitas medicas asociadas a este diagnostico, es decir, las visitas medicas que han sido clasificadas con este diagnostico
+    // Si se elimina un diagnostico, asi mismo se eliminan los diagnosis
+    @JsonIgnore
+    @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Diagnosis> diagnosis;
 
 
 
