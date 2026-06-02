@@ -7,7 +7,8 @@ import java.util.List;
 
 public interface ImageDoctorDiagnosticsRepository extends JpaRepository<ImageDoctorDiagnostics, Integer> {
     List<ImageDoctorDiagnostics> findByImageDiagnosticId(Integer imageDIagnosticId);
-    boolean existsByImageDiagnostic_IdAndMedicalDiagnosticId(
-            Integer imageDiagnosticId,
-            Integer medicalDiagnosticId);
+
+    List<ImageDoctorDiagnostics> findByMedicalDiagnosticId(Integer medicalDiagnosticId);
+
+    boolean existsByImageDiagnostic_IdAndMedicalDiagnosticId(Integer imageDiagnosticId, Integer medicalDiagnosticId);
 }

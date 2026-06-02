@@ -42,7 +42,7 @@ public class MedicalDiagnostic {
     // Relación a los sub-diagnosticos - nullable
     // Buscamos en esta misma tabla en base al parentDiagnostic, este es el campo por el cual podemos saber cuantos diagnosticos pertenecen a un diagnostico padre
     @JsonIgnore// Para evitar problemas de serialización y referencias circulares al convertir a JSON
-    @OneToMany(mappedBy = "parentDiagnostic", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parentDiagnostic", fetch = FetchType.LAZY)
     private List<MedicalDiagnostic> subDiagnostics = new ArrayList<>();
 
     // Relacion con los puntos de evaluacion asociados a este diagnostico

@@ -31,8 +31,8 @@ public class Dataset {
     @OneToMany(mappedBy = "dataset", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<DatasetCategory> datasetCategories;
 
-    // Podemos primero generar el dataset y despues asignarle un area de evaluacion
-    @OneToOne(mappedBy = "dataset", optional = true)
+    @OneToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "evaluation_area_id", nullable = true)
     private EvaluationArea evaluationArea;
 
 }

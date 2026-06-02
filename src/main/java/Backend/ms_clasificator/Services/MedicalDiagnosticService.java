@@ -5,10 +5,10 @@ import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticUpdateDTO
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.MedicalDiagnosticMappers.MedicalDiagnosticMapper;
 import Backend.ms_clasificator.Models.DiagnosticCategoryDataset;
-import Backend.ms_clasificator.Models.ImageDiagnostic;
+import Backend.ms_clasificator.Models.ImageDoctorDiagnostics;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import Backend.ms_clasificator.Repositories.DiagnosticCategoryDatasetRepository;
-import Backend.ms_clasificator.Repositories.ImageDiagnosticRepository;
+import Backend.ms_clasificator.Repositories.ImageDoctorDiagnosticsRepository;
 import Backend.ms_clasificator.Repositories.MedicalDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -25,7 +25,7 @@ public class MedicalDiagnosticService {
     private MedicalDiagnosticRepository medicalDiagnosticRepository;
 
     @Autowired
-    private ImageDiagnosticRepository imageDiagnosticRepository;
+    private ImageDoctorDiagnosticsRepository imageDoctorDiagnosticsRepository;
 
     @Autowired
     private MedicalDiagnosticMapper medicalDiagnosticMapper;
@@ -159,9 +159,10 @@ public class MedicalDiagnosticService {
                 return ApiResponse.error("El diagnóstico médico no se puede eliminar porque tiene sub-diagnósticos asociados. Elimine o reasigne los sub-diagnósticos antes de eliminar este diagnóstico.");
             }
 
-            List<ImageDiagnostic> imageDiagnosticList = imageDiagnosticRepository.findByMedicalDiagnostic_Id(id);
-            if(!imageDiagnosticList.isEmpty()) {
-                return ApiResponse.error("El diagnóstico médico no se puede eliminar porque tiene diagnósticos de imagen asociados. Elimine o reasigne los diagnósticos de imagen antes de eliminar este diagnóstico.");
+            // Validar que este diagnostico no este dentro de las clasificaciones de cualquier medico
+            List<ImageDoctorDiagnostics> imageDoctorDiagnosticsList = imageDoctorDiagnosticsRepository.findByMedicalDiagnosticId(id);
+            if(!imageDoctorDiagnosticsList.isEmpty()){
+                return ApiResponse.error("No se puede eliminar el diagnostico ya que esta asociado a clasificaciones de imagenes");
             }
 
             medicalDiagnosticRepository.delete(medicalDiagnostic);
