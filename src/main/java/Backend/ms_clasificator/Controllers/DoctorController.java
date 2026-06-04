@@ -36,7 +36,7 @@ public class DoctorController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-
+    //obtener un doctor por id de security
     @GetMapping("user-id/{userId}")
     public ResponseEntity<ApiResponse<DoctorResponseDTO>> findByUserId(@PathVariable String userId){
         ApiResponse<DoctorResponseDTO> response = this.doctorService.findByUserId(userId);

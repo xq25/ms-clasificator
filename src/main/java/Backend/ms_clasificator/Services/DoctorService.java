@@ -167,6 +167,10 @@ public class DoctorService {
             Doctor doctor = doctorRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + id));
 
+            if (doctorUpdateDTO.getCode() != null && doctorRepository.existsByCodeAndIdNot(doctorUpdateDTO.getCode(), id)){
+                    return ApiResponse.error("Ya existe un doctor con el código: " + doctorUpdateDTO.getCode() + ". El código debe ser único.");
+            }
+
             // Actualizar solo los campos que vienen en el DTO
             // Si están disponibles en DoctorUpdateDTO, se actualizan aquí
             doctor.setCode(doctorUpdateDTO.getCode() != null ? doctorUpdateDTO.getCode() : doctor.getCode());
