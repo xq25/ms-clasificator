@@ -17,14 +17,14 @@ public class SecurityConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         // Registramos el interceptor de seguridad para todas las rutas
         // Puedes excluir rutas específicas si es necesario (ej: login, registro)
-        registry.addInterceptor(securityInterceptor)
-                .addPathPatterns("/api/**")
-                // Aquí puedes excluir rutas públicas
-                .excludePathPatterns(
-                        "/api/public/**",
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**"
-                );
+//        registry.addInterceptor(securityInterceptor)
+//                .addPathPatterns("/api/**")
+//                // Aquí puedes excluir rutas públicas
+//                .excludePathPatterns(
+//                        "/api/public/**",
+//                        "/swagger-ui/**",
+//                        "/v3/api-docs/**"
+//                );
     }
 }
 

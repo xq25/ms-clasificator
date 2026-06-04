@@ -140,6 +140,7 @@ public class MedicalImageTypeService {
     }
 
     // Asignar area de evaluacion
+    @Transactional
     public ApiResponse<MedicalImageTypeResponseDTO> assignEvaluationArea(Integer medicalImageTypeId, Integer evaluationAreaId) {
         try {
             MedicalImageType medicalImageType = medicalImageTypeRepository.findById(medicalImageTypeId)

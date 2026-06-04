@@ -7,6 +7,7 @@ import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Services.MedicalImageTypeService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,7 +37,7 @@ public class MedicalImageTypeController {
 	@PostMapping("")
 	public ResponseEntity<ApiResponse<MedicalImageTypeResponseDTO>> create(@Valid @RequestBody MedicalImageTypeCreateDTO dto) {
 		ApiResponse<MedicalImageTypeResponseDTO> response = this.medicalImageTypeService.create(dto);
-		if (response.isSuccess()) return ResponseEntity.ok(response);
+		if (response.isSuccess()) return ResponseEntity.status(HttpStatus.CREATED).body(response);
 		return ResponseEntity.badRequest().body(response);
 	}
 
