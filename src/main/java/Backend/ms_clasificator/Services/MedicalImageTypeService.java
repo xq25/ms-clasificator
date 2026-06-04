@@ -159,7 +159,7 @@ public class MedicalImageTypeService {
             return ApiResponse.error("Error al asignar área de evaluación: " + ex.getMessage());
         }
     }
-
+    @Transactional
     //Remover area de evaluacion
     public ApiResponse<MedicalImageTypeResponseDTO> removeEvaluationArea(Integer medicalImageTypeId) {
         try {

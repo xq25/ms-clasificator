@@ -100,7 +100,7 @@ public class PatientService {
             boolean exist = this.securityServices.existUserById(patientCreateDTO.getUserId());
 
             if(!exist){
-                return ApiResponse.error("No existe un usuario con id" + patientCreateDTO.getUserId());
+                return ApiResponse.error("No existe un usuario con id " + patientCreateDTO.getUserId());
             }
 
             // Validar que no exista paciente con el mismo userId

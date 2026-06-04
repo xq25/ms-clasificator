@@ -40,6 +40,7 @@ public class SecurityServices {
                             "/getway/security/api/" +
                             userId +
                             "/exist";
+            System.out.println("URL CONSULTADA: " + url);
 
             ResponseEntity<ApiResponse> response =
                     restTemplate.exchange(
@@ -48,10 +49,13 @@ public class SecurityServices {
                             buildRequestEntity(),
                             ApiResponse.class
                     );
+            System.out.println("RESPONSE: " + response.getBody());
 
             if (response.getBody() != null) {
 
                 Object data = response.getBody().getData();
+
+                System.out.println("DATA: " + data);
 
                 if (data instanceof Boolean) {
                     return (Boolean) data;
@@ -61,6 +65,7 @@ public class SecurityServices {
             return false;
 
         } catch (Exception ex) {
+            ex.printStackTrace(); // MUY IMPORTANTE PARA IDENTIFICAR EL ERROR EN CASO DE FALLAS
             return false;
         }
     }
