@@ -4,6 +4,7 @@ import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordCreateDTO;
 import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordResponseDTO;
 import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.Models.ClinicalRecord;
 import Backend.ms_clasificator.Services.ClinicalRecordService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,16 +40,23 @@ public class ClinicalRecordController {
 		return ResponseEntity.badRequest().body(response);
 	}
 
+	@GetMapping("patient/{patientId}")
+	public ResponseEntity<ApiResponse<List<ClinicalRecordResponseDTO>>> findByPatientId(@PathVariable Integer patientId) {
+		ApiResponse<List<ClinicalRecordResponseDTO>> response = this.clinicalRecordService.findByPatientId(patientId);
+		if (response.isSuccess()) return ResponseEntity.ok(response);
+		return ResponseEntity.badRequest().body(response);
+	}
+
 	@PostMapping("")
-	public ResponseEntity<ApiResponse<ClinicalRecordResponseDTO>> create(@Valid @org.springframework.web.bind.annotation.RequestBody ClinicalRecordCreateDTO dto) {
-		ApiResponse<ClinicalRecordResponseDTO> response = this.clinicalRecordService.create(dto);
+	public ResponseEntity<ApiResponse<ClinicalRecord>> create(@Valid @org.springframework.web.bind.annotation.RequestBody ClinicalRecordCreateDTO dto) {
+		ApiResponse<ClinicalRecord> response = this.clinicalRecordService.create(dto);
 		if (response.isSuccess()) return ResponseEntity.ok(response);
 		return ResponseEntity.badRequest().body(response);
 	}
 
 	@PutMapping("{id}")
-	public ResponseEntity<ApiResponse<ClinicalRecordResponseDTO>> update(@PathVariable Integer id, @Valid @org.springframework.web.bind.annotation.RequestBody ClinicalRecordUpdateDTO dto) {
-		ApiResponse<ClinicalRecordResponseDTO> response = this.clinicalRecordService.update(id, dto);
+	public ResponseEntity<ApiResponse<ClinicalRecord>> update(@PathVariable Integer id, @Valid @org.springframework.web.bind.annotation.RequestBody ClinicalRecordUpdateDTO dto) {
+		ApiResponse<ClinicalRecord> response = this.clinicalRecordService.update(id, dto);
 		if (response.isSuccess()) return ResponseEntity.ok(response);
 		return ResponseEntity.badRequest().body(response);
 	}
@@ -61,11 +69,11 @@ public class ClinicalRecordController {
 	}
 
 	@PutMapping("{clinicalRecordId}/patient/{newPatientId}")
-	public ResponseEntity<ApiResponse<ClinicalRecordResponseDTO>> changePatient(
+	public ResponseEntity<ApiResponse<ClinicalRecord>> changePatient(
 			@PathVariable Integer clinicalRecordId,
 			@PathVariable Integer newPatientId
 	) {
-		ApiResponse<ClinicalRecordResponseDTO> response = this.clinicalRecordService.changePatient(clinicalRecordId, newPatientId);
+		ApiResponse<ClinicalRecord> response = this.clinicalRecordService.changePatient(clinicalRecordId, newPatientId);
 		if (response.isSuccess()) return ResponseEntity.ok(response);
 		return ResponseEntity.badRequest().body(response);
 	}

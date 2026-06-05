@@ -77,10 +77,6 @@ public class MedicalImg extends SystemDatum{
     @JoinColumn(name = "medical_image_type_id", nullable = false)
     private MedicalImageType medicalImageType;
 
-    @JsonIgnore // No queremos cargar todos los diagnosticos de la imagen
-    @OneToMany(mappedBy = "medicalImg", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
-    private List<ImageDiagnostic> imageDiagnostics;
-
     @JsonIgnore // No cargamos el clinical record, es inecesario
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     // Las imagenes puedenn vivir sin la asociacion con las historia medicas (composicion pasiva)

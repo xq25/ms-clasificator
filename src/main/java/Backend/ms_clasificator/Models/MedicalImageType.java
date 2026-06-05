@@ -23,10 +23,6 @@ public class MedicalImageType {
     @Column(name = "name", unique = true, nullable = false)
     private String name;
 
-    @JsonIgnore // No cargamos todas las imagenes, no se puede eliminar un tipo de imagen si hay imagenes asociadas a el.
-    @OneToMany(mappedBy = "medicalImageType", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
-    private List<MedicalImg> medicalImgs;
-
     // Podemos generar el tipo de imagenes y despues asociarlas a un area de evaluacion
     @ManyToOne(fetch = FetchType.LAZY)
     private EvaluationArea evaluationArea;

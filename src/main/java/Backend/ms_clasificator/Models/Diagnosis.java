@@ -1,6 +1,4 @@
 package Backend.ms_clasificator.Models;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,8 +15,7 @@ public class Diagnosis {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    // No es necesario cargar la visita medica a la cual pertenece, ya que seria muy repetitivo
-    @JsonIgnore
+    // No es necesario cargar la visita medica a la cual pertenece, ya que seria muy repetitivo(puede llegar a tener jsonIgnore)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "clinical_record_id")
     private ClinicalRecord clinicalRecord;

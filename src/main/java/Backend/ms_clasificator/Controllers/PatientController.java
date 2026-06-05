@@ -1,6 +1,8 @@
 package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.Patient.PatientCreateDTO;
+import Backend.ms_clasificator.DTOs.Patient.PatientResponseDTO;
+import Backend.ms_clasificator.DTOs.Patient.PatientUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Models.Patient;
 import Backend.ms_clasificator.Services.PatientService;
@@ -35,8 +37,8 @@ public class PatientController {
      * @return Paciente encontrado
      */
     @GetMapping("{id}")
-    public ResponseEntity<ApiResponse<Patient>> findById(@PathVariable Integer id) {
-        ApiResponse<Patient> response = patientService.findById(id);
+    public ResponseEntity<ApiResponse<PatientResponseDTO>> findById(@PathVariable Integer id) {
+        ApiResponse<PatientResponseDTO> response = patientService.findById(id);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -46,8 +48,8 @@ public class PatientController {
     }
 
     @GetMapping("user-id/{userId}")
-    public ResponseEntity<ApiResponse<Patient>> findByUserId(@PathVariable String userId){
-        ApiResponse<Patient> response = patientService.findByUserId(userId);
+    public ResponseEntity<ApiResponse<PatientResponseDTO>> findByUserId(@PathVariable String userId){
+        ApiResponse<PatientResponseDTO> response = patientService.findByUserId(userId);
 
         if(response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -62,8 +64,8 @@ public class PatientController {
      * @return Paciente encontrado
      */
     @GetMapping("document/{document}")
-    public ResponseEntity<ApiResponse<Patient>> findByDocument(@PathVariable String document) {
-        ApiResponse<Patient> response = patientService.findByDocument(document);
+    public ResponseEntity<ApiResponse<PatientResponseDTO>> findByDocument(@PathVariable String document) {
+        ApiResponse<PatientResponseDTO> response = patientService.findByDocument(document);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -91,12 +93,12 @@ public class PatientController {
     /**
      * Actualizar un paciente existente
      * @param id ID del paciente a actualizar
-     * @param patientCreateDTO DTO con datos a actualizar
+     * @param patientUpdateDTO DTO con datos a actualizar
      * @return ApiResponse con el resultado
      */
     @PutMapping("{id}")
-    public ResponseEntity<ApiResponse<Patient>> update(@PathVariable Integer id, @Valid @RequestBody PatientCreateDTO patientCreateDTO) {
-        ApiResponse<Patient> response = patientService.update(id, patientCreateDTO);
+    public ResponseEntity<ApiResponse<Patient>> update(@PathVariable Integer id, @Valid @RequestBody PatientUpdateDTO patientUpdateDTO) {
+        ApiResponse<Patient> response = patientService.update(id, patientUpdateDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

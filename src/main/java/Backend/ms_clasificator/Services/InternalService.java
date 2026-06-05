@@ -18,7 +18,7 @@ public class InternalService {
 
     public boolean existRelation(String userId){
         Doctor doctorRelation = this.theDoctorRepository.findByUserId(userId);
-        Patient patientRelation = this.thePatientRepository.findByUserId(userId);
+        Patient patientRelation = this.thePatientRepository.findByUserId(userId).orElse(null);
         boolean validation = false;
 
         if (doctorRelation != null || patientRelation != null){
@@ -34,7 +34,7 @@ public class InternalService {
     }
 
     public boolean existRelationWithPatient(String userId){
-        Patient patientRelation = this.thePatientRepository.findByUserId(userId);
+        Patient patientRelation = this.thePatientRepository.findByUserId(userId).orElse(null);
         return patientRelation != null;
 
     }

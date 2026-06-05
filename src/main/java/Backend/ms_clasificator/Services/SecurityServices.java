@@ -131,4 +131,34 @@ public class SecurityServices {
             return false;
         }
     }
+
+    public String getUserNameById(String userId) {
+
+        try {
+
+            String url =
+                    securityUrl +
+                            "/getway/security/api/get-username/"+ userId;
+
+            ResponseEntity<ApiResponse> response =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.GET,
+                            buildRequestEntity(),
+                            ApiResponse.class
+                    );
+
+            if (response.getBody() != null) {
+                if (response.getBody().getData() instanceof String) {
+                    String data = (String) response.getBody().getData();
+                    return data;
+                }
+            }
+
+            return null;
+
+        } catch (Exception ex) {
+            return null;
+        }
+    }
 }

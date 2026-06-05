@@ -39,12 +39,6 @@ public class ImageDiagnostic {
         return medicalImg != null ? medicalImg.getId() : null;
     }
 
-    // No necesitamos cargar todos los diagnosticos que se le dieron a esta imagen por este medico.
-    // Si se elimina el diagnostico que dio el medico, se debe eliminar toda la informacion que a este compone
-    @JsonIgnore
-    @OneToMany(mappedBy = "imageDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<ImageDoctorDiagnostics> imageDoctorDiagnostics;
-
     @Column(name = "diagnostic_date", nullable = false)
     private LocalDateTime diagnosticDate;
 }

@@ -26,16 +26,6 @@ public class EvaluationArea {
     @Column(name = "name", unique = true, nullable = false)
     private String name;
 
-    // Si se elimina una area de evaluacion se debe eliminar la relacion intermedia con doctor
-    @JsonIgnore
-    @OneToMany(mappedBy = "evaluationArea", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<DoctorArea> doctorAreas;
-
-    // Las cargas de los tipos de imagenes medicas lo hacemos mediante consultas, ya que pueden ser varias
-    @JsonIgnore
-    @OneToMany(mappedBy = "evaluationArea", fetch = FetchType.LAZY)
-    private List<MedicalImageType> medicalImageTypes;
-
     // No es necesario cargar la configuracion(Dataset) para clasificar, que tiene asiganada esta area de evaluacion.
     @JsonIgnore
     @OneToOne(mappedBy = "evaluationArea", optional = true)

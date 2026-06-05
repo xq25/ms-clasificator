@@ -14,5 +14,6 @@ public class PatientResponseDTO {
     private String document;
     private Integer years;
     private String userId;
+    private String userName;
 }
 

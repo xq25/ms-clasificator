@@ -40,8 +40,7 @@ public class ClinicalRecordMapper implements Mapper<ClinicalRecord, ClinicalReco
         return ClinicalRecordResponseDTO.builder()
                 .id(entity.getId())
                 .visitDate(entity.getVisitDate())
-                .patientId(entity.getPatient() != null ? entity.getPatient().getId() : null)
-                .patientDocument(entity.getPatient() != null ? entity.getPatient().getDocument() : null)
+                .patientInfo(null) // Esta relacion se carga desde el servicio
                 .build();
     }
 }

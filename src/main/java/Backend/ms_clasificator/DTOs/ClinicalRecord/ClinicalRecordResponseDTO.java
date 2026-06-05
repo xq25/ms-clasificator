@@ -14,7 +14,5 @@ import java.util.Date;
 public class ClinicalRecordResponseDTO {
     private Integer id;
     private Date visitDate;
-    private Integer patientId;
-    private String patientDocument;
 }
 

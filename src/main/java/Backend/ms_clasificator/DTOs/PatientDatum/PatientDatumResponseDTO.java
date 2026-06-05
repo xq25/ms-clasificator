@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class PatientDatumResponseDTO {
     private Integer id;
-    private String name;
     private String description;
     private PrimitiveDatum primitiveDatum;
 }
