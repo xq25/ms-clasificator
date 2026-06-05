@@ -96,6 +96,7 @@ public class DatasetCategoryService {
      * @param datasetCategoryCreateDTO DTO con datos de entrada
      * @return ApiResponse<UIState> con el resultado de la operación
      */
+    @Transactional
     public ApiResponse<DatasetCategoryResponseDTO> create(DatasetCategoryCreateDTO datasetCategoryCreateDTO) {
         try {
             if (datasetCategoryCreateDTO == null) {
@@ -130,6 +131,7 @@ public class DatasetCategoryService {
      * @param id ID del estado a eliminar
      * @return ApiResponse con el resultado de la operación
      */
+    @Transactional
     public ApiResponse<Void> delete(Integer id) {
         try {
             DatasetCategory datasetCategory = datasetCategoryRepository.findById(id)

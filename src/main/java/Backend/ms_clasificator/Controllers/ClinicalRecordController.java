@@ -7,6 +7,7 @@ import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Services.ClinicalRecordService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,7 +43,7 @@ public class ClinicalRecordController {
 	@PostMapping("")
 	public ResponseEntity<ApiResponse<ClinicalRecordResponseDTO>> create(@Valid @org.springframework.web.bind.annotation.RequestBody ClinicalRecordCreateDTO dto) {
 		ApiResponse<ClinicalRecordResponseDTO> response = this.clinicalRecordService.create(dto);
-		if (response.isSuccess()) return ResponseEntity.ok(response);
+		if (response.isSuccess()) return ResponseEntity.status(HttpStatus.CREATED).body(response);
 		return ResponseEntity.badRequest().body(response);
 	}
 

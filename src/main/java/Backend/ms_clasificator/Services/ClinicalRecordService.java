@@ -81,7 +81,7 @@ public class ClinicalRecordService {
             return ApiResponse.error("Error al crear registro médico: " + ex.getMessage());
         }
     }
-
+    @Transactional
     public ApiResponse<ClinicalRecordResponseDTO> update(Integer id, ClinicalRecordUpdateDTO dto) {
         try {
             if (dto == null) {

@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -121,7 +122,7 @@ public class DatasetController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-
+    @Transactional
     @PutMapping("{uiConfigId}/evaluation-area/{evaluationAreaId}")
     public ResponseEntity<ApiResponse<DatasetResponseDTO>> assignEvaluationArea(@PathVariable Integer uiConfigId, @PathVariable Integer evaluationAreaId) {
         ApiResponse<DatasetResponseDTO> response = datasetService.assingToEvaluationArea(uiConfigId, evaluationAreaId);
@@ -129,7 +130,7 @@ public class DatasetController {
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.badRequest().body(response);
     }
-
+    @Transactional
     @PutMapping("removeFromArea/{uiConfigId}")
     public ResponseEntity<ApiResponse<DatasetResponseDTO>> removeFromEvaluationArea(@PathVariable Integer uiConfigId) {
         ApiResponse<DatasetResponseDTO> response = datasetService.removeFromEvaluationArea(uiConfigId);
