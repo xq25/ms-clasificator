@@ -159,10 +159,9 @@ public class EvaluationAreaService {
             if (!medicalImgTypes.isEmpty()) {
                 return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene tipos de imágenes médicas asociadas");
             }
-            // Validamos que no tenga una configuracionUI asociada
-            Dataset dataset = this.datasetRepository.findByEvaluationAreaId(id);
-            if (dataset != null) {
-                return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene un Dataset asociado");
+            // Validamos que no tenga una dataset asociada
+            if(datasetRepository.existByEvaluationAreaId(id)){
+                return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene datasets asociadas");
             }
 
             evaluationAreaRepository.delete(evaluationArea);

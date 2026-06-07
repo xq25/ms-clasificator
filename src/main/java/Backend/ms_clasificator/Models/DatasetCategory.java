@@ -1,10 +1,13 @@
 package Backend.ms_clasificator.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Entity
@@ -24,5 +27,9 @@ public class DatasetCategory {
     @JoinColumn(name = "dataset_id", nullable = false, updatable = false)
     private Dataset dataset;
 
+    // Solo lo colocamos por el cascade, no lo mostramos en el json
+    @JsonIgnore
+    @OneToMany(mappedBy = "datasetCategory", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DiagnosticCategoryDataset> diagnosticCategoryDatasets;
 }
 

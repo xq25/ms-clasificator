@@ -2,11 +2,10 @@ package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticResponseDTO;
+import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticSummaryDTO;
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.MedicalDiagnosticMappers.MedicalDiagnosticMapper;
-import Backend.ms_clasificator.Models.DiagnosticCategoryDataset;
-import Backend.ms_clasificator.Models.ImageDoctorDiagnostics;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import Backend.ms_clasificator.Repositories.DiagnosticCategoryDatasetRepository;
 import Backend.ms_clasificator.Repositories.ImageDoctorDiagnosticsRepository;
@@ -14,7 +13,6 @@ import Backend.ms_clasificator.Repositories.MedicalDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -62,16 +60,16 @@ public class MedicalDiagnosticService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<MedicalDiagnosticResponseDTO>> findByParentDiagnosticId(Integer parentDiagnosticId) {
+    public ApiResponse<List<MedicalDiagnosticSummaryDTO>> findByParentDiagnosticId(Integer parentDiagnosticId) {
         try {
             if(!this.medicalDiagnosticRepository.existsById(parentDiagnosticId)){
                 return ApiResponse.error("No se encontró un diagnóstico padre con ID: " + parentDiagnosticId);
             }
 
-            List<MedicalDiagnosticResponseDTO> diagnostics = medicalDiagnosticRepository
+            List<MedicalDiagnosticSummaryDTO> diagnostics = medicalDiagnosticRepository
                     .findByParentDiagnosticId(parentDiagnosticId)
                     .stream()
-                    .map(medicalDiagnosticMapper::toResponseDTO)
+                    .map(medicalDiagnosticMapper::toSummaryDTO)
                     .toList();
             return ApiResponse.success(diagnostics, "Diagnósticos médicos encontrados para el diagnóstico padre ID: " + parentDiagnosticId);
         } catch (Exception ex) {

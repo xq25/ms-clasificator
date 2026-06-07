@@ -17,6 +17,9 @@ public class Dataset {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "name", unique = true)
+    private String name;
+
     // Cargamos el diagnostico sobre el cual se genera el dataset de clasificacion.
     // Para generar un dataset debemos especificar que diagnostico vamos a clasificar
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

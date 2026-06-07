@@ -1,6 +1,7 @@
 package Backend.ms_clasificator.DTOs.Dataset;
 
-import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticResponseDTO;
+import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaSummaryDTO;
+import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticSummaryDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,8 +14,8 @@ import lombok.NoArgsConstructor;
 public class DatasetResponseDTO {
     private Integer id;
     private String name;
-    private MedicalDiagnosticResponseDTO medicalDiagnostic;
-    private Integer evaluationAreaId;
-    private String evaluationAreaName;
+    private MedicalDiagnosticSummaryDTO medicalDiagnostic;
+    private EvaluationAreaSummaryDTO evaluationArea;
+
 }
 

@@ -3,12 +3,17 @@ package Backend.ms_clasificator.Mappers.DatasetCategory;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryCreateDTO;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryResponseDTO;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategorySummaryDTO;
+import Backend.ms_clasificator.Mappers.Dataset.DatasetMappers;
 import Backend.ms_clasificator.Mappers.Mapper;
 import Backend.ms_clasificator.Models.DatasetCategory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DatasetCategoryMappers implements Mapper<DatasetCategory, DatasetCategoryCreateDTO, DatasetCategoryResponseDTO, DatasetCategorySummaryDTO> {
+
+    @Autowired
+    private DatasetMappers datasetMapper;
 
     @Override
     public DatasetCategory toEntity(DatasetCategoryCreateDTO datasetCategoryCreateDTO) {
@@ -41,6 +46,7 @@ public class DatasetCategoryMappers implements Mapper<DatasetCategory, DatasetCa
         return DatasetCategoryResponseDTO.builder()
                 .id(datasetCategory.getId())
                 .numValue(datasetCategory.getNumValue())
+                .dataset(datasetCategory.getDataset() != null ? datasetMapper.toSummaryDTO(datasetCategory.getDataset()) : null)
                 .build();
     }
 

@@ -46,8 +46,7 @@ public class MedicalDiagnosticMapper implements Mapper<MedicalDiagnostic, Medica
                 .id(medicalDiagnostic.getId())
                 .diagnosticName(medicalDiagnostic.getDiagnosticName())
                 .diagnosticCode(medicalDiagnostic.getDiagnosticCode())
-                .parentDiagnosticId(medicalDiagnostic.getParentDiagnostic() != null ? medicalDiagnostic.getParentDiagnostic().getId() : null)
-                .parentDiagnosticCode(medicalDiagnostic.getParentDiagnostic() != null ? medicalDiagnostic.getDiagnosticCode() : null) // El codigo lo definimos dentro del service
+                .parentDiagnostic(medicalDiagnostic.getParentDiagnostic() != null ? toSummaryDTO(medicalDiagnostic.getParentDiagnostic()) : null)
                 .build();
     }
 

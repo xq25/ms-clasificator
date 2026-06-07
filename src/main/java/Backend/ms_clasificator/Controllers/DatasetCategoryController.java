@@ -2,6 +2,7 @@ package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryCreateDTO;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryResponseDTO;
+import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategorySummaryDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Services.DatasetCategoryService;
 import jakarta.validation.Valid;
@@ -9,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/dataset-categories")
@@ -22,7 +25,7 @@ public class DatasetCategoryController {
      * @return Lista de todos los estados
      */
     @GetMapping("")
-    public ResponseEntity<ApiResponse<java.util.List<DatasetCategoryResponseDTO>>> findAll() {
+    public ResponseEntity<ApiResponse<List<DatasetCategoryResponseDTO>>> findAll() {
         ApiResponse<java.util.List<DatasetCategoryResponseDTO>> response = this.datasetCategoryService.findAll();
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
@@ -49,8 +52,8 @@ public class DatasetCategoryController {
      * @return Lista de categorias del dataset
      */
     @GetMapping("dataset/{datasetId}")
-    public ResponseEntity<ApiResponse<java.util.List<DatasetCategoryResponseDTO>>> findByUiConfigId(@PathVariable Integer datasetId) {
-        ApiResponse<java.util.List<DatasetCategoryResponseDTO>> response = this.datasetCategoryService.findByDatasetId(datasetId);
+    public ResponseEntity<ApiResponse<List<DatasetCategorySummaryDTO>>> findByDatasetId(@PathVariable Integer datasetId) {
+        ApiResponse<java.util.List<DatasetCategorySummaryDTO>> response = this.datasetCategoryService.findByDatasetId(datasetId);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

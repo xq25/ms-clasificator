@@ -2,6 +2,7 @@ package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.DiagnosticCategoryDataset.DiagnosticCategoryDatasetCreateDTO;
 import Backend.ms_clasificator.DTOs.DiagnosticCategoryDataset.DiagnosticCategoryDatasetResponseDTO;
+import Backend.ms_clasificator.DTOs.DiagnosticCategoryDataset.DiagnosticCategoryDatasetSummaryDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Services.DiagnosticCategoryDatasetService;
 import jakarta.validation.Valid;
@@ -9,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/diagnostic-category-datasets")
@@ -22,9 +25,9 @@ public class DiagnosticCategoryDatasetController {
      * @return Lista de asociaciones diagnóstico-categoría
      */
     @GetMapping("")
-    public ResponseEntity<ApiResponse<java.util.List<DiagnosticCategoryDatasetResponseDTO>>> findAll() {
+    public ResponseEntity<ApiResponse<List<DiagnosticCategoryDatasetSummaryDTO>>> findAll() {
 
-        ApiResponse<java.util.List<DiagnosticCategoryDatasetResponseDTO>> response =
+        ApiResponse<List<DiagnosticCategoryDatasetSummaryDTO>> response =
                 this.diagnosticCategoryDatasetService.findAll();
 
         return response.isSuccess()
@@ -57,10 +60,9 @@ public class DiagnosticCategoryDatasetController {
      * @return Lista de diagnósticos asociados
      */
     @GetMapping("dataset-category/{datasetCategoryId}")
-    public ResponseEntity<ApiResponse<java.util.List<DiagnosticCategoryDatasetResponseDTO>>>
-    findByDatasetCategoryId(@PathVariable Integer datasetCategoryId) {
+    public ResponseEntity<ApiResponse<List<DiagnosticCategoryDatasetSummaryDTO>>> findByDatasetCategoryId(@PathVariable Integer datasetCategoryId) {
 
-        ApiResponse<java.util.List<DiagnosticCategoryDatasetResponseDTO>> response =
+        ApiResponse<List<DiagnosticCategoryDatasetSummaryDTO>> response =
                 this.diagnosticCategoryDatasetService.findByDatasetCategoryId(datasetCategoryId);
 
         if (response.isSuccess()) {
@@ -76,8 +78,7 @@ public class DiagnosticCategoryDatasetController {
      * @return Asociación creada
      */
     @PostMapping("")
-    public ResponseEntity<ApiResponse<DiagnosticCategoryDatasetResponseDTO>> create(
-            @Valid @RequestBody DiagnosticCategoryDatasetCreateDTO dto) {
+    public ResponseEntity<ApiResponse<DiagnosticCategoryDatasetResponseDTO>> create(@Valid @RequestBody DiagnosticCategoryDatasetCreateDTO dto) {
 
         ApiResponse<DiagnosticCategoryDatasetResponseDTO> response =
                 this.diagnosticCategoryDatasetService.create(dto);

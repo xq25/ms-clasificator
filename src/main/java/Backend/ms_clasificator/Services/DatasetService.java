@@ -2,6 +2,7 @@ package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.Dataset.DatasetCreateDTO;
 import Backend.ms_clasificator.DTOs.Dataset.DatasetResponseDTO;
+import Backend.ms_clasificator.DTOs.Dataset.DatasetSummaryDTO;
 import Backend.ms_clasificator.DTOs.Dataset.DatasetUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.Dataset.DatasetMappers;
@@ -42,16 +43,14 @@ public class DatasetService {
      * @return Lista de todas las configuraciones
      */
     @Transactional(readOnly = true)
-    public ApiResponse<List<DatasetResponseDTO>> findAll() {
-        try {
-            List<DatasetResponseDTO> datasets = datasetRepository.findAll()
-                    .stream()
-                    .map(datasetMappers::toResponseDTO)
-                    .toList();
-            return ApiResponse.success(datasets, "Datasets obtenidos exitosamente");
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al listar Datasets: " + ex.getMessage());
-        }
+    public ApiResponse<List<DatasetSummaryDTO>> findAll() {
+
+        List<DatasetSummaryDTO> datasets = datasetRepository.findAll()
+                .stream()
+                .map(datasetMappers::toSummaryDTO)
+                .toList();
+        return ApiResponse.success(datasets, "Datasets obtenidos exitosamente");
+
     }
 
     /**
@@ -62,42 +61,48 @@ public class DatasetService {
     @Transactional(readOnly = true)
     public ApiResponse<DatasetResponseDTO> findById(Integer id) {
         try {
-            Dataset dataset = datasetRepository.findById(id).orElseThrow(() ->
-                    new IllegalArgumentException("Dataset no encontrado con ID: " + id));
-            return ApiResponse.success(datasetMappers.toResponseDTO(dataset), "Dataset encontrado");
+            DatasetResponseDTO dataset = datasetRepository.findById(id)
+                    .map(datasetMappers::toResponseDTO)
+                    .orElseThrow(() -> new IllegalArgumentException("Dataset no encontrado con ID: " + id));
+
+            return ApiResponse.success(dataset, "Dataset encontrado");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al buscar Dataset por ID: " + ex.getMessage());
         }
     }
 
-    @Transactional
-    public ApiResponse<DatasetResponseDTO> findByEvaluationAreaId(Integer evaluationAreaId){
-        // Validamos que el area de evaluacion exista
-        EvaluationArea evaluationArea = this.evaluationAreaRepository.findById(evaluationAreaId).orElse(null);
-        if (evaluationArea == null){
-            return ApiResponse.error("Area de Evaluacion no encontrada con ID: " + evaluationAreaId);
+    @Transactional(readOnly = true)
+    public ApiResponse<DatasetSummaryDTO> findByEvaluationAreaId(Integer evaluationAreaId) {
+        try {
+            // Validamos que el area de evaluacion exista
+            if (!evaluationAreaRepository.existsById(evaluationAreaId)) {
+                return ApiResponse.error("Area de evaluación no encontrada con ID: " + evaluationAreaId);
+            }
+
+            DatasetSummaryDTO dataset = this.datasetRepository.findByEvaluationAreaId(evaluationAreaId).map(datasetMappers::toSummaryDTO)
+                    .orElseThrow(() -> new IllegalArgumentException("No se encontró un Dataset asignado al área de evaluación con ID: " + evaluationAreaId));
+
+            return ApiResponse.success(dataset, "Dataset encontrado para el área de evaluación con ID: " + evaluationAreaId);
+
+        }catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
         }
-        Dataset dataset = this.datasetRepository.findByEvaluationAreaId(evaluationAreaId);
-        if(dataset == null){
-            return ApiResponse.error("No se encontró un Dataset asociado al área de evaluación con ID: " + evaluationAreaId);
-        }
-        return ApiResponse.success(datasetMappers.toResponseDTO(dataset), "Dataset encontrado para el área de evaluación con ID: " + evaluationAreaId);
+
     }
 
     /**
-     * Obtener todas las configuraciones UI de un diagnóstico médico
+     * Obtener todas las dataset de un diagnóstico médico
      * @param medicalDiagnosticId ID del diagnóstico médico
      * @return Lista de Datasets para clasificaciones del diagnostico
      */
     @Transactional(readOnly = true)
     public ApiResponse<List<DatasetResponseDTO>> findByMedicalDiagnosticId(Integer medicalDiagnosticId) {
         try{
-            MedicalDiagnostic medicalDiagnostic = this.medicalDiagnosticRepository.findById(medicalDiagnosticId).orElseThrow(() ->
-                    new IllegalArgumentException("Diagnóstico médico no encontrado con ID: " + medicalDiagnosticId));
+            if(!medicalDiagnosticRepository.existsById(medicalDiagnosticId)){
+                return ApiResponse.error("Diagnóstico médico no encontrado con ID: " + medicalDiagnosticId);
+            }
 
-            List<DatasetResponseDTO> datasets = datasetRepository.findByMedicalDiagnostic_Id(medicalDiagnosticId)
+            List<DatasetResponseDTO> datasets = datasetRepository.findByMedicalDiagnosticId(medicalDiagnosticId)
                     .stream()
                     .map(datasetMappers::toResponseDTO)
                     .toList();
@@ -116,7 +121,7 @@ public class DatasetService {
     }
 
     /**
-     * Crear una nueva configuración UI
+     * Crear una nueva dataset
      * @param datasetCreateDTO DTO con datos de entrada
      * @return ApiResponse<UIConfig> con el resultado de la operación
      */
@@ -132,21 +137,18 @@ public class DatasetService {
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Diagnóstico médico no encontrado con ID: " + datasetCreateDTO.getMedicalDiagnosticId()));
 
-            // Validar que no exista ya una configuración para este diagnóstico
-            if (datasetRepository.existsByMedicalDiagnostic_Id(datasetCreateDTO.getMedicalDiagnosticId())) {
-                return ApiResponse.error("Ya existe una configuración UI para este diagnóstico médico");
+            // Validar que no exista ya un dataset para este diagnóstico
+            if (datasetRepository.existsByMedicalDiagnosticId(datasetCreateDTO.getMedicalDiagnosticId())) {
+                return ApiResponse.error("Ya existe una dataset para este diagnóstico médico");
             }
 
             Dataset dataset = datasetMappers.toEntity(datasetCreateDTO);
             dataset.setMedicalDiagnostic(medicalDiagnostic);
 
-            Dataset saved = datasetRepository.save(dataset);
-            return ApiResponse.success(datasetMappers.toResponseDTO(saved), "Configuración UI creada exitosamente");
+            return ApiResponse.success(datasetMappers.toResponseDTO(datasetRepository.save(dataset)), "Configuración UI creada exitosamente");
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al crear configuración UI: " + ex.getMessage());
         }
     }
 
@@ -157,12 +159,11 @@ public class DatasetService {
      * @return ApiResponse<UIConfig> con el resultado de la operación
      */
     @Transactional
-    public ApiResponse<DatasetResponseDTO> changeMedicalDiagnostic(Integer id, DatasetUpdateDTO datasetUpdateDTO) {
+    public ApiResponse<DatasetResponseDTO> update(Integer id, DatasetUpdateDTO datasetUpdateDTO) {
         try {
             if (datasetUpdateDTO == null) {
                 return ApiResponse.error("El DTO no puede ser nulo");
             }
-
             Dataset dataset = datasetRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Dataset no encontrado con ID: " + id));
 
@@ -173,7 +174,7 @@ public class DatasetService {
                             "Diagnóstico médico no encontrado con ID: " + datasetUpdateDTO.getMedicalDiagnosticId()));
 
             // Validamos que no exista ya un dataset para ese diagnostico
-            if (datasetRepository.existsByMedicalDiagnostic_Id(datasetUpdateDTO.getMedicalDiagnosticId())) {
+            if (datasetRepository.existsByMedicalDiagnosticId(datasetUpdateDTO.getMedicalDiagnosticId())) {
                 return ApiResponse.error("Ya existe un Dataset para clasificar este diagnóstico médico");
             }
 
@@ -186,9 +187,7 @@ public class DatasetService {
             }
 
             dataset.setMedicalDiagnostic(medicalDiagnostic);
-
-            Dataset updated = datasetRepository.save(dataset);
-            return ApiResponse.success(datasetMappers.toResponseDTO(updated), "Configuración UI actualizada exitosamente");
+            return ApiResponse.success(datasetMappers.toResponseDTO(datasetRepository.save(dataset)), "Dataset actualizado exitosamente");
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
@@ -230,9 +229,7 @@ public class DatasetService {
             }
 
             dataset.setEvaluationArea(evaluationArea);
-            Dataset updated = datasetRepository.save(dataset);
-
-            return ApiResponse.success(datasetMappers.toResponseDTO(updated), "Configuración UI asignada exitosamente al área de evaluación");
+            return ApiResponse.success(datasetMappers.toResponseDTO(datasetRepository.save(dataset)), "Configuración UI asignada exitosamente al área de evaluación");
 
 
         } catch (IllegalArgumentException ex) {
@@ -253,9 +250,7 @@ public class DatasetService {
             }
 
             dataset.setEvaluationArea(null);
-            Dataset updated = datasetRepository.save(dataset);
-
-            return ApiResponse.success(datasetMappers.toResponseDTO(updated), "Dataset desvinculado exitosamente del área de evaluación");
+            return ApiResponse.success(datasetMappers.toResponseDTO(datasetRepository.save(dataset)), "Dataset desvinculado exitosamente del área de evaluación");
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());

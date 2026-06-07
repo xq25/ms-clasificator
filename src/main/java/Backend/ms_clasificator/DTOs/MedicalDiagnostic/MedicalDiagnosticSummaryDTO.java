@@ -14,5 +14,4 @@ public class MedicalDiagnosticSummaryDTO {
     private Integer id;
     private String diagnosticCode;
     private String diagnosticName;
-
 }
