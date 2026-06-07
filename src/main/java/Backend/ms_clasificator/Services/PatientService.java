@@ -2,10 +2,12 @@ package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.Patient.PatientCreateDTO;
 import Backend.ms_clasificator.DTOs.Patient.PatientResponseDTO;
+import Backend.ms_clasificator.DTOs.Patient.PatientSummaryDTO;
 import Backend.ms_clasificator.DTOs.Patient.PatientUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.PatientMappers.PatientMapper;
 import Backend.ms_clasificator.Models.Patient;
+import Backend.ms_clasificator.Models.UserInfo;
 import Backend.ms_clasificator.Repositories.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -32,8 +34,8 @@ public class PatientService {
      * @return Lista de todos los pacientes
      */
     @Transactional(readOnly = true)
-    public List<Patient> findAll() {
-        return patientRepository.findAll();
+    public List<PatientSummaryDTO> findAll() {
+        return patientRepository.findAll().stream().map(patientMapper::toSummaryDTO).toList();
     }
 
     /**
@@ -48,12 +50,13 @@ public class PatientService {
             PatientResponseDTO patient = patientRepository.findById(id).map(patientMapper::toResponseDTO)
                     .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado con ID: " + id));
 
-            // Obtenemos el nombre del usuario
-            String username = securityServices.getUserNameById(patient.getUserId());
-            if(username != null){
-                patient.setUserName(username);
+            // Obtenemos la informacion del usuario
+            UserInfo userInfo = this.getUserInfo(patient.getUserId());
+            if(userInfo != null){
+                patient.setUserName(userInfo.getName());
+                patient.setEmail(userInfo.getEmail());
             } else {
-                ApiResponse.error("No se pudo obtener el nombre de usuario para el userId: " + patient.getUserId());
+                ApiResponse.error("No se pudo obtener la informacion del usuario para el userId: " + patient.getUserId());
             }
 
             return ApiResponse.success(patient, "Paciente encontrado exitosamente");
@@ -71,12 +74,13 @@ public class PatientService {
                     .map(patientMapper::toResponseDTO)
                     .orElseThrow(() -> new IllegalArgumentException("No se encontro paciente con el documento: " + document));
 
-            // Obtenemos el nombre del usuario
-            String username = securityServices.getUserNameById(patient.getUserId());
-            if(username != null){
-                patient.setUserName(username);
+            // Obtenemos la informacion del usuario
+            UserInfo userInfo = this.getUserInfo(patient.getUserId());
+            if(userInfo != null){
+                patient.setUserName(userInfo.getName());
+                patient.setEmail(userInfo.getEmail());
             } else {
-                ApiResponse.error("No se pudo obtener el nombre de usuario para el userId: " + patient.getUserId());
+                ApiResponse.error("No se pudo obtener la informacion del usuario para el userId: " + patient.getUserId());
             }
 
             return ApiResponse.success(patient, "Pacientes encontrados exitosamente");
@@ -92,12 +96,13 @@ public class PatientService {
                     .map(patientMapper::toResponseDTO)
                     .orElseThrow(() -> new IllegalArgumentException("No se encontro paciente con el userId: " + userId));
 
-            // Obtenemos el nombre del usuario
-            String username = securityServices.getUserNameById(patient.getUserId());
-            if(username != null){
-                patient.setUserName(username);
+            // Obtenemos la informacion del usuario
+            UserInfo userInfo = this.getUserInfo(patient.getUserId());
+            if(userInfo != null){
+                patient.setUserName(userInfo.getName());
+                patient.setEmail(userInfo.getEmail());
             } else {
-                ApiResponse.error("No se pudo obtener el nombre de usuario para el userId: " + patient.getUserId());
+                ApiResponse.error("No se pudo obtener la informacion del usuario para el userId: " + patient.getUserId());
             }
 
             return ApiResponse.success(patient, "Paciente encontrado exitosamente");
@@ -114,7 +119,7 @@ public class PatientService {
      * @param patientCreateDTO DTO con datos de entrada
      * @return ApiResponse<Patient> con el resultado de la operación
      */
-    public ApiResponse<Patient> create(PatientCreateDTO patientCreateDTO) {
+    public ApiResponse<PatientSummaryDTO> create(PatientCreateDTO patientCreateDTO) {
         try {
             if (patientCreateDTO == null) {
                 return ApiResponse.error("El DTO no puede ser nulo");
@@ -141,7 +146,8 @@ public class PatientService {
             String roleInfo = assingRole?"Rol 'patient' asignado correctamente al usuario.": "No se pudo asignar el rol 'doctor' al usuario.";
 
             Patient saved = patientRepository.save(patientMapper.toEntity(patientCreateDTO));
-            return ApiResponse.success(saved, "Paciente creado exitosamente. " + roleInfo);
+
+            return ApiResponse.success(patientMapper.toSummaryDTO(saved), "Paciente creado exitosamente. " + roleInfo);
 
         } catch (Exception ex) {
             return ApiResponse.error("Error al crear paciente: " + ex.getMessage());
@@ -154,7 +160,7 @@ public class PatientService {
      * @param patientUpdateDTO DTO con datos a actualizar
      * @return ApiResponse<Patient> con el resultado de la operación
      */
-    public ApiResponse<Patient> update(Integer id, PatientUpdateDTO patientUpdateDTO) {
+    public ApiResponse<PatientSummaryDTO> update(Integer id, PatientUpdateDTO patientUpdateDTO) {
         try {
             if (patientUpdateDTO == null) {
                 return ApiResponse.error("El DTO no puede ser nulo");
@@ -173,7 +179,7 @@ public class PatientService {
             patient.setYears(patientUpdateDTO.getYears());
 
             Patient updated = patientRepository.save(patient);
-            return ApiResponse.success(updated, "Paciente actualizado exitosamente");
+            return ApiResponse.success(patientMapper.toSummaryDTO(updated), "Paciente actualizado exitosamente");
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
@@ -205,6 +211,25 @@ public class PatientService {
         } catch (Exception ex) {
             return ApiResponse.error("Error al eliminar paciente: " + ex.getMessage());
         }
+    }
+
+    private UserInfo getUserInfo(String userId){
+        // Obtenemos el nombre del usuario
+        String username = securityServices.getUserNameById(userId);
+        if (username == null){
+            return null;
+        }
+
+        String email = securityServices.getUserEmailById(userId);
+        if(email == null){
+            return null;
+        }
+
+        UserInfo userInfo =  new UserInfo();
+        userInfo.setName(username);
+        userInfo.setEmail(email);
+
+        return userInfo;
     }
 
 

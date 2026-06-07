@@ -2,12 +2,14 @@ package Backend.ms_clasificator.Mappers.PatientMappers;
 
 import Backend.ms_clasificator.DTOs.Patient.PatientCreateDTO;
 import Backend.ms_clasificator.DTOs.Patient.PatientResponseDTO;
+import Backend.ms_clasificator.DTOs.Patient.PatientSummaryDTO;
 import Backend.ms_clasificator.Mappers.Mapper;
 import Backend.ms_clasificator.Models.Patient;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PatientMapper implements Mapper<Patient, PatientCreateDTO, PatientResponseDTO> {
+public class PatientMapper implements Mapper<Patient, PatientCreateDTO, PatientResponseDTO, PatientSummaryDTO> {
+
     @Override
     public Patient toEntity(PatientCreateDTO patientCreateDTO) {
         if (patientCreateDTO == null) {
@@ -33,17 +35,33 @@ public class PatientMapper implements Mapper<Patient, PatientCreateDTO, PatientR
                 .userId(patient.getUserId())
                 .build();
     }
+
     @Override
-    public PatientResponseDTO toResponseDTO(Patient patient){
-        if (patient == null){
+    public PatientResponseDTO toResponseDTO(Patient patient) {
+        if (patient == null) {
             return null;
         }
+
         return PatientResponseDTO.builder()
                 .id(patient.getId())
                 .document(patient.getDocument())
                 .userId(patient.getUserId())
-                .userName("") // Lo agregamos en el service. ya que depende de la relacion con el securityService
+                .userName("") // Lo agregamos en el service, ya que depende de la relacion con el securityService
+                .email("") // Lo agregamos en el service, ya que depende de la relacion con el securityService
+                .build();
+    }
+
+    @Override
+    public PatientSummaryDTO toSummaryDTO(Patient patient) {
+        if (patient == null) {
+            return null;
+        }
+
+        return PatientSummaryDTO.builder()
+                .id(patient.getId())
+                .document(patient.getDocument())
+                .years(patient.getYears())
+                .userId(patient.getUserId())
                 .build();
     }
 }
-

@@ -2,12 +2,14 @@ package Backend.ms_clasificator.Mappers.ImageDiagnosticMappers;
 
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticCreateDTO;
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticResponseDTO;
+import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticSummaryDTO;
 import Backend.ms_clasificator.Mappers.Mapper;
 import Backend.ms_clasificator.Models.ImageDiagnostic;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ImageDiagnosticMapper implements Mapper<ImageDiagnostic, ImageDiagnosticCreateDTO, ImageDiagnosticResponseDTO> {
+public class ImageDiagnosticMapper implements Mapper<ImageDiagnostic, ImageDiagnosticCreateDTO, ImageDiagnosticResponseDTO, ImageDiagnosticSummaryDTO> {
+
     @Override
     public ImageDiagnostic toEntity(ImageDiagnosticCreateDTO imageDiagnosticCreateDTO) {
         if (imageDiagnosticCreateDTO == null) {
@@ -32,8 +34,8 @@ public class ImageDiagnosticMapper implements Mapper<ImageDiagnostic, ImageDiagn
     }
 
     @Override
-    public ImageDiagnosticResponseDTO toResponseDTO(ImageDiagnostic imageDiagnostic){
-        if (imageDiagnostic == null){
+    public ImageDiagnosticResponseDTO toResponseDTO(ImageDiagnostic imageDiagnostic) {
+        if (imageDiagnostic == null) {
             return null;
         }
 
@@ -44,5 +46,16 @@ public class ImageDiagnosticMapper implements Mapper<ImageDiagnostic, ImageDiagn
                 .diagnosticDate(imageDiagnostic.getDiagnosticDate())
                 .build();
     }
-}
 
+    @Override
+    public ImageDiagnosticSummaryDTO toSummaryDTO(ImageDiagnostic imageDiagnostic) {
+        if (imageDiagnostic == null) {
+            return null;
+        }
+
+        return ImageDiagnosticSummaryDTO.builder()
+                .id(imageDiagnostic.getId())
+                .diagnosticDate(imageDiagnostic.getDiagnosticDate())
+                .build();
+    }
+}

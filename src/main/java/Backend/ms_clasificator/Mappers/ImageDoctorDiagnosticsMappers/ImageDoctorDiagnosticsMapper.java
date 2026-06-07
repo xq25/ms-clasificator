@@ -2,6 +2,7 @@ package Backend.ms_clasificator.Mappers.ImageDoctorDiagnosticsMappers;
 
 import Backend.ms_clasificator.DTOs.ImageDoctorDiagnostics.ImageDoctorDiagnosticsCreateDTO;
 import Backend.ms_clasificator.DTOs.ImageDoctorDiagnostics.ImageDoctorDiagnosticsResponseDTO;
+import Backend.ms_clasificator.DTOs.ImageDoctorDiagnostics.ImageDoctorDiagnosticsSummaryDTO;
 import Backend.ms_clasificator.Mappers.Mapper;
 import Backend.ms_clasificator.Models.ImageDoctorDiagnostics;
 import org.springframework.stereotype.Component;
@@ -11,12 +12,11 @@ public class ImageDoctorDiagnosticsMapper implements
         Mapper<
                 ImageDoctorDiagnostics,
                 ImageDoctorDiagnosticsCreateDTO,
-                ImageDoctorDiagnosticsResponseDTO> {
+                ImageDoctorDiagnosticsResponseDTO,
+                ImageDoctorDiagnosticsSummaryDTO> {
 
     @Override
-    public ImageDoctorDiagnostics toEntity(
-            ImageDoctorDiagnosticsCreateDTO dto) {
-
+    public ImageDoctorDiagnostics toEntity(ImageDoctorDiagnosticsCreateDTO dto) {
         if (dto == null) {
             return null;
         }
@@ -26,9 +26,7 @@ public class ImageDoctorDiagnosticsMapper implements
     }
 
     @Override
-    public ImageDoctorDiagnosticsCreateDTO toDTO(
-            ImageDoctorDiagnostics entity) {
-
+    public ImageDoctorDiagnosticsCreateDTO toDTO(ImageDoctorDiagnostics entity) {
         if (entity == null) {
             return null;
         }
@@ -48,9 +46,7 @@ public class ImageDoctorDiagnosticsMapper implements
     }
 
     @Override
-    public ImageDoctorDiagnosticsResponseDTO toResponseDTO(
-            ImageDoctorDiagnostics entity) {
-
+    public ImageDoctorDiagnosticsResponseDTO toResponseDTO(ImageDoctorDiagnostics entity) {
         if (entity == null) {
             return null;
         }
@@ -72,6 +68,17 @@ public class ImageDoctorDiagnosticsMapper implements
                                 ? entity.getMedicalDiagnostic().getDiagnosticName()
                                 : null
                 )
+                .build();
+    }
+
+    @Override
+    public ImageDoctorDiagnosticsSummaryDTO toSummaryDTO(ImageDoctorDiagnostics entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        return ImageDoctorDiagnosticsSummaryDTO.builder()
+                .id(entity.getId())
                 .build();
     }
 }

@@ -161,4 +161,31 @@ public class SecurityServices {
             return null;
         }
     }
+
+    public String getUserEmailById(String userId){
+        try{
+            String url =
+                    securityUrl +
+                            "/getway/security/api/get-useremail/"+ userId;
+
+            ResponseEntity<ApiResponse> response =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.GET,
+                            buildRequestEntity(),
+                            ApiResponse.class
+                    );
+
+            if (response.getBody() != null) {
+                if (response.getBody().getData() instanceof String) {
+                    String data = (String) response.getBody().getData();
+                    return data;
+                }
+            }
+            return null;
+
+        } catch (Exception ex) {
+            return null;
+        }
+    }
 }

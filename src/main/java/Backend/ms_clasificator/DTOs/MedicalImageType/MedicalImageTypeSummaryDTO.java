@@ -1,4 +1,4 @@
-package Backend.ms_clasificator.DTOs.DatasetCategory;
+package Backend.ms_clasificator.DTOs.MedicalImageType;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,11 +6,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class DatasetCategoryResponseDTO {
-    private Integer id;
-    private Integer numValue;
-}
+public class MedicalImageTypeSummaryDTO {
 
+    private Integer id;
+    private String name;
+
+}

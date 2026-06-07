@@ -2,12 +2,13 @@ package Backend.ms_clasificator.Mappers.DatasetCategory;
 
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryCreateDTO;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryResponseDTO;
+import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategorySummaryDTO;
 import Backend.ms_clasificator.Mappers.Mapper;
 import Backend.ms_clasificator.Models.DatasetCategory;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DatasetCategoryMappers implements Mapper<DatasetCategory, DatasetCategoryCreateDTO, DatasetCategoryResponseDTO> {
+public class DatasetCategoryMappers implements Mapper<DatasetCategory, DatasetCategoryCreateDTO, DatasetCategoryResponseDTO, DatasetCategorySummaryDTO> {
 
     @Override
     public DatasetCategory toEntity(DatasetCategoryCreateDTO datasetCategoryCreateDTO) {
@@ -32,11 +33,24 @@ public class DatasetCategoryMappers implements Mapper<DatasetCategory, DatasetCa
     }
 
     @Override
-    public DatasetCategoryResponseDTO toResponseDTO(DatasetCategory datasetCategory){
-        if (datasetCategory == null){
+    public DatasetCategoryResponseDTO toResponseDTO(DatasetCategory datasetCategory) {
+        if (datasetCategory == null) {
             return null;
         }
+
         return DatasetCategoryResponseDTO.builder()
+                .id(datasetCategory.getId())
+                .numValue(datasetCategory.getNumValue())
+                .build();
+    }
+
+    @Override
+    public DatasetCategorySummaryDTO toSummaryDTO(DatasetCategory datasetCategory) {
+        if (datasetCategory == null) {
+            return null;
+        }
+
+        return DatasetCategorySummaryDTO.builder()
                 .id(datasetCategory.getId())
                 .numValue(datasetCategory.getNumValue())
                 .build();

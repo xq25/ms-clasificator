@@ -6,14 +6,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class MedicalDiagnosticResponseDTO {
+public class MedicalDiagnosticSummaryDTO {
+
     private Integer id;
     private String diagnosticCode;
     private String diagnosticName;
-    private Integer parentDiagnosticId;
-    private String parentDiagnosticCode;
-}
 
+}

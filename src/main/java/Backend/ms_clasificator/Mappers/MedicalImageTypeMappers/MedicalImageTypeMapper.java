@@ -1,14 +1,15 @@
 package Backend.ms_clasificator.Mappers.MedicalImageTypeMappers;
 
-
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeResponseDTO;
+import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeSummaryDTO;
 import Backend.ms_clasificator.Mappers.Mapper;
 import Backend.ms_clasificator.Models.MedicalImageType;
 import org.springframework.stereotype.Component;
 
 @Component
-public class MedicalImageTypeMapper implements Mapper<MedicalImageType, MedicalImageTypeCreateDTO, MedicalImageTypeResponseDTO> {
+public class MedicalImageTypeMapper implements Mapper<MedicalImageType, MedicalImageTypeCreateDTO, MedicalImageTypeResponseDTO, MedicalImageTypeSummaryDTO> {
+
     @Override
     public MedicalImageType toEntity(MedicalImageTypeCreateDTO dto) {
         if (dto == null) {
@@ -35,14 +36,26 @@ public class MedicalImageTypeMapper implements Mapper<MedicalImageType, MedicalI
 
     @Override
     public MedicalImageTypeResponseDTO toResponseDTO(MedicalImageType medicalImageType) {
-        if(medicalImageType == null ){
+        if (medicalImageType == null) {
             return null;
         }
+
         return MedicalImageTypeResponseDTO.builder()
                 .id(medicalImageType.getId())
                 .name(medicalImageType.getName())
                 .evaluationArea(medicalImageType.getEvaluationArea() != null ? medicalImageType.getEvaluationArea().getName() : null)
                 .build();
+    }
 
+    @Override
+    public MedicalImageTypeSummaryDTO toSummaryDTO(MedicalImageType medicalImageType) {
+        if (medicalImageType == null) {
+            return null;
+        }
+
+        return MedicalImageTypeSummaryDTO.builder()
+                .id(medicalImageType.getId())
+                .name(medicalImageType.getName())
+                .build();
     }
 }

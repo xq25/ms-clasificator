@@ -1,4 +1,4 @@
-package Backend.ms_clasificator.DTOs.Patient;
+package Backend.ms_clasificator.DTOs.Doctor;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,15 +6,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class PatientResponseDTO {
-    private Integer id;
-    private String document;
-    private Integer years;
-    private String userId;
-    private String userName;
-    private String email;
-}
+public class DoctorSummaryDTO {
 
+    private Integer id;
+    private String code;
+    private String userId;
+
+}

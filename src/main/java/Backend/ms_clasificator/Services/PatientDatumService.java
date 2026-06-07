@@ -2,6 +2,7 @@ package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumCreateDTO;
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumResponseDTO;
+import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumSummaryDTO;
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.PatientDatumMappers.PatientDatumMapper;
@@ -34,11 +35,11 @@ public class PatientDatumService {
 	private PatientDatumMapper patientDatumMapper;
 
 	@Transactional(readOnly = true)
-	public ApiResponse<List<PatientDatumResponseDTO>> findAll() {
+	public ApiResponse<List<PatientDatumSummaryDTO>> findAll() {
 		try {
-			List<PatientDatumResponseDTO> response = patientDatumRepository.findAll()
+			List<PatientDatumSummaryDTO> response = patientDatumRepository.findAll()
 					.stream()
-					.map(patientDatumMapper::toResponseDTO)
+					.map(patientDatumMapper::toSummaryDTO)
 					.toList();
 			return ApiResponse.success(response, "Patient Datum obtenidos exitosamente");
 		} catch (Exception ex) {
@@ -49,17 +50,18 @@ public class PatientDatumService {
 	@Transactional(readOnly = true)
 	public ApiResponse<PatientDatumResponseDTO> findById(Integer id) {
 		try {
-			PatientDatum patientDatum = patientDatumRepository.findById(id)
+			PatientDatumResponseDTO patientDatum = patientDatumRepository.findById(id)
+					.map(patientDatumMapper::toResponseDTO)
 					.orElseThrow(() -> new IllegalArgumentException("Patient Datum no encontrado con ID: " + id));
 
-			return ApiResponse.success(patientDatumMapper.toResponseDTO(patientDatum), "Patient Datum encontrado exitosamente");
+
+			return ApiResponse.success(patientDatum, "Patient Datum encontrado exitosamente");
 		} catch (IllegalArgumentException ex) {
 			return ApiResponse.error(ex.getMessage());
-		} catch (Exception ex) {
-			return ApiResponse.error("Error al buscar Patient Datum: " + ex.getMessage());
 		}
 	}
 
+	// Funcion principal del flujo para ver la informacion de un clinical Record
 	@Transactional(readOnly = true)
 	public ApiResponse<List<PatientDatumResponseDTO>> findByClinicalRecordId(Integer clinicalRecordId) {
 		try {
@@ -80,22 +82,20 @@ public class PatientDatumService {
 			return ApiResponse.success(patientDatums, "Patient Datum encontrados exitosamente para el Clinical Record");
 		} catch (IllegalArgumentException ex) {
 			return ApiResponse.error(ex.getMessage());
-		} catch (Exception ex) {
-			return ApiResponse.error("Error al buscar Patient Datum por Clinical Record: " + ex.getMessage());
 		}
 	}
 
 	@Transactional(readOnly = true)
-	public ApiResponse<List<PatientDatumResponseDTO>> findByPrimitiveDatumId(Integer primitiveDatumId) {
+	public ApiResponse<List<PatientDatumSummaryDTO>> findByPrimitiveDatumId(Integer primitiveDatumId) {
 		try {
 			if(!this.primitiveDatumRepository.existsById(primitiveDatumId)){
 				return ApiResponse.error("No se encontre un primitiveDatum con id : " + primitiveDatumId);
 			}
 
-			List<PatientDatumResponseDTO> patientDatums = this.patientDatumRepository
+			List<PatientDatumSummaryDTO> patientDatums = this.patientDatumRepository
 					.findByPrimitiveDatumId(primitiveDatumId)
 					.stream()
-					.map(patientDatumMapper::toResponseDTO)
+					.map(patientDatumMapper::toSummaryDTO)
 					.toList();
 
 			if (patientDatums.isEmpty()) {
@@ -105,8 +105,6 @@ public class PatientDatumService {
 			return ApiResponse.success(patientDatums, "Patient Datum encontrados exitosamente para el Primitive Datum");
 		} catch (IllegalArgumentException ex) {
 			return ApiResponse.error(ex.getMessage());
-		} catch (Exception ex) {
-			return ApiResponse.error("Error al buscar Patient Datum por Primitive Datum: " + ex.getMessage());
 		}
 	}
 
@@ -135,6 +133,7 @@ public class PatientDatumService {
 		}
 	}
 
+	@Transactional
 	public ApiResponse<PatientDatumResponseDTO> update(Integer id, PatientDatumUpdateDTO dto) {
 		try {
 			if (dto == null) {
@@ -147,12 +146,9 @@ public class PatientDatumService {
 			// Solo actualizamos la descripcion, la asociacion entre las dos entidades, solo puede ser generada y eliminada.
 			existing.setDescription(dto.getDescription());
 
-			PatientDatum updated = patientDatumRepository.save(existing);
-			return ApiResponse.success(patientDatumMapper.toResponseDTO(updated), "Patient Datum actualizado exitosamente");
+			return ApiResponse.success(patientDatumMapper.toResponseDTO(patientDatumRepository.save(existing)), "Patient Datum actualizado exitosamente");
 		} catch (IllegalArgumentException ex) {
 			return ApiResponse.error(ex.getMessage());
-		} catch (Exception ex) {
-			return ApiResponse.error("Error al actualizar Patient Datum: " + ex.getMessage());
 		}
 	}
 

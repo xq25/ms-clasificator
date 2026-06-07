@@ -8,13 +8,12 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class ClinicalRecordResponseDTO {
+public class ClinicalRecordSummaryDTO {
+
     private Integer id;
     private Date visitDate;
-    private Integer patientId;
-    private String patientDocument;
-}
 
+}

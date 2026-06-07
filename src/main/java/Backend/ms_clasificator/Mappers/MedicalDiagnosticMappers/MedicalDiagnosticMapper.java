@@ -2,13 +2,14 @@ package Backend.ms_clasificator.Mappers.MedicalDiagnosticMappers;
 
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticResponseDTO;
-import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeResponseDTO;
+import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticSummaryDTO;
 import Backend.ms_clasificator.Mappers.Mapper;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import org.springframework.stereotype.Component;
 
 @Component
-public class MedicalDiagnosticMapper implements Mapper<MedicalDiagnostic, MedicalDiagnosticCreateDTO, MedicalDiagnosticResponseDTO> {
+public class MedicalDiagnosticMapper implements Mapper<MedicalDiagnostic, MedicalDiagnosticCreateDTO, MedicalDiagnosticResponseDTO, MedicalDiagnosticSummaryDTO> {
+
     @Override
     public MedicalDiagnostic toEntity(MedicalDiagnosticCreateDTO medicalDiagnosticCreateDTO) {
         if (medicalDiagnosticCreateDTO == null) {
@@ -18,7 +19,7 @@ public class MedicalDiagnosticMapper implements Mapper<MedicalDiagnostic, Medica
         return MedicalDiagnostic.builder()
                 .diagnosticCode(medicalDiagnosticCreateDTO.getDiagnosticCode())
                 .diagnosticName(medicalDiagnosticCreateDTO.getDiagnosticName())
-                // parentDiagnostic esta configurado en el service, para asegurar existencia por medio de validaciones
+                // parentDiagnostic se configura en el service para asegurar existencia por medio de validaciones
                 .build();
     }
 
@@ -31,22 +32,35 @@ public class MedicalDiagnosticMapper implements Mapper<MedicalDiagnostic, Medica
         return MedicalDiagnosticCreateDTO.builder()
                 .diagnosticCode(medicalDiagnostic.getDiagnosticCode())
                 .diagnosticName(medicalDiagnostic.getDiagnosticName())
-                // Mapear el ID del diagnóstico padre si existe
-                .parentDiagnosticId(medicalDiagnostic.getParentDiagnostic() != null ?
-                        medicalDiagnostic.getParentDiagnostic().getId() : null)
+                .parentDiagnosticId(medicalDiagnostic.getParentDiagnostic() != null ? medicalDiagnostic.getParentDiagnostic().getId() : null)
                 .build();
     }
+
     @Override
-    public MedicalDiagnosticResponseDTO toResponseDTO(MedicalDiagnostic medicalDiagnostic){
-        if (medicalDiagnostic == null){
+    public MedicalDiagnosticResponseDTO toResponseDTO(MedicalDiagnostic medicalDiagnostic) {
+        if (medicalDiagnostic == null) {
             return null;
         }
+
         return MedicalDiagnosticResponseDTO.builder()
                 .id(medicalDiagnostic.getId())
                 .diagnosticName(medicalDiagnostic.getDiagnosticName())
                 .diagnosticCode(medicalDiagnostic.getDiagnosticCode())
-                .parentDiagnosticId(medicalDiagnostic.getParentDiagnosticId())
+                .parentDiagnosticId(medicalDiagnostic.getParentDiagnostic() != null ? medicalDiagnostic.getParentDiagnostic().getId() : null)
+                .parentDiagnosticCode(medicalDiagnostic.getParentDiagnostic() != null ? medicalDiagnostic.getDiagnosticCode() : null) // El codigo lo definimos dentro del service
+                .build();
+    }
+
+    @Override
+    public MedicalDiagnosticSummaryDTO toSummaryDTO(MedicalDiagnostic medicalDiagnostic) {
+        if (medicalDiagnostic == null) {
+            return null;
+        }
+
+        return MedicalDiagnosticSummaryDTO.builder()
+                .id(medicalDiagnostic.getId())
+                .diagnosticCode(medicalDiagnostic.getDiagnosticCode())
+                .diagnosticName(medicalDiagnostic.getDiagnosticName())
                 .build();
     }
 }
-

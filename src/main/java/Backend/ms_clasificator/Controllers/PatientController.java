@@ -2,9 +2,9 @@ package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.Patient.PatientCreateDTO;
 import Backend.ms_clasificator.DTOs.Patient.PatientResponseDTO;
+import Backend.ms_clasificator.DTOs.Patient.PatientSummaryDTO;
 import Backend.ms_clasificator.DTOs.Patient.PatientUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
-import Backend.ms_clasificator.Models.Patient;
 import Backend.ms_clasificator.Services.PatientService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +26,8 @@ public class PatientController {
      * @return Lista de todos los pacientes
      */
     @GetMapping("")
-    public ResponseEntity<List<Patient>> findAll() {
-        List<Patient> patients = patientService.findAll();
+    public ResponseEntity<List<PatientSummaryDTO>> findAll() {
+        List<PatientSummaryDTO> patients = patientService.findAll();
         return ResponseEntity.ok(patients);
     }
 
@@ -80,8 +80,8 @@ public class PatientController {
      * @return ApiResponse con el resultado
      */
     @PostMapping("")
-    public ResponseEntity<ApiResponse<Patient>> create(@Valid @RequestBody PatientCreateDTO patientCreateDTO) {
-        ApiResponse<Patient> response = patientService.create(patientCreateDTO);
+    public ResponseEntity<ApiResponse<PatientSummaryDTO>> create(@Valid @RequestBody PatientCreateDTO patientCreateDTO) {
+        ApiResponse<PatientSummaryDTO> response = patientService.create(patientCreateDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -97,8 +97,8 @@ public class PatientController {
      * @return ApiResponse con el resultado
      */
     @PutMapping("{id}")
-    public ResponseEntity<ApiResponse<Patient>> update(@PathVariable Integer id, @Valid @RequestBody PatientUpdateDTO patientUpdateDTO) {
-        ApiResponse<Patient> response = patientService.update(id, patientUpdateDTO);
+    public ResponseEntity<ApiResponse<PatientSummaryDTO>> update(@PathVariable Integer id, @Valid @RequestBody PatientUpdateDTO patientUpdateDTO) {
+        ApiResponse<PatientSummaryDTO> response = patientService.update(id, patientUpdateDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

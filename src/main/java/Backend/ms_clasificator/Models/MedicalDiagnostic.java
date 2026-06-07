@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -31,14 +30,23 @@ public class MedicalDiagnostic {
 
     // Relación al diagnostico padre (self-referencing) - nullable
     // Foreing key del diagnostico padre, si lo hay
-    @JsonIgnore // Para evitar problemas de serialización y referencias circulares al convertir a JSON
     @ManyToOne()
     @JoinColumn(name = "parent_diagnostic_id", nullable = true)
     private MedicalDiagnostic parentDiagnostic;
-    public Integer getParentDiagnosticId() {
-        return parentDiagnostic != null ? parentDiagnostic.getId() : null;
-    }
 
+    // Lo colocamos solo por el cascade
+    @JsonIgnore
+    @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Diagnosis> diagnosisList;
 
+    // Lo colocamos solo por el cascade -> composicion fuerte
+    @JsonIgnore
+    @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Dataset> datasets;
+
+    // Lo colocamos solo por el cascade -> composicion fuerte
+    @JsonIgnore
+    @OneToMany(mappedBy = "medicalDiagnostic", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DiagnosticCategoryDataset> diagnosticCategoryDatasets;
 
 }

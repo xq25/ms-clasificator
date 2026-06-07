@@ -6,15 +6,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class PatientResponseDTO {
+public class PatientSummaryDTO {
+
     private Integer id;
     private String document;
     private Integer years;
     private String userId;
-    private String userName;
-    private String email;
-}
 
+}

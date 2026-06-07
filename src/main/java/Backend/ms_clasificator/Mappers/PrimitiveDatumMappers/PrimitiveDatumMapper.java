@@ -2,13 +2,14 @@ package Backend.ms_clasificator.Mappers.PrimitiveDatumMappers;
 
 import Backend.ms_clasificator.DTOs.PrimitiveDatum.PrimitiveDatumCreateDTO;
 import Backend.ms_clasificator.DTOs.PrimitiveDatum.PrimitiveDatumResponseDTO;
+import Backend.ms_clasificator.DTOs.PrimitiveDatum.PrimitiveDatumSummaryDTO;
 import Backend.ms_clasificator.DTOs.PrimitiveDatum.PrimitiveDatumUpdateDTO;
 import Backend.ms_clasificator.Mappers.Mapper;
 import Backend.ms_clasificator.Models.PrimitiveDatum;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PrimitiveDatumMapper implements Mapper<PrimitiveDatum, PrimitiveDatumCreateDTO, PrimitiveDatumResponseDTO> {
+public class PrimitiveDatumMapper implements Mapper<PrimitiveDatum, PrimitiveDatumCreateDTO, PrimitiveDatumResponseDTO, PrimitiveDatumSummaryDTO> {
 
     @Override
     public PrimitiveDatum toEntity(PrimitiveDatumCreateDTO dto) {
@@ -55,6 +56,20 @@ public class PrimitiveDatumMapper implements Mapper<PrimitiveDatum, PrimitiveDat
         }
 
         return PrimitiveDatumResponseDTO.builder()
+                .id(entity.getId())
+                .name(entity.getName())
+                .type(entity.getType())
+                .unit(entity.getUnit())
+                .build();
+    }
+
+    @Override
+    public PrimitiveDatumSummaryDTO toSummaryDTO(PrimitiveDatum entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        return PrimitiveDatumSummaryDTO.builder()
                 .id(entity.getId())
                 .name(entity.getName())
                 .type(entity.getType())

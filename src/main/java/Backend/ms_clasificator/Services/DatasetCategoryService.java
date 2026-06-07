@@ -28,38 +28,35 @@ public class DatasetCategoryService {
     private DatasetRepository datasetRepository;
 
     /**
-     * Obtener todos los estados UI
+     * Obtener todos las categorias (general)
      * @return Lista de todos los estados
      */
     @Transactional(readOnly = true)
     public ApiResponse<List<DatasetCategoryResponseDTO>> findAll() {
-        try {
-            List<DatasetCategoryResponseDTO> response = datasetCategoryRepository.findAll()
-                    .stream()
-                    .map(datasetCategoryMappers::toResponseDTO)
-                    .toList();
-            return ApiResponse.success(response, "Categorias de dataset obtenidas exitosamente");
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al listar categorias de dataset: " + ex.getMessage());
-        }
+
+        List<DatasetCategoryResponseDTO> response = datasetCategoryRepository.findAll()
+                .stream()
+                .map(datasetCategoryMappers::toResponseDTO)
+                .toList();
+        return ApiResponse.success(response, "Categorias de dataset obtenidas exitosamente");
+
     }
 
     /**
-     * Obtener un estado UI por ID
+     * Obtener una categoria por ID
      * @param id ID del estado
      * @return UIState encontrado o null
      */
     @Transactional(readOnly = true)
     public ApiResponse<DatasetCategoryResponseDTO> findById(Integer id) {
         try {
-            DatasetCategory datasetCategory =  datasetCategoryRepository.findById(id).orElseThrow(() ->
-                    new IllegalArgumentException("Estado UI no encontrado con ID: " + id));
+            DatasetCategoryResponseDTO datasetCategory =  datasetCategoryRepository.findById(id)
+                    .map(datasetCategoryMappers::toResponseDTO)
+                    .orElseThrow(() -> new IllegalArgumentException("Categoria no encontrada con ID: " + id));
 
-            return ApiResponse.success(datasetCategoryMappers.toResponseDTO(datasetCategory), "Estado UI encontrado");
+            return ApiResponse.success(datasetCategory, "Categoria encontrada");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al buscar estado por ID: " + ex.getMessage());
         }
     }
 
@@ -71,30 +68,29 @@ public class DatasetCategoryService {
     @Transactional(readOnly = true)
     public ApiResponse<List<DatasetCategoryResponseDTO>> findByDatasetId(Integer datasetId) {
         try {
-            this.datasetRepository.findById(datasetId).orElseThrow(() ->
-                    new IllegalArgumentException("Dataset no encontrada con ID: " + datasetId));
+            if(!this.datasetRepository.existsById(datasetId)){
+                return ApiResponse.error("Dataset no encontrado con ID: " + datasetId);
+            }
 
-            List<DatasetCategory> datasetCategories = this.datasetCategoryRepository.findByDatasetId(datasetId);
-            List<DatasetCategoryResponseDTO> response = datasetCategories.stream()
+
+            List<DatasetCategoryResponseDTO> response = this.datasetCategoryRepository.findByDatasetId(datasetId).stream()
                     .map(datasetCategoryMappers::toResponseDTO)
                     .toList();
-            if (datasetCategories.isEmpty()) {
-                return ApiResponse.success(response,"No se encontraron estados UI para la configuración con ID: " + datasetId);
+            if (response.isEmpty()) {
+                return ApiResponse.success(response,"No se encontraron categorias para la configuración con ID: " + datasetId);
             }else{
-                return ApiResponse.success(response,"Estados UI encontrados para la configuración con ID: " + datasetId);
+                return ApiResponse.success(response,"Categorias encontradas para la configuración con ID: " + datasetId);
             }
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al buscar estado por ID: " + ex.getMessage());
         }
     }
 
     /**
-     * Crear un nuevo estado UI
+     * Crear una nueva Categoria
      * @param datasetCategoryCreateDTO DTO con datos de entrada
-     * @return ApiResponse<UIState> con el resultado de la operación
+     * @return ApiResponse<DatasetCategoryResponseDTO> con el resultado de la operación
      */
     public ApiResponse<DatasetCategoryResponseDTO> create(DatasetCategoryCreateDTO datasetCategoryCreateDTO) {
         try {
@@ -110,9 +106,8 @@ public class DatasetCategoryService {
             DatasetCategory datasetCategory = datasetCategoryMappers.toEntity(datasetCategoryCreateDTO);
             datasetCategory.setDataset(dataset);
 
-            // Validar el numero de categorias que tiene el dataset para asiganrle el siguiente en secuencia.
-            List<DatasetCategory> datasetCategories = datasetCategoryRepository.findByDatasetId(dataset.getId());
-            int nextNumValue = datasetCategories.size() + 1;
+            // Validar el numero de categorias que tiene el dataset para asignarle el siguiente en secuencia.
+            int nextNumValue = datasetCategoryRepository.findByDatasetId(dataset.getId()).size() + 1;
             datasetCategory.setNumValue(nextNumValue);
 
             DatasetCategory saved = datasetCategoryRepository.save(datasetCategory);

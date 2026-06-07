@@ -6,11 +6,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class DatasetCategoryResponseDTO {
+public class DatasetCategorySummaryDTO {
+
     private Integer id;
     private Integer numValue;
-}
 
+}

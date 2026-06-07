@@ -1,16 +1,19 @@
-package Backend.ms_clasificator.DTOs.DatasetCategory;
+package Backend.ms_clasificator.DTOs.ImageDiagnostic;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class DatasetCategoryResponseDTO {
-    private Integer id;
-    private Integer numValue;
-}
+public class ImageDiagnosticSummaryDTO {
 
+    private Integer id;
+    private LocalDateTime diagnosticDate;
+
+}

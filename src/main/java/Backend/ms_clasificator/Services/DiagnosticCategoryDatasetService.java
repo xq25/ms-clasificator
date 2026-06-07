@@ -186,7 +186,7 @@ public class DiagnosticCategoryDatasetService {
      * Implementar según tu modelo de jerarquía de diagnósticos.
      */
     private boolean isValidSubDiagnostic(MedicalDiagnostic diagnostic, MedicalDiagnostic rootDiagnostic) {
-        medicalDiagnosticRepository.existsByIdAndParentDiagnostic_Id(diagnostic.getId(), rootDiagnostic.getId());
+        medicalDiagnosticRepository.existsByIdAndParentDiagnosticId(diagnostic.getId(), rootDiagnostic.getId());
 
         return true;
     }

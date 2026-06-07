@@ -32,4 +32,9 @@ public class ClinicalRecord {
     @OneToMany(mappedBy = "clinicalRecord", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PatientDatum> patientDatumList;
 
+    // Solo lo agregamos para el cascade
+    @JsonIgnore
+    @OneToMany(mappedBy = "clinicalRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Diagnosis> diagnosisList;
+
 }
