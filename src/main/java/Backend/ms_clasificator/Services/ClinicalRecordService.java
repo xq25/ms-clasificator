@@ -2,6 +2,7 @@ package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordCreateDTO;
 import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordResponseDTO;
+import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordSummaryDTO;
 import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.ClinicalRecordMappers.ClinicalRecordMapper;
@@ -13,7 +14,6 @@ import Backend.ms_clasificator.Repositories.MedicalImgRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -33,19 +33,19 @@ public class ClinicalRecordService {
     @Autowired
     private ClinicalRecordMapper clinicalRecordMapper;
 
+    // No cargamos toda la informacion adicional
     @Transactional(readOnly = true)
-    public ApiResponse<List<ClinicalRecordResponseDTO>> findAll() {
-        try {
-            List<ClinicalRecordResponseDTO> response = clinicalRecordRepository.findAll()
-                    .stream()
-                    .map(clinicalRecordMapper::toResponseDTO)
-                    .toList();
-            return ApiResponse.success(response, "Registros médicos obtenidos exitosamente");
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al listar registros médicos: " + ex.getMessage());
-        }
+    public ApiResponse<List<ClinicalRecordSummaryDTO>> findAll() {
+
+        List<ClinicalRecordSummaryDTO> response = clinicalRecordRepository.findAll()
+                .stream()
+                .map(clinicalRecordMapper::toSummaryDTO)
+                .toList();
+        return ApiResponse.success(response, "Registros médicos obtenidos exitosamente");
+
     }
 
+    // No cargamos toda la informacion
     @Transactional(readOnly = true)
     public ApiResponse<ClinicalRecordResponseDTO> findById(Integer id) {
         try {
@@ -57,6 +57,27 @@ public class ClinicalRecordService {
             return ApiResponse.error(ex.getMessage());
         } catch (Exception ex) {
             return ApiResponse.error("Error al obtener registro médico: " + ex.getMessage());
+        }
+    }
+
+    // No cargamos toda la informacion
+    @Transactional(readOnly = true)
+    public ApiResponse<List<ClinicalRecordSummaryDTO>> findByPatientId(Integer patientId){
+        try {
+            // Validar que existe el paciente
+            if (!this.patientRepository.existsById(patientId)) {
+                return ApiResponse.error("Paciente no encontrado con ID: " + patientId);
+            }
+
+            List<ClinicalRecordSummaryDTO> response = clinicalRecordRepository.findByPatientId(patientId)
+                    .stream()
+                    .map(clinicalRecordMapper::toSummaryDTO)
+                    .toList();
+
+            return ApiResponse.success(response, "Registros médicos obtenidos exitosamente");
+
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al listar registros médicos: " + ex.getMessage());
         }
     }
 
@@ -91,9 +112,7 @@ public class ClinicalRecordService {
             ClinicalRecord clinicalRecord = clinicalRecordRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Clinical Record no encontrado con ID: " + id));
 
-            if (dto.getVisitDate() != null) {
-                clinicalRecord.setVisitDate(dto.getVisitDate());
-            }
+            clinicalRecord.setVisitDate(dto.getVisitDate());
 
             ClinicalRecord updated = clinicalRecordRepository.save(clinicalRecord);
             return ApiResponse.success(clinicalRecordMapper.toResponseDTO(updated), "Registro médico actualizado exitosamente");
@@ -113,16 +132,15 @@ public class ClinicalRecordService {
                             "Clinical Record no encontrado con ID: " + id
                     ));
 
-            // Desasociar imágenes
-            if (clinicalRecord.getMedicalImages() != null && !clinicalRecord.getMedicalImages().isEmpty()) {
-                clinicalRecord.getMedicalImages().forEach(img -> img.setClinicalRecord(null));
-                medicalImgRepository.saveAll(clinicalRecord.getMedicalImages());
-            }
+            // Al tener transactional al inicio, JPA detecta los cambios sobre las imagenes y las actualiza.
+            // Desasociar imágenes - > Composicion debil
+            medicalImgRepository.findByClinicalRecordId(clinicalRecord.getId())
+                    .forEach(img -> img.setClinicalRecord(null));
 
             // Eliminar registro médico
             clinicalRecordRepository.delete(clinicalRecord);
 
-            return ApiResponse.success(null, "Registro médico eliminado correctamente");
+            return ApiResponse.success("Registro médico eliminado correctamente");
         } catch (DataIntegrityViolationException ex) {
             return ApiResponse.error("Violacion de integridad en la base de datos: " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
@@ -132,12 +150,13 @@ public class ClinicalRecordService {
         }
     }
 
-    @Transactional(propagation = Propagation.NOT_SUPPORTED) // Evitamos que si falla algo en la operacion, el clinicalRecord quede sin paciente.
+    @Transactional // Evitamos que si falla algo en la operacion, el clinicalRecord quede sin paciente.
     public ApiResponse<ClinicalRecordResponseDTO> changePatient(Integer clinicalRecordId, Integer newPatientId){
         try {
             // Validar que exista el clinicalRecord
             ClinicalRecord clinicalRecord = this.clinicalRecordRepository.findById(clinicalRecordId)
                     .orElseThrow(() -> new IllegalArgumentException("Clinical Record no encontrado con ID: " + clinicalRecordId));
+
             // Validar que exista el paciente nuevo
             Patient newPatient = this.patientRepository.findById(newPatientId).orElse(null);
             if (newPatient == null) {
@@ -147,9 +166,10 @@ public class ClinicalRecordService {
             if (clinicalRecord.getPatient().getId().equals(newPatientId)) {
                 throw new IllegalArgumentException("El paciente nuevo no puede ser el mismo que el paciente actual");
             }
+
             clinicalRecord.setPatient(newPatient);
-            this.clinicalRecordRepository.save(clinicalRecord);
-            return ApiResponse.success(clinicalRecordMapper.toResponseDTO(clinicalRecord), "Paciente del registro médico cambiado exitosamente");
+            ClinicalRecord updated = this.clinicalRecordRepository.save(clinicalRecord);
+            return ApiResponse.success(clinicalRecordMapper.toResponseDTO(updated), "Paciente del registro médico cambiado exitosamente");
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());

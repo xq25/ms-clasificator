@@ -18,7 +18,7 @@ public class DiagnosticCategoryDataset {
     @GeneratedValue
     private Integer id;
 
-    // No cargamos el dataset al que oertence, ya que desde el es que se consultan estas entidades
+    // No cargamos el dataset al que pertence, ya que desde el es que se consultan estas entidades
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private DatasetCategory datasetCategory;

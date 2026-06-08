@@ -10,5 +10,7 @@ public interface ImageDoctorDiagnosticsRepository extends JpaRepository<ImageDoc
 
     List<ImageDoctorDiagnostics> findByMedicalDiagnosticId(Integer medicalDiagnosticId);
 
-    boolean existsByImageDiagnostic_IdAndMedicalDiagnosticId(Integer imageDiagnosticId, Integer medicalDiagnosticId);
+    boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);
+
+    boolean existsByImageDiagnosticIdAndMedicalDiagnosticId(Integer imageDiagnosticId, Integer medicalDiagnosticId);
 }

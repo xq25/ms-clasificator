@@ -1,6 +1,7 @@
 package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeCreateDTO;
+import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeSummaryDTO;
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeUpdateDTO;
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeResponseDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
@@ -20,8 +21,8 @@ public class MedicalImageTypeController {
 	private MedicalImageTypeService medicalImageTypeService;
 
 	@GetMapping("")
-	public ResponseEntity<ApiResponse<List<MedicalImageTypeResponseDTO>>> find(){
-		ApiResponse<List<MedicalImageTypeResponseDTO>> response = this.medicalImageTypeService.findAll();
+	public ResponseEntity<ApiResponse<List<MedicalImageTypeSummaryDTO>>> find(){
+		ApiResponse<List<MedicalImageTypeSummaryDTO>> response = this.medicalImageTypeService.findAll();
 		if (response.isSuccess()) return ResponseEntity.ok(response);
 		return ResponseEntity.badRequest().body(response);
 	}
@@ -29,6 +30,13 @@ public class MedicalImageTypeController {
 	@GetMapping("{id}")
 	public ResponseEntity<ApiResponse<MedicalImageTypeResponseDTO>> findById(@PathVariable Integer id){
 		ApiResponse<MedicalImageTypeResponseDTO> response = this.medicalImageTypeService.findById(id);
+		if (response.isSuccess()) return ResponseEntity.ok(response);
+		return ResponseEntity.badRequest().body(response);
+	}
+
+	@GetMapping("area/{evaluationAreaId}")
+	public ResponseEntity<ApiResponse<List<MedicalImageTypeSummaryDTO>>> findByEvaluationAreaId(@PathVariable Integer evaluationAreaId){
+		ApiResponse<List<MedicalImageTypeSummaryDTO>> response = this.medicalImageTypeService.findByEvaluationAreaId(evaluationAreaId);
 		if (response.isSuccess()) return ResponseEntity.ok(response);
 		return ResponseEntity.badRequest().body(response);
 	}

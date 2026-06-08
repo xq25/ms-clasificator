@@ -2,6 +2,7 @@ package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumCreateDTO;
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumResponseDTO;
+import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumSummaryDTO;
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.PatientDatumMappers.PatientDatumMapper;
@@ -34,69 +35,72 @@ public class PatientDatumService {
 	private PatientDatumMapper patientDatumMapper;
 
 	@Transactional(readOnly = true)
-	public ApiResponse<List<PatientDatumResponseDTO>> findAll() {
-		try {
-			List<PatientDatumResponseDTO> response = patientDatumRepository.findAll()
-					.stream()
-					.map(patientDatumMapper::toResponseDTO)
-					.toList();
-			return ApiResponse.success(response, "Patient Datum obtenidos exitosamente");
-		} catch (Exception ex) {
-			return ApiResponse.error("Error al listar Patient Datum: " + ex.getMessage());
-		}
+	public ApiResponse<List<PatientDatumSummaryDTO>> findAll() {
+		List<PatientDatumSummaryDTO> response = patientDatumRepository.findAll()
+				.stream()
+				.map(patientDatumMapper::toSummaryDTO)
+				.toList();
+		return ApiResponse.success(response, "Patient Datum obtenidos exitosamente");
 	}
 
 	@Transactional(readOnly = true)
 	public ApiResponse<PatientDatumResponseDTO> findById(Integer id) {
 		try {
-			PatientDatum patientDatum = patientDatumRepository.findById(id)
+			PatientDatumResponseDTO patientDatum = patientDatumRepository.findById(id)
+					.map(patientDatumMapper::toResponseDTO)
 					.orElseThrow(() -> new IllegalArgumentException("Patient Datum no encontrado con ID: " + id));
 
-			return ApiResponse.success(patientDatumMapper.toResponseDTO(patientDatum), "Patient Datum encontrado exitosamente");
+
+			return ApiResponse.success(patientDatum, "Patient Datum encontrado exitosamente");
 		} catch (IllegalArgumentException ex) {
 			return ApiResponse.error(ex.getMessage());
-		} catch (Exception ex) {
-			return ApiResponse.error("Error al buscar Patient Datum: " + ex.getMessage());
 		}
 	}
 
+	// Funcion principal del flujo para ver la informacion de un clinical Record
 	@Transactional(readOnly = true)
 	public ApiResponse<List<PatientDatumResponseDTO>> findByClinicalRecordId(Integer clinicalRecordId) {
 		try {
-			ClinicalRecord clinicalRecord = clinicalRecordRepository.findById(clinicalRecordId)
-					.orElseThrow(() -> new IllegalArgumentException("Clinical Record no encontrado con ID: " + clinicalRecordId));
-
-			List<PatientDatum> patientDatums = patientDatumRepository.findByClinicalRecord_Id(clinicalRecord.getId());
-			List<PatientDatumResponseDTO> response = patientDatums.stream().map(patientDatumMapper::toResponseDTO).toList();
-			if (patientDatums.isEmpty()) {
-				return ApiResponse.success(response, "No se encontraron datos del paciente para esta visita medica: " + clinicalRecordId);
+			if (!this.clinicalRecordRepository.existsById(clinicalRecordId)){
+				return ApiResponse.error("No se encontre un clinicalRecord con id : " + clinicalRecordId);
 			}
 
-			return ApiResponse.success(response, "Patient Datum encontrados exitosamente para el Clinical Record");
+			List<PatientDatumResponseDTO>patientDatums = this.patientDatumRepository
+					.findByClinicalRecordId(clinicalRecordId)
+					.stream()
+					.map(patientDatumMapper::toResponseDTO)
+					.toList();
+
+			if (patientDatums.isEmpty()) {
+				return ApiResponse.success(patientDatums, "No se encontraron datos del paciente para esta visita medica: " + clinicalRecordId);
+			}
+
+			return ApiResponse.success(patientDatums, "Patient Datum encontrados exitosamente para el Clinical Record");
 		} catch (IllegalArgumentException ex) {
 			return ApiResponse.error(ex.getMessage());
-		} catch (Exception ex) {
-			return ApiResponse.error("Error al buscar Patient Datum por Clinical Record: " + ex.getMessage());
 		}
 	}
 
 	@Transactional(readOnly = true)
-	public ApiResponse<List<PatientDatumResponseDTO>> findByPrimitiveDatumId(Integer primitiveDatumId) {
+	public ApiResponse<List<PatientDatumSummaryDTO>> findByPrimitiveDatumId(Integer primitiveDatumId) {
 		try {
-			PrimitiveDatum primitiveDatum = primitiveDatumRepository.findById(primitiveDatumId)
-					.orElseThrow(() -> new IllegalArgumentException("Primitive Datum no encontrado con ID: " + primitiveDatumId));
-
-			List<PatientDatum> patientDatums = patientDatumRepository.findByPrimitiveDatum_Id(primitiveDatum.getId());
-			List<PatientDatumResponseDTO> response = patientDatums.stream().map(patientDatumMapper::toResponseDTO).toList();
-			if (patientDatums.isEmpty()) {
-				return ApiResponse.success(response, "No se encontraron Patient Datum para el Primitive Datum con ID: " + primitiveDatumId);
+			if(!this.primitiveDatumRepository.existsById(primitiveDatumId)){
+				return ApiResponse.error("No se encontre un primitiveDatum con id : " + primitiveDatumId);
 			}
 
-			return ApiResponse.success(response, "Patient Datum encontrados exitosamente para el Primitive Datum");
+			List<PatientDatumSummaryDTO> patientDatums = this.patientDatumRepository
+					.findByPrimitiveDatumId(primitiveDatumId)
+					.stream()
+					.map(patientDatumMapper::toSummaryDTO)
+					.toList();
+
+			if (patientDatums.isEmpty()) {
+				return ApiResponse.success(patientDatums, "No se encontraron Patient Datum para el Primitive Datum con ID: " + primitiveDatumId);
+			}
+
+			return ApiResponse.success(patientDatums, "Patient Datum encontrados exitosamente para el Primitive Datum");
 		} catch (IllegalArgumentException ex) {
 			return ApiResponse.error(ex.getMessage());
-		} catch (Exception ex) {
-			return ApiResponse.error("Error al buscar Patient Datum por Primitive Datum: " + ex.getMessage());
 		}
 	}
 
@@ -104,14 +108,6 @@ public class PatientDatumService {
 		try {
 			if (dto == null) {
 				return ApiResponse.error("El DTO no puede ser nulo");
-			}
-
-			if (dto.getClinicalRecordId() == null) {
-				return ApiResponse.error("El clinicalRecord es obligatorio");
-			}
-
-			if (dto.getPrimitiveDatumId() == null) {
-				return ApiResponse.error("El primitiveDatum es obligatorio");
 			}
 
 			ClinicalRecord clinicalRecord = clinicalRecordRepository.findById(dto.getClinicalRecordId())
@@ -128,11 +124,10 @@ public class PatientDatumService {
 			return ApiResponse.success(patientDatumMapper.toResponseDTO(saved), "Patient Datum creado exitosamente");
 		} catch (IllegalArgumentException ex) {
 			return ApiResponse.error(ex.getMessage());
-		} catch (Exception ex) {
-			return ApiResponse.error("Error al crear Patient Datum: " + ex.getMessage());
 		}
 	}
 
+	@Transactional
 	public ApiResponse<PatientDatumResponseDTO> update(Integer id, PatientDatumUpdateDTO dto) {
 		try {
 			if (dto == null) {
@@ -143,16 +138,11 @@ public class PatientDatumService {
 					.orElseThrow(() -> new IllegalArgumentException("Patient Datum no encontrado con ID: " + id));
 
 			// Solo actualizamos la descripcion, la asociacion entre las dos entidades, solo puede ser generada y eliminada.
-			if (dto.getDescription() != null) {
-				existing.setDescription(dto.getDescription());
-			}
+			existing.setDescription(dto.getDescription());
 
-			PatientDatum updated = patientDatumRepository.save(existing);
-			return ApiResponse.success(patientDatumMapper.toResponseDTO(updated), "Patient Datum actualizado exitosamente");
+			return ApiResponse.success(patientDatumMapper.toResponseDTO(patientDatumRepository.save(existing)), "Patient Datum actualizado exitosamente");
 		} catch (IllegalArgumentException ex) {
 			return ApiResponse.error(ex.getMessage());
-		} catch (Exception ex) {
-			return ApiResponse.error("Error al actualizar Patient Datum: " + ex.getMessage());
 		}
 	}
 
@@ -168,8 +158,6 @@ public class PatientDatumService {
 			return ApiResponse.error("Violacion a integridad de la base de datos: " + ex.getMessage());
 		} catch (IllegalArgumentException ex) {
 			return ApiResponse.error(ex.getMessage());
-		} catch (Exception ex) {
-			return ApiResponse.error("Error al eliminar Patient Datum: " + ex.getMessage());
 		}
 	}
 

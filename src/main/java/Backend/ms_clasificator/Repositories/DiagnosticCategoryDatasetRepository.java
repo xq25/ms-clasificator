@@ -7,6 +7,10 @@ import java.util.List;
 
 public interface DiagnosticCategoryDatasetRepository extends JpaRepository<DiagnosticCategoryDataset, Integer> {
     List<DiagnosticCategoryDataset> findByDatasetCategoryId(Integer datasetCategoryId);
+
     List<DiagnosticCategoryDataset> findByMedicalDiagnosticId(Integer medicalDiagnosticId);
-    boolean existsByDatasetCategory_DatasetIdAndMedicalDiagnosticId(Integer datasetId, Integer medicalDiagnosticId);
+
+    boolean existsByDatasetCategoryDatasetIdAndMedicalDiagnosticId(Integer datasetId, Integer medicalDiagnosticId);
+
+    boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);
 }

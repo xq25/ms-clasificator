@@ -10,4 +10,8 @@ public interface MedicalImageTypeRepository extends JpaRepository<MedicalImageTy
 	MedicalImageType findByName(String name);
 
 	List<MedicalImageType> findByEvaluationAreaId(Integer evaluationAreaId);
+
+	boolean existsByEvaluationAreaId(Integer evaluationAreaId);
+
+	boolean existsByName(String name);
 }

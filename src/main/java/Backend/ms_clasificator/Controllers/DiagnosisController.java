@@ -1,6 +1,8 @@
 package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.Diagnosis.DiagnosisCreateDTO;
+import Backend.ms_clasificator.DTOs.Diagnosis.DiagnosisResponseDTO;
+import Backend.ms_clasificator.DTOs.Diagnosis.DiagnosisSummaryDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Models.Diagnosis;
 import Backend.ms_clasificator.Services.DiagnosisService;
@@ -24,9 +26,14 @@ public class DiagnosisController {
      * @return Lista de todos los diagnósticos
      */
     @GetMapping("")
-    public ResponseEntity<List<Diagnosis>> findAll() {
-        List<Diagnosis> diagnoses = diagnosisService.findAll();
-        return ResponseEntity.ok(diagnoses);
+    public ResponseEntity<ApiResponse<List<DiagnosisSummaryDTO>>> findAll() {
+        ApiResponse<List<DiagnosisSummaryDTO>> response = diagnosisService.findAll();
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     /**
@@ -35,8 +42,8 @@ public class DiagnosisController {
      * @return Diagnóstico encontrado
      */
     @GetMapping("{id}")
-    public ResponseEntity<ApiResponse<Diagnosis>> findById(@PathVariable Integer id) {
-        ApiResponse<Diagnosis> response = diagnosisService.findById(id);
+    public ResponseEntity<ApiResponse<DiagnosisResponseDTO>> findById(@PathVariable Integer id) {
+        ApiResponse<DiagnosisResponseDTO> response = diagnosisService.findById(id);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -51,8 +58,8 @@ public class DiagnosisController {
      * @return Diagnósticos encontrados para la visita
      */
     @GetMapping("clinical-record/{clinicalRecordId}")
-    public ResponseEntity<ApiResponse<Diagnosis>> findByClinicalRecordId(@PathVariable Integer clinicalRecordId) {
-        ApiResponse<Diagnosis> response = diagnosisService.findByClinicalRecordId(clinicalRecordId);
+    public ResponseEntity<ApiResponse<List<DiagnosisSummaryDTO>>> findByClinicalRecordId(@PathVariable Integer clinicalRecordId) {
+        ApiResponse<List<DiagnosisSummaryDTO>> response = diagnosisService.findByClinicalRecordId(clinicalRecordId);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -67,8 +74,8 @@ public class DiagnosisController {
      * @return ApiResponse con el resultado
      */
     @PostMapping("")
-    public ResponseEntity<ApiResponse<Diagnosis>> create(@Valid @RequestBody DiagnosisCreateDTO diagnosisCreateDTO) {
-        ApiResponse<Diagnosis> response = diagnosisService.create(diagnosisCreateDTO);
+    public ResponseEntity<ApiResponse<DiagnosisResponseDTO>> create(@Valid @RequestBody DiagnosisCreateDTO diagnosisCreateDTO) {
+        ApiResponse<DiagnosisResponseDTO> response = diagnosisService.create(diagnosisCreateDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -76,6 +83,8 @@ public class DiagnosisController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
+    // No existe metodo de actualizacion, ya que es una asociacion
 
     /**
      * Eliminar un diagnóstico

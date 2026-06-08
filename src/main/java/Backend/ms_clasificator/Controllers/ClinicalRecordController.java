@@ -2,6 +2,7 @@ package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordCreateDTO;
 import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordResponseDTO;
+import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordSummaryDTO;
 import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Services.ClinicalRecordService;
@@ -26,8 +27,8 @@ public class ClinicalRecordController {
 	private ClinicalRecordService clinicalRecordService;
 
 	@GetMapping("")
-	public ResponseEntity<ApiResponse<List<ClinicalRecordResponseDTO>>> findAll() {
-		ApiResponse<List<ClinicalRecordResponseDTO>> response = this.clinicalRecordService.findAll();
+	public ResponseEntity<ApiResponse<List<ClinicalRecordSummaryDTO>>> findAll() {
+		ApiResponse<List<ClinicalRecordSummaryDTO>> response = this.clinicalRecordService.findAll();
 		if (response.isSuccess()) return ResponseEntity.ok(response);
 		return ResponseEntity.badRequest().body(response);
 	}
@@ -35,6 +36,13 @@ public class ClinicalRecordController {
 	@GetMapping("{id}")
 	public ResponseEntity<ApiResponse<ClinicalRecordResponseDTO>> findById(@PathVariable Integer id) {
 		ApiResponse<ClinicalRecordResponseDTO> response = this.clinicalRecordService.findById(id);
+		if (response.isSuccess()) return ResponseEntity.ok(response);
+		return ResponseEntity.badRequest().body(response);
+	}
+
+	@GetMapping("patient/{patientId}")
+	public ResponseEntity<ApiResponse<List<ClinicalRecordSummaryDTO>>> findByPatientId(@PathVariable Integer patientId) {
+		ApiResponse<List<ClinicalRecordSummaryDTO>> response = this.clinicalRecordService.findByPatientId(patientId);
 		if (response.isSuccess()) return ResponseEntity.ok(response);
 		return ResponseEntity.badRequest().body(response);
 	}

@@ -2,9 +2,9 @@ package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.DiagnosticCategoryDataset.DiagnosticCategoryDatasetCreateDTO;
 import Backend.ms_clasificator.DTOs.DiagnosticCategoryDataset.DiagnosticCategoryDatasetResponseDTO;
+import Backend.ms_clasificator.DTOs.DiagnosticCategoryDataset.DiagnosticCategoryDatasetSummaryDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.DiagnosticCategoryDatasetMappers.DiagnosticCategoryDatasetMapper;
-import Backend.ms_clasificator.Models.Dataset;
 import Backend.ms_clasificator.Models.DatasetCategory;
 import Backend.ms_clasificator.Models.DiagnosticCategoryDataset;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-
 
 @Service
 public class DiagnosticCategoryDatasetService {
@@ -33,11 +32,11 @@ public class DiagnosticCategoryDatasetService {
     private MedicalDiagnosticRepository medicalDiagnosticRepository;
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<DiagnosticCategoryDatasetResponseDTO>> findAll() {
+    public ApiResponse<List<DiagnosticCategoryDatasetSummaryDTO>> findAll() {
         try {
-            List<DiagnosticCategoryDatasetResponseDTO> data = repository.findAll()
+            List<DiagnosticCategoryDatasetSummaryDTO> data = repository.findAll()
                     .stream()
-                    .map(mapper::toResponseDTO)
+                    .map(mapper::toSummaryDTO)
                     .toList();
 
             return ApiResponse.success(data,
@@ -54,38 +53,29 @@ public class DiagnosticCategoryDatasetService {
     public ApiResponse<DiagnosticCategoryDatasetResponseDTO> findById(Integer id) {
         try {
 
-            DiagnosticCategoryDataset entity = repository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "DiagnosticCategoryDataset no encontrado con ID: " + id));
+            DiagnosticCategoryDatasetResponseDTO entity = repository.findById(id)
+                    .map(mapper::toResponseDTO)
+                    .orElseThrow(() -> new IllegalArgumentException("DiagnosticCategoryDataset no encontrado con ID: " + id));
 
-            return ApiResponse.success(
-                    mapper.toResponseDTO(entity),
-                    "DiagnosticCategoryDataset encontrado");
-
+            return ApiResponse.success(entity, "DiagnosticCategoryDataset obtenido exitosamente");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error(
-                    "Error al buscar DiagnosticCategoryDataset: "
-                            + ex.getMessage());
         }
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<DiagnosticCategoryDatasetResponseDTO>> findByDatasetCategoryId(Integer datasetCategoryId) {
+    public ApiResponse<List<DiagnosticCategoryDatasetSummaryDTO>> findByDatasetCategoryId(Integer datasetCategoryId) {
 
         try {
 
-            DatasetCategory datasetCategory =
-                    datasetCategoryRepository.findById(datasetCategoryId)
-                            .orElseThrow(() -> new IllegalArgumentException(
-                                    "DatasetCategory no encontrado con ID: "
-                                            + datasetCategoryId));
+            if (!datasetCategoryRepository.existsById(datasetCategoryId)) {
+                return ApiResponse.error("DatasetCategory no encontrado con ID: " + datasetCategoryId);
+            }
 
-            List<DiagnosticCategoryDatasetResponseDTO> data =
-                    repository.findByDatasetCategoryId(datasetCategory.getId())
+            List<DiagnosticCategoryDatasetSummaryDTO> data =
+                    repository.findByDatasetCategoryId(datasetCategoryId)
                             .stream()
-                            .map(mapper::toResponseDTO)
+                            .map(mapper::toSummaryDTO)
                             .toList();
 
             return ApiResponse.success(
@@ -103,59 +93,60 @@ public class DiagnosticCategoryDatasetService {
 
     @Transactional
     public ApiResponse<DiagnosticCategoryDatasetResponseDTO> create(DiagnosticCategoryDatasetCreateDTO dto) {
-
         try {
-
             if (dto == null) {
                 return ApiResponse.error("El DTO no puede ser nulo");
             }
 
             DatasetCategory datasetCategory =
-                    datasetCategoryRepository.findById(
-                                    dto.getDatasetCategoryId())
-                            .orElseThrow(() -> new IllegalArgumentException(
-                                    "DatasetCategory no encontrado con ID: "
-                                            + dto.getDatasetCategoryId()));
+                    datasetCategoryRepository.findById(dto.getDatasetCategoryId())
+                            .orElseThrow(() ->
+                                    new IllegalArgumentException(
+                                            "DatasetCategory no encontrado con ID: "
+                                                    + dto.getDatasetCategoryId()
+                                    ));
 
             MedicalDiagnostic medicalDiagnostic =
-                    medicalDiagnosticRepository.findById(
-                                    dto.getMedicalDiagnosticId())
-                            .orElseThrow(() -> new IllegalArgumentException(
-                                    "MedicalDiagnostic no encontrado con ID: "
-                                            + dto.getMedicalDiagnosticId()));
-
-            Dataset dataset = datasetCategory.getDataset();
+                    medicalDiagnosticRepository.findById(dto.getMedicalDiagnosticId())
+                            .orElseThrow(() ->
+                                    new IllegalArgumentException(
+                                            "MedicalDiagnostic no encontrado con ID: "
+                                                    + dto.getMedicalDiagnosticId()
+                                    ));
 
             MedicalDiagnostic rootDiagnostic =
-                    dataset.getMedicalDiagnostic();
+                    datasetCategory.getDataset().getMedicalDiagnostic();
 
-            // Validar que el diagnóstico seleccionado sea parte del árbol de clasificación definido por el Dataset (un subdiagnostico del diagnostico a clasificar)
-            if (!isValidSubDiagnostic(medicalDiagnostic, rootDiagnostic)) {
-                return ApiResponse.error("El diagnóstico seleccionado no pertenece al árbol de clasificación definido por el Dataset");
+            if (!isValidSubDiagnostic(
+                    medicalDiagnostic,
+                    rootDiagnostic)) {
+
+                return ApiResponse.error(
+                        "El diagnóstico seleccionado no pertenece al árbol de clasificación definido por el Dataset"
+                );
             }
 
-            // Validar que el diagnostico no pertenezca ya a otra categoría del mismo dataset
-            boolean exists = repository.existsByDatasetCategory_DatasetIdAndMedicalDiagnosticId(dataset.getId(), medicalDiagnostic.getId());
-            if (exists) {
-                return ApiResponse.error("El diagnóstico seleccionado ya pertenece a otra categoría del mismo dataset");
+            if (repository.existsByDatasetCategoryDatasetIdAndMedicalDiagnosticId(
+                    datasetCategory.getDataset().getId(),
+                    medicalDiagnostic.getId())) {
+
+                return ApiResponse.error(
+                        "El diagnóstico seleccionado ya pertenece a otra categoría del mismo dataset"
+                );
             }
 
-            DiagnosticCategoryDataset entity = mapper.toEntity(dto);
+            DiagnosticCategoryDataset entity =
+                    mapper.toEntity(dto);
 
             entity.setDatasetCategory(datasetCategory);
             entity.setMedicalDiagnostic(medicalDiagnostic);
 
-            DiagnosticCategoryDataset saved = repository.save(entity);
-
-            return ApiResponse.success(mapper.toResponseDTO(saved), "Diagnóstico agregado exitosamente a la categoria");
+            return ApiResponse.success(mapper.toResponseDTO(repository.save(entity)), "Diagnóstico agregado exitosamente a la categoría");
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error(
-                    "Error al crear DiagnosticCategoryDataset: "
-                            + ex.getMessage());
         }
+
     }
 
     @Transactional
@@ -175,10 +166,6 @@ public class DiagnosticCategoryDatasetService {
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error(
-                    "Error al eliminar DiagnosticCategoryDataset: "
-                            + ex.getMessage());
         }
     }
 
@@ -186,7 +173,7 @@ public class DiagnosticCategoryDatasetService {
      * Implementar según tu modelo de jerarquía de diagnósticos.
      */
     private boolean isValidSubDiagnostic(MedicalDiagnostic diagnostic, MedicalDiagnostic rootDiagnostic) {
-        medicalDiagnosticRepository.existsByIdAndParentDiagnostic_Id(diagnostic.getId(), rootDiagnostic.getId());
+        medicalDiagnosticRepository.existsByIdAndParentDiagnosticId(diagnostic.getId(), rootDiagnostic.getId());
 
         return true;
     }

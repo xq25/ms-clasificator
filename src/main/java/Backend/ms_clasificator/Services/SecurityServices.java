@@ -1,6 +1,7 @@
 package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.Models.UserInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -28,7 +29,6 @@ public class SecurityServices {
 
         return new HttpEntity<>(headers);
     }
-
 
     // EXIST USER BY ID
     public boolean existUserById(String userId) {
@@ -130,5 +130,81 @@ public class SecurityServices {
         } catch (Exception ex) {
             return false;
         }
+    }
+
+    public String getUserNameById(String userId) {
+
+        try {
+
+            String url =
+                    securityUrl +
+                            "/getway/security/api/get-username/"+ userId;
+
+            ResponseEntity<ApiResponse> response =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.GET,
+                            buildRequestEntity(),
+                            ApiResponse.class
+                    );
+
+            if (response.getBody() != null) {
+                if (response.getBody().getData() instanceof String) {
+                    String data = (String) response.getBody().getData();
+                    return data;
+                }
+            }
+
+            return null;
+
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    public String getUserEmailById(String userId){
+        try{
+            String url =
+                    securityUrl +
+                            "/getway/security/api/get-useremail/"+ userId;
+
+            ResponseEntity<ApiResponse> response =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.GET,
+                            buildRequestEntity(),
+                            ApiResponse.class
+                    );
+
+            if (response.getBody() != null) {
+                if (response.getBody().getData() instanceof String) {
+                    String data = (String) response.getBody().getData();
+                    return data;
+                }
+            }
+            return null;
+
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    public UserInfo getUserInfo(String userId){
+        // Obtenemos el nombre del usuario
+        String username = this.getUserNameById(userId);
+        if (username == null){
+            return null;
+        }
+
+        String email = this.getUserEmailById(userId);
+        if(email == null){
+            return null;
+        }
+
+        UserInfo userInfo =  new UserInfo();
+        userInfo.setName(username);
+        userInfo.setEmail(email);
+
+        return userInfo;
     }
 }

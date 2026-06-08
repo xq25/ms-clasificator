@@ -2,6 +2,7 @@ package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticCreateDTO;
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticResponseDTO;
+import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticSummaryDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Services.ImageDiagnosticService;
 import jakarta.validation.Valid;
@@ -24,8 +25,8 @@ public class ImageDiagnosticController {
      * @return Lista de todos los diagnósticos
      */
     @GetMapping("")
-    public ResponseEntity<List<ImageDiagnosticResponseDTO>> findAll() {
-        List<ImageDiagnosticResponseDTO> diagnostics = imageDiagnosticService.findAll();
+    public ResponseEntity<List<ImageDiagnosticSummaryDTO>> findAll() {
+        List<ImageDiagnosticSummaryDTO> diagnostics = imageDiagnosticService.findAll();
         return ResponseEntity.ok(diagnostics);
     }
 
@@ -37,6 +38,28 @@ public class ImageDiagnosticController {
     @GetMapping("{id}")
     public ResponseEntity<ApiResponse<ImageDiagnosticResponseDTO>> findById(@PathVariable Integer id) {
         ApiResponse<ImageDiagnosticResponseDTO> response = imageDiagnosticService.findById(id);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @GetMapping("doctor/{doctorId}")
+    public ResponseEntity<ApiResponse<List<ImageDiagnosticSummaryDTO>>> findByDoctorId(@PathVariable Integer doctorId) {
+        ApiResponse<List<ImageDiagnosticSummaryDTO>> response = imageDiagnosticService.findByDoctorId(doctorId);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @GetMapping("image/{medicalImageId}")
+    public ResponseEntity<ApiResponse<List<ImageDiagnosticSummaryDTO>>> findByMedicalImageId(@PathVariable Integer medicalImageId) {
+        ApiResponse<List<ImageDiagnosticSummaryDTO>> response = imageDiagnosticService.findByMedicalImgId(medicalImageId);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

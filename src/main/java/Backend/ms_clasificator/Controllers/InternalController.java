@@ -1,10 +1,10 @@
 package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.Doctor.DoctorBaseDTO;
+import Backend.ms_clasificator.DTOs.Doctor.DoctorSummaryDTO;
 import Backend.ms_clasificator.DTOs.Patient.PatientCreateDTO;
+import Backend.ms_clasificator.DTOs.Patient.PatientSummaryDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
-import Backend.ms_clasificator.Models.Doctor;
-import Backend.ms_clasificator.Models.Patient;
 import Backend.ms_clasificator.Services.DoctorService;
 import Backend.ms_clasificator.Services.InternalService;
 import Backend.ms_clasificator.Services.PatientService;
@@ -40,13 +40,13 @@ public class InternalController {
 
     @PostMapping("register/doctor")
     public boolean registerDoctor(@RequestBody DoctorBaseDTO doctorBaseDTO){
-        ApiResponse<Backend.ms_clasificator.DTOs.Doctor.DoctorResponseDTO> registerResponse =  this.doctorService.create(doctorBaseDTO);
+        ApiResponse<DoctorSummaryDTO> registerResponse =  this.doctorService.create(doctorBaseDTO);
         return registerResponse.isSuccess();
     }
 
     @PostMapping("register/patient")
     public boolean registerPatient(@RequestBody PatientCreateDTO patientCreateDTO){
-        ApiResponse<Patient> registerResponse = this.patientService.create(patientCreateDTO);
+        ApiResponse<PatientSummaryDTO> registerResponse = this.patientService.create(patientCreateDTO);
 
         return registerResponse.isSuccess();
     }

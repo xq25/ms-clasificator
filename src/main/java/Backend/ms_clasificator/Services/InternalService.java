@@ -17,24 +17,20 @@ public class InternalService {
     private PatientRepository thePatientRepository;
 
     public boolean existRelation(String userId){
-        Doctor doctorRelation = this.theDoctorRepository.findByUserId(userId);
-        Patient patientRelation = this.thePatientRepository.findByUserId(userId);
-        boolean validation = false;
+        Doctor doctorRelation = this.theDoctorRepository.findByUserId(userId).orElse(null);
+        Patient patientRelation = this.thePatientRepository.findByUserId(userId).orElse(null);
 
-        if (doctorRelation != null || patientRelation != null){
-            validation = true;
-        }
-        return validation;
+        return doctorRelation != null || patientRelation != null;
     }
 
     public boolean existRelationWithDoctor(String userId){
-        Doctor doctorRelation = this.theDoctorRepository.findByUserId(userId);
+        Doctor doctorRelation = this.theDoctorRepository.findByUserId(userId).orElse(null);
         return doctorRelation != null;
 
     }
 
     public boolean existRelationWithPatient(String userId){
-        Patient patientRelation = this.thePatientRepository.findByUserId(userId);
+        Patient patientRelation = this.thePatientRepository.findByUserId(userId).orElse(null);
         return patientRelation != null;
 
     }

@@ -13,6 +13,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class DatasetCreateDTO {
+    @NotNull(message = "El nombre del dataset no puede ser null")
+    @NotBlank(message = "El nombre del dataset no puede estar vacío")
+    private String name;
+
     @Min(message = "El ID del diagnosstico | enfermedad para el que esta diseñado el dataset debe ser un numero positivo", value = 1)
     @NotNull(message = "El ID del diagnosstico | enfermedad para el que esta diseñado el dataset no puede ser null")
     private Integer medicalDiagnosticId;

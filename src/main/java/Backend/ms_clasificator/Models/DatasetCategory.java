@@ -27,11 +27,9 @@ public class DatasetCategory {
     @JoinColumn(name = "dataset_id", nullable = false, updatable = false)
     private Dataset dataset;
 
-    // No cargamos las listas de states, para eso estan las consultas desde el service
+    // Solo lo colocamos por el cascade, no lo mostramos en el json
     @JsonIgnore
-    @OneToMany(mappedBy = "datasetCategory", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<DiagnosticCategoryDataset> stateDatasetCategories;
-
-
+    @OneToMany(mappedBy = "datasetCategory", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DiagnosticCategoryDataset> diagnosticCategoryDatasets;
 }
 

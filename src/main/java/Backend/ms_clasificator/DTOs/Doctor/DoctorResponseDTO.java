@@ -14,6 +14,8 @@ public class DoctorResponseDTO {
     private Integer id;
     private String code;
     private String userId;
+    private String userName;
+    private String email;
 
 }
 

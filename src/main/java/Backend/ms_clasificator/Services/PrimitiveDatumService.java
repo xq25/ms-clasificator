@@ -57,6 +57,7 @@ public class PrimitiveDatumService {
 				return ApiResponse.error("El DTO no puede ser nulo");
 			}
 
+			// Validamos que no exista otro dato con este mismo nombre
 			PrimitiveDatum existing = primitiveDatumRepository.findByNameIgnoreCase(dto.getName());
 			if (existing != null) {
 				return ApiResponse.error("Ya existe un dato primitivo con el nombre: " + dto.getName());
@@ -81,21 +82,15 @@ public class PrimitiveDatumService {
 			PrimitiveDatum primitiveDatum = primitiveDatumRepository.findById(id)
 					.orElseThrow(() -> new IllegalArgumentException("Dato primitivo no encontrado con ID: " + id));
 
-			if (dto.getName() != null) {
-				PrimitiveDatum existing = primitiveDatumRepository.findByNameIgnoreCase(dto.getName());
-				if (existing != null && !existing.getId().equals(id)) {
-					return ApiResponse.error("Ya existe un dato primitivo con el nombre: " + dto.getName());
-				}
-				primitiveDatum.setName(dto.getName());
+			// Validamos que no tenga el mismo nombre que otro dato primitivo
+			PrimitiveDatum existing = primitiveDatumRepository.findByNameIgnoreCase(dto.getName());
+			if (existing != null && !existing.getId().equals(id)) {
+				return ApiResponse.error("Ya existe un dato primitivo con el nombre: " + dto.getName());
 			}
 
-			if (dto.getType() != null) {
-				primitiveDatum.setType(dto.getType());
-			}
-
-			if (dto.getUnit() != null) {
-				primitiveDatum.setUnit(dto.getUnit());
-			}
+			primitiveDatum.setName(dto.getName());
+			primitiveDatum.setType(dto.getType());
+			primitiveDatum.setUnit(dto.getUnit());
 
 			PrimitiveDatum updated = primitiveDatumRepository.save(primitiveDatum);
 			return ApiResponse.success(primitiveDatumMapper.toResponseDTO(updated), "Dato primitivo actualizado exitosamente");

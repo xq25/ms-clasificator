@@ -1,6 +1,6 @@
 package Backend.ms_clasificator.DTOs.PatientDatum;
 
-import Backend.ms_clasificator.Models.PrimitiveDatum;
+import Backend.ms_clasificator.DTOs.PrimitiveDatum.PrimitiveDatumSummaryDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,8 +13,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class PatientDatumResponseDTO {
     private Integer id;
-    private String name;
     private String description;
-    private PrimitiveDatum primitiveDatum;
+    private PrimitiveDatumSummaryDTO primitiveDatum;
+    private Integer clinicalRecordId;
 }
 

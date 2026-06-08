@@ -7,6 +7,7 @@ import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
+
 @Getter
 @Setter
 @Entity
@@ -16,6 +17,9 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class PrimitiveDatum extends SystemDatum{
 
+    @Column(name = "name", nullable = false, unique = true)
+    private String name;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PrimitiveType type;
@@ -24,9 +28,9 @@ public class PrimitiveDatum extends SystemDatum{
     @Column(nullable = false)
     private PrimitiveUnit unit;
 
-    // Si se elimina el dato primitivo se deben eliminaar todos los datos de un historial clinico de un paciente que esten relacionados con este.
+    // Lo colocamos solo para el cascade
     @JsonIgnore
-    @OneToMany(mappedBy = "primitiveDatum", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<PatientDatum> patientDatums;
+    @OneToMany(mappedBy = "primitiveDatum", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PatientDatum> patientDatumList;
 
 }

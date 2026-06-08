@@ -5,8 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,7 +13,6 @@ public class MedicalDiagnosticResponseDTO {
     private Integer id;
     private String diagnosticCode;
     private String diagnosticName;
-    private Integer parentDiagnosticId;
-    private List<Integer> subDiagnosticsIds;
+    private MedicalDiagnosticSummaryDTO parentDiagnostic;
 }
 

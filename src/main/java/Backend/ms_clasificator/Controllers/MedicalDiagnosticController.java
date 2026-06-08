@@ -2,6 +2,7 @@ package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticResponseDTO;
+import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticSummaryDTO;
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Services.MedicalDiagnosticService;
@@ -47,8 +48,8 @@ public class MedicalDiagnosticController {
     }
 
     @GetMapping("parentId/{parentId}")
-    public ResponseEntity<ApiResponse<List<MedicalDiagnosticResponseDTO>>> findByParentId(@PathVariable Integer parentId) {
-        ApiResponse<List<MedicalDiagnosticResponseDTO>> response = this.medicalDiagnosticService.findByParentDiagnosticId(parentId);
+    public ResponseEntity<ApiResponse<List<MedicalDiagnosticSummaryDTO>>> findByParentId(@PathVariable Integer parentId) {
+        ApiResponse<List<MedicalDiagnosticSummaryDTO>> response = this.medicalDiagnosticService.findByParentDiagnosticId(parentId);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

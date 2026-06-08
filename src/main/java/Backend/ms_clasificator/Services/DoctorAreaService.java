@@ -1,7 +1,10 @@
 package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.DoctorArea.DoctorAreaCreateDTO;
+import Backend.ms_clasificator.DTOs.DoctorArea.DoctorAreaResponseDTO;
+import Backend.ms_clasificator.DTOs.DoctorArea.DoctorAreaSummaryDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.Mappers.DoctorAreaMappers.DoctorAreaMapper;
 import Backend.ms_clasificator.Models.Doctor;
 import Backend.ms_clasificator.Models.DoctorArea;
 import Backend.ms_clasificator.Models.EvaluationArea;
@@ -27,13 +30,20 @@ public class DoctorAreaService {
     @Autowired
     private EvaluationAreaRepository evaluationAreaRepository;
 
+    @Autowired
+    private DoctorAreaMapper doctorAreaMapper;
+
     /**
      * Obtener todas las relaciones DoctorArea
      * @return Lista de todas las relaciones
      */
     @Transactional(readOnly = true)
-    public List<DoctorArea> findAll() {
-        return doctorAreaRepository.findAll();
+    public ApiResponse<List<DoctorAreaSummaryDTO>> findAll() {
+        List<DoctorAreaSummaryDTO> doctorAreas =  doctorAreaRepository.findAll()
+                .stream().map(doctorAreaMapper::toSummaryDTO)
+                .toList();
+
+        return ApiResponse.success(doctorAreas, "Relaciones DoctorArea obtenidas exitosamente");
     }
 
     /**
@@ -42,16 +52,15 @@ public class DoctorAreaService {
      * @return DoctorArea encontrada
      */
     @Transactional(readOnly = true)
-    public ApiResponse<DoctorArea> findById(Integer id) {
+    public ApiResponse<DoctorAreaResponseDTO> findById(Integer id) {
         try {
-            DoctorArea doctorArea = doctorAreaRepository.findById(id)
+            DoctorAreaResponseDTO doctorArea = doctorAreaRepository.findById(id)
+                    .map(doctorAreaMapper::toResponseDTO)
                     .orElseThrow(() -> new IllegalArgumentException("Relación DoctorArea no encontrada con ID: " + id));
 
             return ApiResponse.success(doctorArea, "Relacion encontrada exitosamente");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al buscar relación DoctorArea: " + ex.getMessage());
         }
     }
 
@@ -61,19 +70,23 @@ public class DoctorAreaService {
      * @return Lista de DoctorArea del doctor
      */
     @Transactional(readOnly = true)
-    public ApiResponse<List<DoctorArea>> findByDoctorId(Integer doctorId) {
+    public ApiResponse<List<DoctorAreaSummaryDTO>> findByDoctorId(Integer doctorId) {
         try{
             //Validar que el id del doctor exista
-            this.doctorRepository.findById(doctorId)
-                    .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + doctorId));
+            if(!doctorRepository.existsById(doctorId)){
+                return ApiResponse.error("No se encontro un doctor con id : " + doctorId);
+            }
 
-            List<DoctorArea> relations = this.doctorAreaRepository.findByDoctorId(doctorId);
+            List<DoctorAreaSummaryDTO> relations = this.doctorAreaRepository.findByDoctorId(doctorId)
+                    .stream().map(doctorAreaMapper::toSummaryDTO).toList();
+
+            if (relations.isEmpty()) {
+                return ApiResponse.success(relations, "No se encontraron áreas de evaluación para este doctor");
+            }
 
             return ApiResponse.success(relations, "Relaciones encontradas exitosamente");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al buscar relaciones por doctor: " + ex.getMessage());
         }
 
     }
@@ -84,19 +97,23 @@ public class DoctorAreaService {
      * @return Lista de DoctorArea en el área
      */
     @Transactional(readOnly = true)
-    public ApiResponse<List<DoctorArea>> findByEvaluationAreaId(Integer evaluationAreaId) {
+    public ApiResponse<List<DoctorAreaSummaryDTO>> findByEvaluationAreaId(Integer evaluationAreaId) {
         try{
-            //Validar que el id del doctor exista
-            this.evaluationAreaRepository.findById(evaluationAreaId)
-                    .orElseThrow(() -> new IllegalArgumentException("Area de Evaluacion no encontrado con ID: " + evaluationAreaId));
+            //Validar que el id del area exista
+            if(!evaluationAreaRepository.existsById(evaluationAreaId)){
+                return ApiResponse.error("No se encontro un area de evaluacion con id : " + evaluationAreaId);
+            }
 
-            List<DoctorArea> relations = this.doctorAreaRepository.findByEvaluationAreaId(evaluationAreaId);
+            List<DoctorAreaSummaryDTO> relations = this.doctorAreaRepository.findByEvaluationAreaId(evaluationAreaId)
+                    .stream().map(doctorAreaMapper::toSummaryDTO).toList();
+
+            if (relations.isEmpty()){
+                return ApiResponse.success(relations, "No se encontraron doctores para esta área de evaluación");
+            }
 
             return ApiResponse.success(relations, "Relaciones encontradas exitosamente");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al buscar relaciones por doctor: " + ex.getMessage());
         }
     }
 
@@ -105,7 +122,7 @@ public class DoctorAreaService {
      * @param doctorAreaCreateDTO DTO con los datos de la relación
      * @return ApiResponse<DoctorArea> con el resultado de la operación
      */
-    public ApiResponse<DoctorArea> create(DoctorAreaCreateDTO doctorAreaCreateDTO) {
+    public ApiResponse<DoctorAreaResponseDTO> create(DoctorAreaCreateDTO doctorAreaCreateDTO) {
         try {
             if (doctorAreaCreateDTO == null) {
                 return ApiResponse.error("El DTO no puede ser nulo");
@@ -123,24 +140,17 @@ public class DoctorAreaService {
                     .orElseThrow(() -> new IllegalArgumentException("Área de evaluación no encontrada con ID: " + evaluationAreaId));
 
             // Validar que no exista ya esta relación
-            DoctorArea existing = doctorAreaRepository.findByDoctorIdAndEvaluationAreaId(doctorId, evaluationAreaId);
-            if (existing != null) {
+            if (doctorAreaRepository.existsByDoctorIdAndEvaluationAreaId(doctorId, evaluationAreaId)) {
                 return ApiResponse.error("Este doctor ya está asociado a esta área de evaluación");
             }
+            DoctorArea doctorArea = doctorAreaMapper.toEntity(doctorAreaCreateDTO);
+            doctorArea.setDoctor(doctor);
+            doctorArea.setEvaluationArea(evaluationArea);
 
-            // Crear la relación
-            DoctorArea doctorArea = DoctorArea.builder()
-                    .doctor(doctor)
-                    .evaluationArea(evaluationArea)
-                    .build();
-
-            DoctorArea saved = doctorAreaRepository.save(doctorArea);
-            return ApiResponse.success(saved, "Doctor asociado al área de evaluación exitosamente");
+            return ApiResponse.success(doctorAreaMapper.toResponseDTO(doctorAreaRepository.save(doctorArea)), "Doctor asociado al área de evaluación exitosamente");
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al crear relación DoctorArea: " + ex.getMessage());
         }
     }
 
@@ -159,8 +169,6 @@ public class DoctorAreaService {
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al eliminar relación DoctorArea: " + ex.getMessage());
         }
     }
 
@@ -186,9 +194,5 @@ public class DoctorAreaService {
         }
     }
 
-    public boolean validateDoctorInEvaluationArea(Integer doctorId, Integer evaluationAreaId) {
-        List<DoctorArea> doctorAreas = this.doctorAreaRepository.findByDoctorId(doctorId);
-        return doctorAreas.stream().anyMatch(da -> da.getEvaluationArea().getId().equals(evaluationAreaId));
-    }
 }
 

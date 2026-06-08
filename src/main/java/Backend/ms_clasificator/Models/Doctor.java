@@ -26,10 +26,7 @@ public class Doctor {
     private String userId;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<DoctorArea> doctorAreas;
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<DoctorArea> doctorAreas;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "doctor", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
-    private List<ImageDiagnostic> imageDiagnostics;
 }

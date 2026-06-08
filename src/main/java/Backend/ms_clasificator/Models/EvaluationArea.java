@@ -20,21 +20,16 @@ public class EvaluationArea {
     private Integer id;
 
     // Normalmente usado en hospitales para diferenciar entre areas de evaluacion(No estandarizado)
-    @Column(name = "codeArea", nullable = false)
+    @Column(name = "codeArea", unique = true, nullable = false)
     private String codeArea;
 
     @Column(name = "name", unique = true, nullable = false)
     private String name;
 
-    // Si se elimina una area de evaluacion se debe eliminar la relacion intermedia con doctor
+    // Solo lo agreamos para el cascade
     @JsonIgnore
-    @OneToMany(mappedBy = "evaluationArea", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "evaluationArea", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DoctorArea> doctorAreas;
-
-    // Las cargas de los tipos de imagenes medicas lo hacemos mediante consultas, ya que pueden ser varias
-    @JsonIgnore
-    @OneToMany(mappedBy = "evaluationArea", fetch = FetchType.LAZY)
-    private List<MedicalImageType> medicalImageTypes;
 
     // No es necesario cargar la configuracion(Dataset) para clasificar, que tiene asiganada esta area de evaluacion.
     @JsonIgnore

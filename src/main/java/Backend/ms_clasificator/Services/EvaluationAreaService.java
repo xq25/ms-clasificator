@@ -6,15 +6,12 @@ import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.EvaluationAreaMappers.EvaluationAreaMapper;
 import Backend.ms_clasificator.Models.EvaluationArea;
-import Backend.ms_clasificator.Models.MedicalImageType;
-import Backend.ms_clasificator.Models.Dataset;
 import Backend.ms_clasificator.Repositories.EvaluationAreaRepository;
 import Backend.ms_clasificator.Repositories.MedicalImageTypeRepository;
 import Backend.ms_clasificator.Repositories.DatasetRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -41,15 +38,13 @@ public class EvaluationAreaService {
      */
     @Transactional(readOnly = true)
     public ApiResponse<List<EvaluationAreaResponseDTO>> findAll() {
-        try {
-            List<EvaluationAreaResponseDTO> response = evaluationAreaRepository.findAll()
-                    .stream()
-                    .map(evaluationAreaMapper::toResponseDTO)
-                    .toList();
-            return ApiResponse.success(response, "Areas de evaluacion obtenidas exitosamente");
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al listar las areas de evaluacion: " + ex.getMessage());
-        }
+
+        List<EvaluationAreaResponseDTO> response = evaluationAreaRepository.findAll()
+                .stream()
+                .map(evaluationAreaMapper::toResponseDTO)
+                .toList();
+        return ApiResponse.success(response, "Areas de evaluacion obtenidas exitosamente");
+
     }
 
     /**
@@ -68,8 +63,6 @@ public class EvaluationAreaService {
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al buscar Area de Evaluacion: " + ex.getMessage());
         }
     }
 
@@ -79,28 +72,23 @@ public class EvaluationAreaService {
      * @return ApiResponse<EvaluationArea> con el resultado de la operación
      */
     public ApiResponse<EvaluationAreaResponseDTO> create(EvaluationAreaCreateDTO evaluationAreaCreateDTO) {
-        try {
+
             if (evaluationAreaCreateDTO == null) {
                 return ApiResponse.error("El DTO no puede ser nulo");
             }
 
             // Validar que no exista área con el mismo nombre
-            if (evaluationAreaRepository.findByName(evaluationAreaCreateDTO.getName()) != null) {
+            if (this.evaluationAreaRepository.existsByName(evaluationAreaCreateDTO.getName())) {
                 return ApiResponse.error("Ya existe un área de evaluación con el nombre: " + evaluationAreaCreateDTO.getName());
             }
 
             // Validar que no exista área con el mismo código
-            if (evaluationAreaRepository.findByCodeArea(evaluationAreaCreateDTO.getCodeArea()) != null) {
+            if (this.evaluationAreaRepository.existsByCodeArea(evaluationAreaCreateDTO.getCodeArea())) {
                 return ApiResponse.error("Ya existe un área de evaluación con el código: " + evaluationAreaCreateDTO.getCodeArea());
             }
 
             EvaluationArea evaluationArea = evaluationAreaMapper.toEntity(evaluationAreaCreateDTO);
-            EvaluationArea saved = evaluationAreaRepository.save(evaluationArea);
-            return ApiResponse.success(evaluationAreaMapper.toResponseDTO(saved), "Área de evaluación creada exitosamente");
-
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al crear área de evaluación: " + ex.getMessage());
-        }
+            return ApiResponse.success(evaluationAreaMapper.toResponseDTO(evaluationAreaRepository.save(evaluationArea)), "Área de evaluación creada exitosamente");
     }
 
     /**
@@ -138,8 +126,6 @@ public class EvaluationAreaService {
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al actualizar área de evaluación: " + ex.getMessage());
         }
     }
 
@@ -148,21 +134,19 @@ public class EvaluationAreaService {
      * @param id ID del área a eliminar
      * @return ApiResponse con el resultado de la operación
      */
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @Transactional
     public ApiResponse<Void> delete(Integer id) {
         try {
             EvaluationArea evaluationArea = evaluationAreaRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Área de evaluación no encontrada con ID: " + id));
 
             // Validamos que no tenga tipos de imagenes medicas asociadas a esta area
-            List<MedicalImageType> medicalImgTypes = this.medicalImageTypeRepository.findByEvaluationAreaId(id);
-            if (!medicalImgTypes.isEmpty()) {
+            if (medicalImageTypeRepository.existsByEvaluationAreaId(id)) {
                 return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene tipos de imágenes médicas asociadas");
             }
-            // Validamos que no tenga una configuracionUI asociada
-            Dataset dataset = this.datasetRepository.findByEvaluationAreaId(id);
-            if (dataset != null) {
-                return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene un Dataset asociado");
+            // Validamos que no tenga una dataset asociada
+            if(datasetRepository.existsByEvaluationAreaId(id)){
+                return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene datasets asociadas");
             }
 
             evaluationAreaRepository.delete(evaluationArea);

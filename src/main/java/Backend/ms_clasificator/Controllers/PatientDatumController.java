@@ -2,6 +2,7 @@ package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumCreateDTO;
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumResponseDTO;
+import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumSummaryDTO;
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Services.PatientDatumService;
@@ -27,8 +28,8 @@ public class PatientDatumController {
 	private PatientDatumService patientDatumService;
 
 	@GetMapping("")
-	public ResponseEntity<ApiResponse<List<PatientDatumResponseDTO>>> findAll() {
-		ApiResponse<List<PatientDatumResponseDTO>> response = this.patientDatumService.findAll();
+	public ResponseEntity<ApiResponse<List<PatientDatumSummaryDTO	>>> findAll() {
+		ApiResponse<List<PatientDatumSummaryDTO>> response = this.patientDatumService.findAll();
 		if (response.isSuccess()) return ResponseEntity.ok(response);
 		return ResponseEntity.badRequest().body(response);
 	}
@@ -48,8 +49,8 @@ public class PatientDatumController {
 	}
 
 	@GetMapping("primitive-datum/{primitiveDatumId}")
-	public ResponseEntity<ApiResponse<List<PatientDatumResponseDTO>>> findByPrimitiveDatumId(@PathVariable Integer primitiveDatumId) {
-		ApiResponse<List<PatientDatumResponseDTO>> response = this.patientDatumService.findByPrimitiveDatumId(primitiveDatumId);
+	public ResponseEntity<ApiResponse<List<PatientDatumSummaryDTO>>> findByPrimitiveDatumId(@PathVariable Integer primitiveDatumId) {
+		ApiResponse<List<PatientDatumSummaryDTO>> response = this.patientDatumService.findByPrimitiveDatumId(primitiveDatumId);
 		if (response.isSuccess()) return ResponseEntity.ok(response);
 		return ResponseEntity.badRequest().body(response);
 	}
