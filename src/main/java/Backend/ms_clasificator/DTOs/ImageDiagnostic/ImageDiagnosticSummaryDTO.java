@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 public class ImageDiagnosticSummaryDTO {
 
     private Integer id;
+    private Integer doctorId;
+    private Integer medicalImageId;
     private LocalDateTime diagnosticDate;
 
 }

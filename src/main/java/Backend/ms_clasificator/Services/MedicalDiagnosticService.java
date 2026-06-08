@@ -141,10 +141,12 @@ public class MedicalDiagnosticService {
             MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Diagnóstico médico no encontrado con ID: " + id));
 
+            // Validacion de subdiagnosticos
             if (medicalDiagnosticRepository.existsByParentDiagnosticId(id)) {
                 return ApiResponse.error("El diagnóstico médico no se puede eliminar porque tiene sub-diagnósticos asociados.");
             }
 
+            // Validamos que no tenga diagnosticos de imagenes asociados a el
             if (imageDoctorDiagnosticsRepository.existsByMedicalDiagnosticId(id)) {
                 return ApiResponse.error("No se puede eliminar el diagnóstico ya que está asociado a clasificaciones de imágenes.");
             }
@@ -211,7 +213,7 @@ public class MedicalDiagnosticService {
             }
 
             // Validar que el subdiagnostico que se va a remover no este dentro de una configuracion.
-            if (this.diagnosticCategoryDatasetRepository.existByMedicalDiagnosticId(subDiagnosticId)) {
+            if (this.diagnosticCategoryDatasetRepository.existsByMedicalDiagnosticId(subDiagnosticId)) {
                 return ApiResponse.error("No se puede remover este sub-diagnóstico porque está asignado a una categoría dentro de un dataset.");
             }
 

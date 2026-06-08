@@ -2,29 +2,27 @@ package Backend.ms_clasificator.Models;
 
 import jakarta.persistence.*;
 import lombok.*;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * Entidad MedicalImg — versión actualizada con soporte de storage desacoplado.
- *
+
  * CAMPOS NUEVOS vs versión original:
  * - image_key   → clave única del objeto en el storage (diagnostics/uuid.jpg)
  * - provider    → qué sistema la guardó ("minio", "s3", "r2") — útil para auditoría
  *                 y para saber a dónde ir a buscarla si necesitas migrar datos
  * - content_type → MIME type del archivo original (image/jpeg, etc.)
  * - file_size   → tamaño en bytes — útil para billing y validaciones
- *
+
  * CAMPO ELIMINADO:
  * - url → ya NO se guarda en la BD. La URL se genera dinámicamente con
  *          ImageStoragePort.generatePublicUrl(imageKey).
  *   Por qué: las URLs pre-signed expiran. Si guardas la URL, en 24h está muerta.
  *   El image_key siempre es válido — la URL se genera on-demand.
- *
+
  * DECISIÓN — created_at aquí vs en la entidad de storage:
  * Mantenemos created_at en esta entidad porque ya existe en el dominio médico.
  * No tiene sentido una entidad separada solo para el registro de storage
@@ -77,9 +75,8 @@ public class MedicalImg extends SystemDatum{
     @JoinColumn(name = "medical_image_type_id", nullable = false)
     private MedicalImageType medicalImageType;
 
-    @JsonIgnore // No cargamos el clinical record, es inecesario
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     // Las imagenes puedenn vivir sin la asociacion con las historia medicas (composicion pasiva)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "clinical_record_id", nullable = true )
     private ClinicalRecord clinicalRecord;
 

@@ -2,6 +2,7 @@ package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgResponseDTO;
+import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgSummaryDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Services.MedicalImageService;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class MedicalImageController {
     /**
      * POST /medical-images/upload
      * Ejemplo con curl:
-     * curl -X POST http://localhost:8081/medical-images/upload
+     * curl -X POST "http: //localhost:8081 / medical-images/upload"
      *   -F "file=@imagen.jpg;type=image/jpeg" \
      *   -F "evaluationAreaId=1" \
      *   -F "folder=diagnostics"
@@ -62,7 +63,7 @@ public class MedicalImageController {
 
     // LECTURA
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<MedicalImgResponseDTO>>> findAll() {
+    public ResponseEntity<ApiResponse<List<MedicalImgSummaryDTO>>> findAll() {
         return ResponseEntity.ok(medicalImageService.findAll());
     }
 
@@ -78,6 +79,15 @@ public class MedicalImageController {
     public ResponseEntity<ApiResponse<List<MedicalImgResponseDTO>>> findByMedicalImageType(@PathVariable Integer medicalImageTypeId) {
         ApiResponse<List<MedicalImgResponseDTO>> response =
                 medicalImageService.findByMedicalImageType(medicalImageTypeId);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("clinical-record/{clinicalRecordId}")
+    public ResponseEntity<ApiResponse<List<MedicalImgSummaryDTO>>> findByClinicalRecord(@PathVariable Integer clinicalRecordId) {
+        ApiResponse<List<MedicalImgSummaryDTO>> response =
+                medicalImageService.findByClinicalRecord(clinicalRecordId);
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.badRequest().body(response);

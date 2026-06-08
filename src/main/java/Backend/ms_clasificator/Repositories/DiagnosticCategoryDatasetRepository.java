@@ -12,5 +12,5 @@ public interface DiagnosticCategoryDatasetRepository extends JpaRepository<Diagn
 
     boolean existsByDatasetCategoryDatasetIdAndMedicalDiagnosticId(Integer datasetId, Integer medicalDiagnosticId);
 
-    boolean existByMedicalDiagnosticId(Integer medicalDiagnosticId);
+    boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);
 }

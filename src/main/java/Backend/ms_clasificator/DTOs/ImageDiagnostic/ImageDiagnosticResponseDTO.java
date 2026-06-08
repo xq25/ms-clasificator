@@ -1,5 +1,7 @@
 package Backend.ms_clasificator.DTOs.ImageDiagnostic;
 
+import Backend.ms_clasificator.DTOs.Doctor.DoctorSummaryDTO;
+import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgSummaryDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,8 +15,8 @@ import java.time.LocalDateTime;
 @Builder
 public class ImageDiagnosticResponseDTO {
     private Integer id;
-    private Integer doctorId;
-    private Integer medicalImgId;
+    private DoctorSummaryDTO doctor;
+    private MedicalImgSummaryDTO medicalImg;
     private LocalDateTime diagnosticDate;
 }
 

@@ -1,6 +1,7 @@
 package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.Doctor.DoctorBaseDTO;
+import Backend.ms_clasificator.DTOs.Doctor.DoctorSummaryDTO;
 import Backend.ms_clasificator.DTOs.Doctor.DoctorUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.DTOs.Doctor.DoctorResponseDTO;
@@ -20,8 +21,8 @@ public class DoctorController {
     private DoctorService doctorService;
 
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<DoctorResponseDTO>>> find(){
-        ApiResponse<List<DoctorResponseDTO>> response = this.doctorService.findAll();
+    public ResponseEntity<ApiResponse<List<DoctorSummaryDTO>>> find(){
+        ApiResponse<List<DoctorSummaryDTO>> response = this.doctorService.findAll();
         if (response.isSuccess()) return ResponseEntity.ok(response);
         return ResponseEntity.badRequest().body(response);
     }
@@ -60,8 +61,8 @@ public class DoctorController {
     }
 
     @PostMapping("")
-    public ResponseEntity<ApiResponse<DoctorResponseDTO>> create(@Valid @RequestBody DoctorBaseDTO doctor) {
-        ApiResponse<DoctorResponseDTO> response = this.doctorService.create(doctor);
+    public ResponseEntity<ApiResponse<DoctorSummaryDTO>> create(@Valid @RequestBody DoctorBaseDTO doctor) {
+        ApiResponse<DoctorSummaryDTO> response = this.doctorService.create(doctor);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -71,8 +72,8 @@ public class DoctorController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<ApiResponse<DoctorResponseDTO>> update(@PathVariable Integer id, @Valid @RequestBody DoctorUpdateDTO doctor) {
-        ApiResponse<DoctorResponseDTO> response = this.doctorService.update(id, doctor);
+    public ResponseEntity<ApiResponse<DoctorSummaryDTO>> update(@PathVariable Integer id, @Valid @RequestBody DoctorUpdateDTO doctor) {
+        ApiResponse<DoctorSummaryDTO> response = this.doctorService.update(id, doctor);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

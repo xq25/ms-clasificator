@@ -35,7 +35,6 @@ public class MedicalImageTypeMapper implements Mapper<MedicalImageType, MedicalI
 
         return MedicalImageTypeCreateDTO.builder()
                 .name(medicalImageType.getName())
-                .evaluationAreaId(medicalImageType.getEvaluationArea() != null ? medicalImageType.getEvaluationArea().getId() : null)
                 .build();
     }
 

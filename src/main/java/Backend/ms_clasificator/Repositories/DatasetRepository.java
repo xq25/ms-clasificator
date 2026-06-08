@@ -10,5 +10,5 @@ public interface DatasetRepository extends JpaRepository<Dataset, Integer> {
     List<Dataset> findByMedicalDiagnosticId(Integer medicalDiagnosticId); //pa buscar todas las configs asociadas a un diagnóstico
     Optional<Dataset> findByEvaluationAreaId(Integer evaluationAreaId);
     boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);  // pa validar antes de crear duplicados
-    boolean existByEvaluationAreaId(Integer evaluationAreaId); // pa validar antes de crear duplicados
+    boolean existsByEvaluationAreaId(Integer evaluationAreaId); // pa validar antes de crear duplicados
 }

@@ -1,7 +1,5 @@
 package Backend.ms_clasificator.Models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,17 +11,16 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"image_diagnostic_id", "medical_diagnostic_id"}))
+// No puede existir dos veces el mismo diagnostico medico en un mismo diagnostico de imagen dado por un medico a una imagen especifica
 public class ImageDoctorDiagnostics {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    // No es necesario cargar a al diagnostico de la imagen a la que hace referencia
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "image_diagnostic_id")
+    @JoinColumn(name = "image_diagnostic_id", nullable = false, updatable = false)
     private ImageDiagnostic imageDiagnostic;
-    @JsonProperty
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "medical_diagnostic_id", nullable = false, updatable = false)

@@ -78,12 +78,12 @@ public class EvaluationAreaService {
             }
 
             // Validar que no exista área con el mismo nombre
-            if (this.evaluationAreaRepository.existByName(evaluationAreaCreateDTO.getName())) {
+            if (this.evaluationAreaRepository.existsByName(evaluationAreaCreateDTO.getName())) {
                 return ApiResponse.error("Ya existe un área de evaluación con el nombre: " + evaluationAreaCreateDTO.getName());
             }
 
             // Validar que no exista área con el mismo código
-            if (this.evaluationAreaRepository.existByCodeArea(evaluationAreaCreateDTO.getCodeArea())) {
+            if (this.evaluationAreaRepository.existsByCodeArea(evaluationAreaCreateDTO.getCodeArea())) {
                 return ApiResponse.error("Ya existe un área de evaluación con el código: " + evaluationAreaCreateDTO.getCodeArea());
             }
 
@@ -141,11 +141,11 @@ public class EvaluationAreaService {
                     .orElseThrow(() -> new IllegalArgumentException("Área de evaluación no encontrada con ID: " + id));
 
             // Validamos que no tenga tipos de imagenes medicas asociadas a esta area
-            if (medicalImageTypeRepository.existByEvaluationAreaId(id)) {
+            if (medicalImageTypeRepository.existsByEvaluationAreaId(id)) {
                 return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene tipos de imágenes médicas asociadas");
             }
             // Validamos que no tenga una dataset asociada
-            if(datasetRepository.existByEvaluationAreaId(id)){
+            if(datasetRepository.existsByEvaluationAreaId(id)){
                 return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene datasets asociadas");
             }
 

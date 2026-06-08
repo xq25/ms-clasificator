@@ -78,7 +78,7 @@ public class MedicalImageTypeService {
         }
 
         // Validamos el que el nombre sea unico
-        if (this.medicalImageTypeRepository.existByName(dto.getName())) {
+        if (this.medicalImageTypeRepository.existsByName(dto.getName())) {
             return ApiResponse.error("Ya existe un tipo de imagen con el nombre: " + dto.getName());
         }
 
@@ -97,7 +97,7 @@ public class MedicalImageTypeService {
                     .orElseThrow(() -> new IllegalArgumentException("Tipo de imagen médica no encontrado con ID: " + id));
 
             // Validamos el que el nombre sea unico
-            if (this.medicalImageTypeRepository.existByName(dto.getName())) {
+            if (this.medicalImageTypeRepository.existsByName(dto.getName())) {
                 return ApiResponse.error("Ya existe un tipo de imagen con el nombre: " + dto.getName());
             }
             medicalImageType.setName(dto.getName());
@@ -115,7 +115,7 @@ public class MedicalImageTypeService {
             MedicalImageType medicalImageType = medicalImageTypeRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Tipo de imagen médica no encontrado con ID: " + id));
 
-            if (medicalImgRepository.existByMedicalImageTypeId(id)) {
+            if (medicalImgRepository.existsByMedicalImageTypeId(id)) {
                 return ApiResponse.error("No se puede eliminar el tipo de imagen porque tiene imágenes médicas asociadas");
             }
 

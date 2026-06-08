@@ -7,7 +7,6 @@ import Backend.ms_clasificator.DTOs.Doctor.DoctorUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.DoctorMappers.DoctorMapper;
 import Backend.ms_clasificator.Models.Doctor;
-import Backend.ms_clasificator.Models.ImageDiagnostic;
 import Backend.ms_clasificator.Models.UserInfo;
 import Backend.ms_clasificator.Repositories.DoctorRepository;
 import Backend.ms_clasificator.Repositories.ImageDiagnosticRepository;
@@ -125,7 +124,7 @@ public class DoctorService {
         }
 
         // Validar que no exista doctor con el mismo código
-        if(this.doctorRepository.existByCode(doctorCreateDTO.getCode())){
+        if(this.doctorRepository.existsByCode(doctorCreateDTO.getCode())){
             return ApiResponse.error("Ya existe un doctor con el código: " + doctorCreateDTO.getCode() + ". El código debe ser único.");
         }
 
@@ -135,7 +134,7 @@ public class DoctorService {
         }
 
         // Validar que no exista doctor con el mismo userId
-        if(this.doctorRepository.existByUserId(doctorCreateDTO.getUserId())){
+        if(this.doctorRepository.existsByUserId(doctorCreateDTO.getUserId())){
             return ApiResponse.error("Ya existe un doctor asociado al userId: " + doctorCreateDTO.getUserId() + ". Un usuario solo puede estar asociado a un doctor.");
         }
 
@@ -188,8 +187,7 @@ public class DoctorService {
                     .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + id));
 
             // Validamos que el medico no tenga diagnosticos de imagenes asociados.
-            List<ImageDiagnostic> imageDiagnostics = this.imageDiagnosticRepository.findByDoctor_Id(id);
-            if (!imageDiagnostics.isEmpty()){
+            if (imageDiagnosticRepository.existsByDoctorId(doctor.getId())) {
                 return ApiResponse.error("No se puede eliminar el doctor porque tiene diagnosticos asociados");
             }
 

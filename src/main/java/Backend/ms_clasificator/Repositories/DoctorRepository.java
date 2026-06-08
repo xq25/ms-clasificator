@@ -9,7 +9,7 @@ public interface DoctorRepository extends JpaRepository<Doctor, Integer> {
     Optional<Doctor> findByCode(String code);
     Optional<Doctor> findByUserId(String userId);
 
-    boolean existByCode(String code);
-    boolean existByUserId(String userId);
+    boolean existsByCode(String code);
+    boolean existsByUserId(String userId);
 
 }

@@ -7,6 +7,6 @@ public interface EvaluationAreaRepository extends JpaRepository<EvaluationArea, 
     EvaluationArea findByName(String name);
     EvaluationArea findByCodeArea(String codeArea);
 
-    boolean existByName(String name);
-    boolean existByCodeArea(String codeArea);
+    boolean existsByName(String name);
+    boolean existsByCodeArea(String codeArea);
 }
