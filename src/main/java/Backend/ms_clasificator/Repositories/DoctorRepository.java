@@ -3,7 +3,13 @@ package Backend.ms_clasificator.Repositories;
 import Backend.ms_clasificator.Models.Doctor;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface DoctorRepository extends JpaRepository<Doctor, Integer> {
-    Doctor findByCode(String code);
-    Doctor findByUserId(String userId);
+    Optional<Doctor> findByCode(String code);
+    Optional<Doctor> findByUserId(String userId);
+
+    boolean existByCode(String code);
+    boolean existByUserId(String userId);
+
 }

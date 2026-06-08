@@ -12,5 +12,7 @@ import lombok.NoArgsConstructor;
 public class DoctorAreaSummaryDTO {
 
     private Integer id;
+    private Integer doctorId;
+    private Integer evaluationAreaId;
 
 }

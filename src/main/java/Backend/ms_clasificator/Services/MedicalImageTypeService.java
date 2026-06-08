@@ -2,11 +2,11 @@ package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeResponseDTO;
+import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeSummaryDTO;
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.MedicalImageTypeMappers.MedicalImageTypeMapper;
 import Backend.ms_clasificator.Models.EvaluationArea;
-import Backend.ms_clasificator.Models.MedicalImg;
 import Backend.ms_clasificator.Models.MedicalImageType;
 import Backend.ms_clasificator.Repositories.EvaluationAreaRepository;
 import Backend.ms_clasificator.Repositories.MedicalImageTypeRepository;
@@ -14,7 +14,6 @@ import Backend.ms_clasificator.Repositories.MedicalImgRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -34,16 +33,13 @@ public class MedicalImageTypeService {
     private MedicalImageTypeMapper medicalImageTypeMapper;
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<MedicalImageTypeResponseDTO>> findAll() {
-        try {
-            List<MedicalImageTypeResponseDTO> response = medicalImageTypeRepository.findAll()
-                    .stream()
-                    .map(medicalImageTypeMapper::toResponseDTO)
-                    .toList();
-            return ApiResponse.success(response, "Tipos de imagen obtenidos exitosamente");
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al listar tipos de imagen: " + ex.getMessage());
-        }
+    public ApiResponse<List<MedicalImageTypeSummaryDTO>> findAll() {
+        List<MedicalImageTypeSummaryDTO> response = medicalImageTypeRepository.findAll()
+                .stream()
+                .map(medicalImageTypeMapper::toSummaryDTO)
+                .toList();
+        return ApiResponse.success(response, "Tipos de imagen obtenidos exitosamente");
+
     }
 
     @Transactional(readOnly = true)
@@ -55,38 +51,40 @@ public class MedicalImageTypeService {
             return ApiResponse.success(medicalImageTypeMapper.toResponseDTO(medicalImageType), "Tipo de imagen obtenido exitosamente");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al obtener tipo de imagen: " + ex.getMessage());
         }
     }
 
-    public ApiResponse<MedicalImageTypeResponseDTO> create(MedicalImageTypeCreateDTO dto) {
-        try {
-            if (dto == null) {
-                return ApiResponse.error("El DTO no puede ser nulo");
-            }
-
-            MedicalImageType existing = medicalImageTypeRepository.findByName(dto.getName());
-            if (existing != null) {
-                return ApiResponse.error("Ya existe un tipo de imagen con el nombre: " + dto.getName());
-            }
-
-            EvaluationArea evaluationArea = null;
-            if (dto.getEvaluationAreaId() != null) {
-                evaluationArea = evaluationAreaRepository.findById(dto.getEvaluationAreaId()).orElse(null);
-            }
-            if (dto.getEvaluationAreaId() != null && evaluationArea == null) {
-                return ApiResponse.error("El area de evaluacion asignada no existe, con id " + dto.getEvaluationAreaId());
-            }
-
-            MedicalImageType medicalImageType = medicalImageTypeMapper.toEntity(dto);
-            medicalImageType.setEvaluationArea(evaluationArea);
-            medicalImageType = this.medicalImageTypeRepository.save(medicalImageType);
-            return ApiResponse.success(medicalImageTypeMapper.toResponseDTO(medicalImageType), "Tipo de imagen creado exitosamente");
-
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al intentar crear un tipo de imagen: " + ex.getMessage());
+    @Transactional(readOnly = true)
+    public ApiResponse<List<MedicalImageTypeSummaryDTO>> findByEvaluationAreaId(Integer evaluationAreaId){
+        if(!evaluationAreaRepository.existsById(evaluationAreaId)){
+            return ApiResponse.error("Área de evaluación no encontrada con ID: " + evaluationAreaId);
         }
+
+        List<MedicalImageTypeSummaryDTO> imageTypes = this.medicalImageTypeRepository.findByEvaluationAreaId(evaluationAreaId)
+                .stream().map(medicalImageTypeMapper::toSummaryDTO)
+                .toList();
+
+        if (imageTypes.isEmpty()){
+            return ApiResponse.success(imageTypes, "No se encontraron tipos de imagen asociados al área de evaluación con ID: " + evaluationAreaId);
+        }
+        return ApiResponse.success(imageTypes, "Tipos de imagen asociados al área de evaluación con ID: " + evaluationAreaId + " obtenidos exitosamente");
+
+    }
+
+    public ApiResponse<MedicalImageTypeResponseDTO> create(MedicalImageTypeCreateDTO dto) {
+
+        if (dto == null) {
+            return ApiResponse.error("El DTO no puede ser nulo");
+        }
+
+        // Validamos el que el nombre sea unico
+        if (this.medicalImageTypeRepository.existByName(dto.getName())) {
+            return ApiResponse.error("Ya existe un tipo de imagen con el nombre: " + dto.getName());
+        }
+
+        MedicalImageType medicalImageType = medicalImageTypeMapper.toEntity(dto);
+        return ApiResponse.success(medicalImageTypeMapper.toResponseDTO(this.medicalImageTypeRepository.save(medicalImageType)), "Tipo de imagen creado exitosamente");
+
     }
 
     public ApiResponse<MedicalImageTypeResponseDTO> update(Integer id, MedicalImageTypeUpdateDTO dto) {
@@ -98,32 +96,26 @@ public class MedicalImageTypeService {
             MedicalImageType medicalImageType = medicalImageTypeRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Tipo de imagen médica no encontrado con ID: " + id));
 
-            if (dto.getName() != null) {
-                MedicalImageType existing = medicalImageTypeRepository.findByName(dto.getName());
-                if (existing != null && !existing.getId().equals(id)) {
-                    return ApiResponse.error("Ya existe un tipo de imagen con el nombre: " + dto.getName());
-                }
-                medicalImageType.setName(dto.getName());
+            // Validamos el que el nombre sea unico
+            if (this.medicalImageTypeRepository.existByName(dto.getName())) {
+                return ApiResponse.error("Ya existe un tipo de imagen con el nombre: " + dto.getName());
             }
+            medicalImageType.setName(dto.getName());
 
-            MedicalImageType updated = medicalImageTypeRepository.save(medicalImageType);
-            return ApiResponse.success(medicalImageTypeMapper.toResponseDTO(updated), "Tipo de imagen actualizado exitosamente");
+            return ApiResponse.success(medicalImageTypeMapper.toResponseDTO(medicalImageTypeRepository.save(medicalImageType)), "Tipo de imagen actualizado exitosamente");
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al actualizar tipo de imagen: " + ex.getMessage());
         }
     }
 
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @Transactional
     public ApiResponse<Void> delete(Integer id) {
         try {
             MedicalImageType medicalImageType = medicalImageTypeRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Tipo de imagen médica no encontrado con ID: " + id));
 
-            List<MedicalImg> medicalImgs = medicalImgRepository.findByMedicalImageTypeId(id);
-            if (!medicalImgs.isEmpty()) {
+            if (medicalImgRepository.existByMedicalImageTypeId(id)) {
                 return ApiResponse.error("No se puede eliminar el tipo de imagen porque tiene imágenes médicas asociadas");
             }
 
@@ -134,8 +126,6 @@ public class MedicalImageTypeService {
             return ApiResponse.error("Violacion de integridad de la base de datos: " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al eliminar tipo de imagen: " + ex.getMessage());
         }
     }
 
@@ -149,13 +139,10 @@ public class MedicalImageTypeService {
                     .orElseThrow(() -> new IllegalArgumentException("Área de evaluación no encontrada con ID: " + evaluationAreaId));
 
             medicalImageType.setEvaluationArea(evaluationArea);
-            MedicalImageType updated = medicalImageTypeRepository.save(medicalImageType);
-            return ApiResponse.success(medicalImageTypeMapper.toResponseDTO(updated), "Área de evaluación asignada exitosamente");
+            return ApiResponse.success(medicalImageTypeMapper.toResponseDTO(medicalImageTypeRepository.save(medicalImageType)), "Área de evaluación asignada exitosamente");
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al asignar área de evaluación: " + ex.getMessage());
         }
     }
 
@@ -171,13 +158,10 @@ public class MedicalImageTypeService {
             }
 
             medicalImageType.setEvaluationArea(null);
-            MedicalImageType updated = medicalImageTypeRepository.save(medicalImageType);
-            return ApiResponse.success(medicalImageTypeMapper.toResponseDTO(updated), "Área de evaluación removida exitosamente");
+            return ApiResponse.success(medicalImageTypeMapper.toResponseDTO(medicalImageTypeRepository.save(medicalImageType)), "Área de evaluación removida exitosamente");
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al remover área de evaluación: " + ex.getMessage());
         }
     }
 }

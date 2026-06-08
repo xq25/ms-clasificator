@@ -64,7 +64,6 @@ public class MedicalImageService {
     // =====================================================================
     // UPLOAD — operación principal
     // =====================================================================
-
     /**
      * Sube una imagen y crea el registro en BD.
      *

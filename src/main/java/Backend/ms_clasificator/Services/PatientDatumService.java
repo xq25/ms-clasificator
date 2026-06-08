@@ -36,15 +36,11 @@ public class PatientDatumService {
 
 	@Transactional(readOnly = true)
 	public ApiResponse<List<PatientDatumSummaryDTO>> findAll() {
-		try {
-			List<PatientDatumSummaryDTO> response = patientDatumRepository.findAll()
-					.stream()
-					.map(patientDatumMapper::toSummaryDTO)
-					.toList();
-			return ApiResponse.success(response, "Patient Datum obtenidos exitosamente");
-		} catch (Exception ex) {
-			return ApiResponse.error("Error al listar Patient Datum: " + ex.getMessage());
-		}
+		List<PatientDatumSummaryDTO> response = patientDatumRepository.findAll()
+				.stream()
+				.map(patientDatumMapper::toSummaryDTO)
+				.toList();
+		return ApiResponse.success(response, "Patient Datum obtenidos exitosamente");
 	}
 
 	@Transactional(readOnly = true)
@@ -128,8 +124,6 @@ public class PatientDatumService {
 			return ApiResponse.success(patientDatumMapper.toResponseDTO(saved), "Patient Datum creado exitosamente");
 		} catch (IllegalArgumentException ex) {
 			return ApiResponse.error(ex.getMessage());
-		} catch (Exception ex) {
-			return ApiResponse.error("Error al crear Patient Datum: " + ex.getMessage());
 		}
 	}
 
@@ -164,8 +158,6 @@ public class PatientDatumService {
 			return ApiResponse.error("Violacion a integridad de la base de datos: " + ex.getMessage());
 		} catch (IllegalArgumentException ex) {
 			return ApiResponse.error(ex.getMessage());
-		} catch (Exception ex) {
-			return ApiResponse.error("Error al eliminar Patient Datum: " + ex.getMessage());
 		}
 	}
 

@@ -36,15 +36,13 @@ public class ClinicalRecordService {
     // No cargamos toda la informacion adicional
     @Transactional(readOnly = true)
     public ApiResponse<List<ClinicalRecordSummaryDTO>> findAll() {
-        try {
-            List<ClinicalRecordSummaryDTO> response = clinicalRecordRepository.findAll()
-                    .stream()
-                    .map(clinicalRecordMapper::toSummaryDTO)
-                    .toList();
-            return ApiResponse.success(response, "Registros médicos obtenidos exitosamente");
-        } catch (Exception ex) {
-            return ApiResponse.error("Error al listar registros médicos: " + ex.getMessage());
-        }
+
+        List<ClinicalRecordSummaryDTO> response = clinicalRecordRepository.findAll()
+                .stream()
+                .map(clinicalRecordMapper::toSummaryDTO)
+                .toList();
+        return ApiResponse.success(response, "Registros médicos obtenidos exitosamente");
+
     }
 
     // No cargamos toda la informacion

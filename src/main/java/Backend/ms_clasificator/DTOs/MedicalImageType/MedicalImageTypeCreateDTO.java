@@ -14,6 +14,4 @@ public class MedicalImageTypeCreateDTO {
     @NotBlank(message = "El nombre del tipo de imagen no puede estar vacío")
     private String name;
 
-    // Podemos asignar o no asignar una area de evaluacion durante la creacion
-    private Integer evaluationAreaId;
 }

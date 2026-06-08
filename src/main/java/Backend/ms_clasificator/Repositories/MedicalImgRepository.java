@@ -15,5 +15,7 @@ public interface MedicalImgRepository extends JpaRepository<MedicalImg, Integer>
 
     List<MedicalImg> findByClinicalRecordId(Integer clinicalRecordId);
 
+    boolean existByMedicalImageTypeId(Integer medicalImageTypeId);
+
 
 }

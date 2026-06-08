@@ -12,7 +12,6 @@ import Backend.ms_clasificator.Repositories.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -51,7 +50,7 @@ public class PatientService {
                     .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado con ID: " + id));
 
             // Obtenemos la informacion del usuario
-            UserInfo userInfo = this.getUserInfo(patient.getUserId());
+            UserInfo userInfo = securityServices.getUserInfo(patient.getUserId());
             if(userInfo != null){
                 patient.setUserName(userInfo.getName());
                 patient.setEmail(userInfo.getEmail());
@@ -75,7 +74,7 @@ public class PatientService {
                     .orElseThrow(() -> new IllegalArgumentException("No se encontro paciente con el documento: " + document));
 
             // Obtenemos la informacion del usuario
-            UserInfo userInfo = this.getUserInfo(patient.getUserId());
+            UserInfo userInfo = securityServices.getUserInfo(patient.getUserId());
             if(userInfo != null){
                 patient.setUserName(userInfo.getName());
                 patient.setEmail(userInfo.getEmail());
@@ -97,7 +96,7 @@ public class PatientService {
                     .orElseThrow(() -> new IllegalArgumentException("No se encontro paciente con el userId: " + userId));
 
             // Obtenemos la informacion del usuario
-            UserInfo userInfo = this.getUserInfo(patient.getUserId());
+            UserInfo userInfo = securityServices.getUserInfo(patient.getUserId());
             if(userInfo != null){
                 patient.setUserName(userInfo.getName());
                 patient.setEmail(userInfo.getEmail());
@@ -193,7 +192,7 @@ public class PatientService {
      * @param id ID del paciente a eliminar
      * @return ApiResponse con el resultado de la operación
      */
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @Transactional
     public ApiResponse<Void> delete(Integer id) {
         try {
             Patient patient = patientRepository.findById(id)
@@ -212,25 +211,5 @@ public class PatientService {
             return ApiResponse.error("Error al eliminar paciente: " + ex.getMessage());
         }
     }
-
-    private UserInfo getUserInfo(String userId){
-        // Obtenemos el nombre del usuario
-        String username = securityServices.getUserNameById(userId);
-        if (username == null){
-            return null;
-        }
-
-        String email = securityServices.getUserEmailById(userId);
-        if(email == null){
-            return null;
-        }
-
-        UserInfo userInfo =  new UserInfo();
-        userInfo.setName(username);
-        userInfo.setEmail(email);
-
-        return userInfo;
-    }
-
 
 }

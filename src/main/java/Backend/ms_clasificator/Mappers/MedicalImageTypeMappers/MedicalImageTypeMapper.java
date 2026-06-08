@@ -3,12 +3,17 @@ package Backend.ms_clasificator.Mappers.MedicalImageTypeMappers;
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeResponseDTO;
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeSummaryDTO;
+import Backend.ms_clasificator.Mappers.EvaluationAreaMappers.EvaluationAreaMapper;
 import Backend.ms_clasificator.Mappers.Mapper;
 import Backend.ms_clasificator.Models.MedicalImageType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MedicalImageTypeMapper implements Mapper<MedicalImageType, MedicalImageTypeCreateDTO, MedicalImageTypeResponseDTO, MedicalImageTypeSummaryDTO> {
+
+    @Autowired
+    private EvaluationAreaMapper evaluationAreaMapper;
 
     @Override
     public MedicalImageType toEntity(MedicalImageTypeCreateDTO dto) {
@@ -43,7 +48,7 @@ public class MedicalImageTypeMapper implements Mapper<MedicalImageType, MedicalI
         return MedicalImageTypeResponseDTO.builder()
                 .id(medicalImageType.getId())
                 .name(medicalImageType.getName())
-                .evaluationArea(medicalImageType.getEvaluationArea() != null ? medicalImageType.getEvaluationArea().getName() : null)
+                .evaluationArea(medicalImageType.getEvaluationArea() != null ? evaluationAreaMapper.toSummaryDTO(medicalImageType.getEvaluationArea()) : null)
                 .build();
     }
 

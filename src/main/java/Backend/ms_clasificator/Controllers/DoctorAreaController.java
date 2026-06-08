@@ -1,8 +1,9 @@
 package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.DoctorArea.DoctorAreaCreateDTO;
+import Backend.ms_clasificator.DTOs.DoctorArea.DoctorAreaResponseDTO;
+import Backend.ms_clasificator.DTOs.DoctorArea.DoctorAreaSummaryDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
-import Backend.ms_clasificator.Models.DoctorArea;
 import Backend.ms_clasificator.Services.DoctorAreaService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,14 @@ public class DoctorAreaController {
      * @return Lista de todas las relaciones
      */
     @GetMapping("")
-    public List<DoctorArea> findAll() {
-        return this.doctorAreaService.findAll();
+    public ResponseEntity<ApiResponse<List<DoctorAreaSummaryDTO>>> findAll() {
+        ApiResponse<List<DoctorAreaSummaryDTO>> response = this.doctorAreaService.findAll();
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     /**
@@ -34,8 +41,8 @@ public class DoctorAreaController {
      * @return DoctorArea encontrada
      */
     @GetMapping("{id}")
-    public ResponseEntity<ApiResponse<DoctorArea>> findById(@PathVariable Integer id) {
-        ApiResponse<DoctorArea> response = this.doctorAreaService.findById(id);
+    public ResponseEntity<ApiResponse<DoctorAreaResponseDTO>> findById(@PathVariable Integer id) {
+        ApiResponse<DoctorAreaResponseDTO> response = this.doctorAreaService.findById(id);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -50,8 +57,8 @@ public class DoctorAreaController {
      * @return Lista de DoctorArea del doctor
      */
     @GetMapping("doctor/{doctorId}")
-    public ResponseEntity<ApiResponse<List<DoctorArea>>> findByDoctorId(@PathVariable Integer doctorId) {
-        ApiResponse<List<DoctorArea>> response = this.doctorAreaService.findByDoctorId(doctorId);
+    public ResponseEntity<ApiResponse<List<DoctorAreaSummaryDTO>>> findByDoctorId(@PathVariable Integer doctorId) {
+        ApiResponse<List<DoctorAreaSummaryDTO>> response = this.doctorAreaService.findByDoctorId(doctorId);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -66,8 +73,8 @@ public class DoctorAreaController {
      * @return Lista de DoctorArea en el área
      */
     @GetMapping("area/{evaluationAreaId}")
-    public ResponseEntity<ApiResponse<List<DoctorArea>>> findByEvaluationAreaId(@PathVariable Integer evaluationAreaId) {
-        ApiResponse<List<DoctorArea>> response = this.doctorAreaService.findByEvaluationAreaId(evaluationAreaId);
+    public ResponseEntity<ApiResponse<List<DoctorAreaSummaryDTO>>> findByEvaluationAreaId(@PathVariable Integer evaluationAreaId) {
+        ApiResponse<List<DoctorAreaSummaryDTO>> response = this.doctorAreaService.findByEvaluationAreaId(evaluationAreaId);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
@@ -82,8 +89,8 @@ public class DoctorAreaController {
      * @return ResponseEntity con el resultado
      */
     @PostMapping("")
-    public ResponseEntity<ApiResponse<DoctorArea>> create(@Valid @RequestBody DoctorAreaCreateDTO doctorAreaCreateDTO) {
-        ApiResponse<DoctorArea> response = this.doctorAreaService.create(doctorAreaCreateDTO);
+    public ResponseEntity<ApiResponse<DoctorAreaResponseDTO>> create(@Valid @RequestBody DoctorAreaCreateDTO doctorAreaCreateDTO) {
+        ApiResponse<DoctorAreaResponseDTO> response = this.doctorAreaService.create(doctorAreaCreateDTO);
 
         if (response.isSuccess()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);

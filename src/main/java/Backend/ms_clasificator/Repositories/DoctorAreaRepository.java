@@ -12,6 +12,7 @@ public interface DoctorAreaRepository extends JpaRepository<DoctorArea, Integer>
 
     @Query("SELECT da FROM DoctorArea da WHERE da.doctor.id = :doctorId AND da.evaluationArea.id = :evaluationAreaId")
     DoctorArea findByDoctorIdAndEvaluationAreaId(@Param("doctorId") Integer doctorId, @Param("evaluationAreaId") Integer evaluationAreaId);
+    boolean existsByDoctorIdAndEvaluationAreaId(Integer doctorId, Integer evaluationAreaId);
 
     List<DoctorArea>findByDoctorId(Integer doctor_id);
     List<DoctorArea>findByEvaluationAreaId(Integer evaluationAreaId);

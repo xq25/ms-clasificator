@@ -1,5 +1,7 @@
 package Backend.ms_clasificator.DTOs.Diagnosis;
 
+import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordSummaryDTO;
+import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticSummaryDTO;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class DiagnosisResponseDTO {
     private Integer id;
-    private MedicalDiagnostic medicalDiagnostic;
+    private MedicalDiagnosticSummaryDTO medicalDiagnostic;
+    private ClinicalRecordSummaryDTO clinicalrecord;
 }
 
