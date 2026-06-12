@@ -46,8 +46,7 @@ public class PatientMapper implements Mapper<Patient, PatientCreateDTO, PatientR
                 .id(patient.getId())
                 .document(patient.getDocument())
                 .userId(patient.getUserId())
-                .userName("") // Lo agregamos en el service, ya que depende de la relacion con el securityService
-                .email("") // Lo agregamos en el service, ya que depende de la relacion con el securityService
+                .userInfo(null)
                 .build();
     }
 
