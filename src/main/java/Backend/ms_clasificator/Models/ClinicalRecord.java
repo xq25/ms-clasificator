@@ -20,6 +20,9 @@ public class ClinicalRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "chiefComplaint", nullable = false)
+    private String chiefComplaint;
+
     @Column(name = "visitDate", nullable = false)
     private Date visitDate;
 

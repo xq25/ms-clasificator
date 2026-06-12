@@ -18,7 +18,8 @@ public class PatientMapper implements Mapper<Patient, PatientCreateDTO, PatientR
 
         return Patient.builder()
                 .document(patientCreateDTO.getDocument())
-                .years(patientCreateDTO.getYears())
+                .dob(patientCreateDTO.getDob())
+                .sex(patientCreateDTO.getSex())
                 .userId(patientCreateDTO.getUserId())
                 .build();
     }
@@ -31,7 +32,8 @@ public class PatientMapper implements Mapper<Patient, PatientCreateDTO, PatientR
 
         return PatientCreateDTO.builder()
                 .document(patient.getDocument())
-                .years(patient.getYears())
+                .dob(patient.getDob())
+                .sex(patient.getSex())
                 .userId(patient.getUserId())
                 .build();
     }
@@ -45,6 +47,8 @@ public class PatientMapper implements Mapper<Patient, PatientCreateDTO, PatientR
         return PatientResponseDTO.builder()
                 .id(patient.getId())
                 .document(patient.getDocument())
+                .dob(patient.getDob())
+                .sex(patient.getSex())
                 .userId(patient.getUserId())
                 .userInfo(null)
                 .build();
@@ -59,7 +63,8 @@ public class PatientMapper implements Mapper<Patient, PatientCreateDTO, PatientR
         return PatientSummaryDTO.builder()
                 .id(patient.getId())
                 .document(patient.getDocument())
-                .years(patient.getYears())
+                .dob(patient.getDob())
+                .sex(patient.getSex())
                 .userId(patient.getUserId())
                 .build();
     }

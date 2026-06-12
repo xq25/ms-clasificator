@@ -17,6 +17,7 @@ public class ClinicalRecordMapper implements Mapper<ClinicalRecord, ClinicalReco
         }
 
         return ClinicalRecord.builder()
+                .chiefComplaint(dto.getChiefComplaint())
                 .visitDate(dto.getVisitDate())
                 .build();
     }
@@ -28,6 +29,7 @@ public class ClinicalRecordMapper implements Mapper<ClinicalRecord, ClinicalReco
         }
 
         return ClinicalRecordCreateDTO.builder()
+                .chiefComplaint(entity.getChiefComplaint())
                 .visitDate(entity.getVisitDate())
                 .patientId(entity.getPatient() != null ? entity.getPatient().getId() : null)
                 .build();
@@ -41,6 +43,7 @@ public class ClinicalRecordMapper implements Mapper<ClinicalRecord, ClinicalReco
 
         return ClinicalRecordResponseDTO.builder()
                 .id(entity.getId())
+                .chiefComplaint(entity.getChiefComplaint())
                 .visitDate(entity.getVisitDate())
                 .patientId(entity.getPatient() != null ? entity.getPatient().getId() : null)
                 .patientDocument(entity.getPatient() != null ? entity.getPatient().getDocument() : null)
@@ -55,6 +58,7 @@ public class ClinicalRecordMapper implements Mapper<ClinicalRecord, ClinicalReco
 
         return ClinicalRecordSummaryDTO.builder()
                 .id(entity.getId())
+                .chiefComplaint(entity.getChiefComplaint())
                 .visitDate(entity.getVisitDate())
                 .build();
     }

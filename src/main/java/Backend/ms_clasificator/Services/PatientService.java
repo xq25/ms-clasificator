@@ -172,7 +172,8 @@ public class PatientService {
             }
 
             patient.setDocument(patientUpdateDTO.getDocument());
-            patient.setYears(patientUpdateDTO.getYears());
+            patient.setDob(patientUpdateDTO.getDob());
+            patient.setSex(patientUpdateDTO.getSex());
 
             Patient updated = patientRepository.save(patient);
             return ApiResponse.success(patientMapper.toSummaryDTO(updated), "Paciente actualizado exitosamente");

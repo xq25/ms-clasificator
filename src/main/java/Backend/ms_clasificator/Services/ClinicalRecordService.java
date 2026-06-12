@@ -113,6 +113,7 @@ public class ClinicalRecordService {
                     .orElseThrow(() -> new IllegalArgumentException("Clinical Record no encontrado con ID: " + id));
 
             clinicalRecord.setVisitDate(dto.getVisitDate());
+            clinicalRecord.setChiefComplaint(dto.getChiefComplaint());
 
             ClinicalRecord updated = clinicalRecordRepository.save(clinicalRecord);
             return ApiResponse.success(clinicalRecordMapper.toResponseDTO(updated), "Registro médico actualizado exitosamente");

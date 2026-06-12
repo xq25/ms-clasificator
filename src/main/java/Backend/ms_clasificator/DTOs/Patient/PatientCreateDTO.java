@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.util.Date;
 
 @Data
 @NoArgsConstructor
@@ -17,9 +20,12 @@ public class PatientCreateDTO {
     private String document;
 
     @NotNull(message = "La edad del paciente no puede ser nula")
-    @Positive(message = "La edad debe ser un número positivo")
-    @Max(message = "La edad no puede ser mayor a 120 años", value = 120)
-    private Integer years;
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private Date dob;
+
+    @NotNull(message = "La información de sexo del paciente no puede ser nula")
+    @NotBlank(message = "La información de sexo del paciente no puede estar vacía")
+    private String sex;
 
     @NotNull(message = "El userId no puede ser nulo")
     @NotBlank(message = "El userId no puede estar vacío")

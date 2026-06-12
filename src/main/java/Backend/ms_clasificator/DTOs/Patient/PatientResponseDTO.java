@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,7 +15,8 @@ import lombok.NoArgsConstructor;
 public class PatientResponseDTO {
     private Integer id;
     private String document;
-    private Integer years;
+    private Date dob;
+    private String sex;
     private String userId;
     private UserInfo userInfo;
 

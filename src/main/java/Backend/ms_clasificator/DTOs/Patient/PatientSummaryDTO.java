@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+import java.util.Date;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -13,7 +16,8 @@ public class PatientSummaryDTO {
 
     private Integer id;
     private String document;
-    private Integer years;
+    private Date dob;
+    private String sex;
     private String userId;
 
 }
