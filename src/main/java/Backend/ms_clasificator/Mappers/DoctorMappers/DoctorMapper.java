@@ -42,8 +42,7 @@ public class DoctorMapper implements Mapper<Doctor, DoctorBaseDTO, DoctorRespons
                 .id(doctor.getId())
                 .code(doctor.getCode())
                 .userId(doctor.getUserId())
-                .userName("") // Se asigna desde el service
-                .email("") // Se asigna desde el service
+                .userInfo(null) // Se asigna en el service
                 .build();
     }
 

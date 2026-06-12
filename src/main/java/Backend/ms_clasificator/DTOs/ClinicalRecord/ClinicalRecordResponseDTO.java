@@ -13,6 +13,7 @@ import java.util.Date;
 @Builder
 public class ClinicalRecordResponseDTO {
     private Integer id;
+    private String chiefComplaint;
     private Date visitDate;
     private Integer patientId;
     private String patientDocument;

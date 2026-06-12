@@ -133,66 +133,53 @@ public class SecurityServices {
     }
 
     public String getUserNameById(String userId) {
+        String url =
+                securityUrl +
+                        "/getway/security/api/get-name/"+ userId;
 
-        try {
+        ResponseEntity<String> response =
+                restTemplate.exchange(
+                        url,
+                        HttpMethod.GET,
+                        buildRequestEntity(),
+                            String.class
+                );
 
-            String url =
-                    securityUrl +
-                            "/getway/security/api/get-username/"+ userId;
-
-            ResponseEntity<ApiResponse> response =
-                    restTemplate.exchange(
-                            url,
-                            HttpMethod.GET,
-                            buildRequestEntity(),
-                            ApiResponse.class
-                    );
-
-            if (response.getBody() != null) {
-                if (response.getBody().getData() instanceof String) {
-                    String data = (String) response.getBody().getData();
-                    return data;
-                }
-            }
-
-            return null;
-
-        } catch (Exception ex) {
-            return null;
+        if (response.getBody() != null) {
+            System.out.println(response.getBody());
+            return response.getBody();
         }
+        return null;
+
+
     }
 
     public String getUserEmailById(String userId){
-        try{
-            String url =
-                    securityUrl +
-                            "/getway/security/api/get-useremail/"+ userId;
 
-            ResponseEntity<ApiResponse> response =
-                    restTemplate.exchange(
-                            url,
-                            HttpMethod.GET,
-                            buildRequestEntity(),
-                            ApiResponse.class
-                    );
+        String url =
+                securityUrl +
+                        "/getway/security/api/get-email/"+ userId;
 
-            if (response.getBody() != null) {
-                if (response.getBody().getData() instanceof String) {
-                    String data = (String) response.getBody().getData();
-                    return data;
-                }
-            }
-            return null;
+        ResponseEntity<String> response =
+                restTemplate.exchange(
+                        url,
+                        HttpMethod.GET,
+                        buildRequestEntity(),
+                        String.class
+                );
 
-        } catch (Exception ex) {
-            return null;
+        if (response.getBody() != null) {
+            return response.getBody();
         }
+        return null;
+
     }
 
     public UserInfo getUserInfo(String userId){
         // Obtenemos el nombre del usuario
         String username = this.getUserNameById(userId);
         if (username == null){
+            System.out.println("Error al obtener el nombre del usuario con ID: " + userId);
             return null;
         }
 

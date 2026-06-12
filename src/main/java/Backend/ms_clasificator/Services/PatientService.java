@@ -52,8 +52,7 @@ public class PatientService {
             // Obtenemos la informacion del usuario
             UserInfo userInfo = securityServices.getUserInfo(patient.getUserId());
             if(userInfo != null){
-                patient.setUserName(userInfo.getName());
-                patient.setEmail(userInfo.getEmail());
+                patient.setUserInfo(userInfo);
             } else {
                 ApiResponse.error("No se pudo obtener la informacion del usuario para el userId: " + patient.getUserId());
             }
@@ -76,8 +75,7 @@ public class PatientService {
             // Obtenemos la informacion del usuario
             UserInfo userInfo = securityServices.getUserInfo(patient.getUserId());
             if(userInfo != null){
-                patient.setUserName(userInfo.getName());
-                patient.setEmail(userInfo.getEmail());
+                patient.setUserInfo(userInfo);
             } else {
                 ApiResponse.error("No se pudo obtener la informacion del usuario para el userId: " + patient.getUserId());
             }
@@ -98,8 +96,7 @@ public class PatientService {
             // Obtenemos la informacion del usuario
             UserInfo userInfo = securityServices.getUserInfo(patient.getUserId());
             if(userInfo != null){
-                patient.setUserName(userInfo.getName());
-                patient.setEmail(userInfo.getEmail());
+                patient.setUserInfo(userInfo);
             } else {
                 ApiResponse.error("No se pudo obtener la informacion del usuario para el userId: " + patient.getUserId());
             }
@@ -175,7 +172,8 @@ public class PatientService {
             }
 
             patient.setDocument(patientUpdateDTO.getDocument());
-            patient.setYears(patientUpdateDTO.getYears());
+            patient.setDob(patientUpdateDTO.getDob());
+            patient.setSex(patientUpdateDTO.getSex());
 
             Patient updated = patientRepository.save(patient);
             return ApiResponse.success(patientMapper.toSummaryDTO(updated), "Paciente actualizado exitosamente");

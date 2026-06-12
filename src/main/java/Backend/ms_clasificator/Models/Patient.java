@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+import java.util.Date;
+
 @Data
 @Entity
 @Builder
@@ -19,8 +22,11 @@ public class Patient {
     @Column(name = "document", nullable = false, unique = true)
     private String document;
 
-    @Column(name = "years", nullable = false)
-    private Integer years;
+    @Column(name = "dob", nullable = false) // Date Of Birthday
+    private Date dob;
+
+    @Column(name = "sex", nullable = false)
+    private String sex;
 
     @Column(name="user_id", nullable = false, unique = true)
     private String userId;

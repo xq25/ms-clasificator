@@ -14,6 +14,7 @@ import java.util.Date;
 public class ClinicalRecordSummaryDTO {
 
     private Integer id;
+    private String chiefComplaint;
     private Date visitDate;
 
 }

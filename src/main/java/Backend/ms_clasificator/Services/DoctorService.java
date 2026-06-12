@@ -60,8 +60,7 @@ public class DoctorService {
 
             UserInfo userInfo = securityServices.getUserInfo(doctor.getUserId());
             if(userInfo != null){
-                doctor.setUserName(userInfo.getName());
-                doctor.setEmail(userInfo.getEmail());
+                doctor.setUserInfo(userInfo);
             }
 
             return ApiResponse.success(doctor, "Doctor encontrado exitosamente");
@@ -84,8 +83,7 @@ public class DoctorService {
 
             UserInfo userInfo = securityServices.getUserInfo(doctor.getUserId());
             if(userInfo != null){
-                doctor.setUserName(userInfo.getName());
-                doctor.setEmail(userInfo.getEmail());
+                doctor.setUserInfo(userInfo);
             }
 
             return ApiResponse.success(doctor, "Doctor encontrado exitosamente");
@@ -103,8 +101,7 @@ public class DoctorService {
 
             UserInfo userInfo = securityServices.getUserInfo(doctor.getUserId());
             if(userInfo != null){
-                doctor.setUserName(userInfo.getName());
-                doctor.setEmail(userInfo.getEmail());
+                doctor.setUserInfo(userInfo);
             }
 
             return ApiResponse.success(doctor, "Doctor encontrado exitosamente");
