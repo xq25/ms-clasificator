@@ -98,7 +98,7 @@ public class MedicalImgMapper implements Mapper<MedicalImg, MedicalImgCreateDTO,
                 .provider(entity.getProvider())
                 .contentType(entity.getContentType())
                 .fileSize(entity.getFileSize())
-                .medicalImageType(entity.getMedicalImageType() != null ? entity.getMedicalImageType().getName() : null)
+                .medicalImageTypeName(entity.getMedicalImageType() != null ? entity.getMedicalImageType().getName() : null)
                 .createdAt(entity.getCreatedAt())
                 .build();
     }

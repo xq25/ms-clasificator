@@ -44,6 +44,7 @@ public class EvaluationAreaMapper implements Mapper<EvaluationArea, EvaluationAr
                 .id(evaluationArea.getId())
                 .name(evaluationArea.getName())
                 .codeArea(evaluationArea.getCodeArea())
+                .doctorsCount(evaluationArea.getDoctorsCount())
                 .build();
     }
 
@@ -57,6 +58,7 @@ public class EvaluationAreaMapper implements Mapper<EvaluationArea, EvaluationAr
                 .id(evaluationArea.getId())
                 .name(evaluationArea.getName())
                 .codeArea(evaluationArea.getCodeArea())
+                .doctorsCount(evaluationArea.getDoctorsCount())
                 .build();
     }
 }

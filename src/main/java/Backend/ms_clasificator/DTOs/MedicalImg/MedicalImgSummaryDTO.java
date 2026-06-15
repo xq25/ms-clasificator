@@ -17,7 +17,7 @@ public class MedicalImgSummaryDTO {
     private String imageKey;
     private String provider;
     private String contentType;
-    private String medicalImageType;
+    private String medicalImageTypeName;
     private Long fileSize;
     private LocalDateTime createdAt;
 

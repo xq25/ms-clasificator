@@ -26,6 +26,9 @@ public class EvaluationArea {
     @Column(name = "name", unique = true, nullable = false)
     private String name;
 
+    @Column (name = "doctorsCount")
+    private Integer doctorsCount;
+
     // Solo lo agreamos para el cascade
     @JsonIgnore
     @OneToMany(mappedBy = "evaluationArea", cascade = CascadeType.ALL, orphanRemoval = true)
