@@ -34,24 +34,17 @@ public class MedicalImageController {
 
     private final MedicalImageService medicalImageService;
 
-    // UPLOAD — multipart/form-data
-    /**
-     * POST /medical-images/upload
-     * Ejemplo con curl:
-     * curl -X POST "http: //localhost:8081 / medical-images/upload"
-     *   -F "file=@imagen.jpg;type=image/jpeg" \
-     *   -F "evaluationAreaId=1" \
-     *   -F "folder=diagnostics"
-     */
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<MedicalImgResponseDTO>> upload(
             @RequestPart("file") MultipartFile file,
             @RequestParam("medicalImageTypeId") Integer medicalImageTypeId,
-            @RequestParam(value = "folder", defaultValue = "diagnostics") String folder) {
+            @RequestParam(value = "folder", defaultValue = "diagnostics") String folder,
+            @RequestParam(value = "clinicalRecordId", required = false) Integer clinicalRecordId) {
 
         MedicalImgCreateDTO dto = MedicalImgCreateDTO.builder()
                 .medicalImageTypeId(medicalImageTypeId)
                 .folder(folder)
+                .clinicalRecordId(clinicalRecordId)  // ← agregar
                 .build();
 
         ApiResponse<MedicalImgResponseDTO> response = medicalImageService.uploadImage(file, dto);

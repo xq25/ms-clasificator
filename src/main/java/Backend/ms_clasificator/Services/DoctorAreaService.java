@@ -122,6 +122,7 @@ public class DoctorAreaService {
      * @param doctorAreaCreateDTO DTO con los datos de la relación
      * @return ApiResponse<DoctorArea> con el resultado de la operación
      */
+    @Transactional
     public ApiResponse<DoctorAreaResponseDTO> create(DoctorAreaCreateDTO doctorAreaCreateDTO) {
         try {
             if (doctorAreaCreateDTO == null) {
@@ -146,6 +147,8 @@ public class DoctorAreaService {
             DoctorArea doctorArea = doctorAreaMapper.toEntity(doctorAreaCreateDTO);
             doctorArea.setDoctor(doctor);
             doctorArea.setEvaluationArea(evaluationArea);
+
+            evaluationArea.setDoctorsCount(evaluationArea.getDoctorsCount() + 1); // Incrementamos el contador de doctores en el área
 
             return ApiResponse.success(doctorAreaMapper.toResponseDTO(doctorAreaRepository.save(doctorArea)), "Doctor asociado al área de evaluación exitosamente");
 

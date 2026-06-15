@@ -88,6 +88,7 @@ public class EvaluationAreaService {
             }
 
             EvaluationArea evaluationArea = evaluationAreaMapper.toEntity(evaluationAreaCreateDTO);
+            evaluationArea.setDoctorsCount(0); // Inicializamos el contador de doctores en 0
             return ApiResponse.success(evaluationAreaMapper.toResponseDTO(evaluationAreaRepository.save(evaluationArea)), "Área de evaluación creada exitosamente");
     }
 

@@ -14,5 +14,6 @@ public class EvaluationAreaSummaryDTO {
     private Integer id;
     private String codeArea;
     private String name;
+    private Integer doctorsCount;
 
 }
