@@ -86,6 +86,16 @@ public class MedicalImageController {
                 : ResponseEntity.badRequest().body(response);
     }
 
+    @GetMapping("undianosed/doctor/{doctorId}/image-type/{medicalImageTypeId}")
+    public ResponseEntity<ApiResponse<List<MedicalImgResponseDTO>>> findUndiagnosedByDoctorAndImageType(@PathVariable Integer doctorId, @PathVariable Integer medicalImageTypeId) {
+        ApiResponse<List<MedicalImgResponseDTO>> response =
+                medicalImageService.findUndiagnosedByDoctorAndMedicalImageType(doctorId, medicalImageTypeId);
+
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.badRequest().body(response);
+    }
+
     // DELETE
     @DeleteMapping("{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id) {

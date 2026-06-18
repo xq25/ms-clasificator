@@ -63,9 +63,9 @@ public class DatasetController {
         }
     }
 
-    @GetMapping("area/{evaluationAreaId}")
-    public ResponseEntity<ApiResponse<DatasetSummaryDTO>> findByEvaluationAreaId(@PathVariable Integer evaluationAreaId){
-        ApiResponse<DatasetSummaryDTO> response = this.datasetService.findByEvaluationAreaId(evaluationAreaId);
+    @GetMapping("image-type/{medicalImageTypeId}")
+    public ResponseEntity<ApiResponse<DatasetResponseDTO>> findByMedicalImageTypeId(@PathVariable Integer medicalImageTypeId){
+        ApiResponse<DatasetResponseDTO> response = this.datasetService.findByMedicalImageTypeId(medicalImageTypeId);
 
         if (response.isSuccess()){
             return ResponseEntity.ok(response);
@@ -91,12 +91,12 @@ public class DatasetController {
     }
 
     /**
-     * Actualizar una configuración UI existente
+     * Actualizar un dataset existente
      * @param id ID de la configuración a actualizar
      * @param datasetUpdateDTO DTO con datos a actualizar
      * @return ApiResponse con el resultado
      */
-    @PutMapping("{id}/change-diagnostic")
+    @PutMapping("{id}")
     public ResponseEntity<ApiResponse<DatasetResponseDTO>> update(@PathVariable Integer id, @Valid @RequestBody DatasetUpdateDTO datasetUpdateDTO) {
         ApiResponse<DatasetResponseDTO> response = datasetService.update(id, datasetUpdateDTO);
 
@@ -121,22 +121,6 @@ public class DatasetController {
         } else {
             return ResponseEntity.badRequest().body(response);
         }
-    }
-
-    @PutMapping("{uiConfigId}/evaluation-area/{evaluationAreaId}")
-    public ResponseEntity<ApiResponse<DatasetResponseDTO>> assignEvaluationArea(@PathVariable Integer uiConfigId, @PathVariable Integer evaluationAreaId) {
-        ApiResponse<DatasetResponseDTO> response = datasetService.assingToEvaluationArea(uiConfigId, evaluationAreaId);
-        return response.isSuccess()
-                ? ResponseEntity.ok(response)
-                : ResponseEntity.badRequest().body(response);
-    }
-
-    @PutMapping("removeFromArea/{uiConfigId}")
-    public ResponseEntity<ApiResponse<DatasetResponseDTO>> removeFromEvaluationArea(@PathVariable Integer uiConfigId) {
-        ApiResponse<DatasetResponseDTO> response = datasetService.removeFromEvaluationArea(uiConfigId);
-        return response.isSuccess()
-                ? ResponseEntity.ok(response)
-                : ResponseEntity.badRequest().body(response);
     }
 
 }

@@ -2,6 +2,9 @@ package Backend.ms_clasificator.Repositories;
 
 import Backend.ms_clasificator.Models.MedicalImg;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 import java.util.List;
 
 public interface MedicalImgRepository extends JpaRepository<MedicalImg, Integer> {
@@ -14,6 +17,20 @@ public interface MedicalImgRepository extends JpaRepository<MedicalImg, Integer>
     List<MedicalImg> findByMedicalImageTypeId(Integer medicalImageTypeId);
 
     List<MedicalImg> findByClinicalRecordId(Integer clinicalRecordId);
+
+    // Consulta para la busqueda de las iamgenes con un tipo de imagen especifico que no han sido diagnosticadas por un doctor en especifico
+    @Query("""
+        SELECT m
+        FROM MedicalImg m
+        WHERE m.medicalImageType.id = :medicalImageTypeId
+          AND NOT EXISTS (
+                SELECT d
+                FROM ImageDiagnostic d
+                WHERE d.medicalImg = m
+                  AND d.doctor.id = :doctorId
+          )
+    """)
+    List<MedicalImg> findUndiagnosedImagesByDoctorAndMedicalImageType(@Param("doctorId") Integer doctorId, @Param("medicalImageTypeId") Integer medicalImageTypeId);
 
     boolean existsByMedicalImageTypeId(Integer medicalImageTypeId);
 

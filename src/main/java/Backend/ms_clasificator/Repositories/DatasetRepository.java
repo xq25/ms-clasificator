@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface DatasetRepository extends JpaRepository<Dataset, Integer> {
     List<Dataset> findByMedicalDiagnosticId(Integer medicalDiagnosticId); //pa buscar todas las configs asociadas a un diagnóstico
-    Optional<Dataset> findByEvaluationAreaId(Integer evaluationAreaId);
+    Optional<Dataset> findByMedicalImageTypeId(Integer medicalImageTypeId);
     boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);  // pa validar antes de crear duplicados
-    boolean existsByEvaluationAreaId(Integer evaluationAreaId); // pa validar antes de crear duplicados
+    boolean existsByMedicalImageTypeId(Integer medicalImageTypeId); // pa validar antes de crear duplicados
 }

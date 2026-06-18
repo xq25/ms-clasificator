@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -125,9 +126,12 @@ public class ImageDiagnosticService {
                 throw new IllegalArgumentException("Ya existe un diagnóstico dado por ese doctor a esa imagen médica");
             }
 
+
             ImageDiagnostic imageDiagnostic = imageDiagnosticMapper.toEntity(imageDiagnosticCreateDTO);
             imageDiagnostic.setDoctor(doctor);
             imageDiagnostic.setMedicalImg(medicalImg);
+            //agregamos la fecha actual al crear el diagnostico
+            imageDiagnostic.setDiagnosticDate(LocalDateTime.now());
 
             return ApiResponse.success(imageDiagnosticMapper.toResponseDTO(imageDiagnosticRepository.save(imageDiagnostic)), "Diagnóstico de imagen creado exitosamente");
 
