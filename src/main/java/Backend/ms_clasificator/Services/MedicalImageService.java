@@ -155,6 +155,25 @@ public class MedicalImageService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public ApiResponse<List<MedicalImgResponseDTO>> findUndiagnosedByDoctorAndMedicalImageType(Integer doctorId, Integer medicalImageTypeId) {
+        try {
+            if(!medicalImageTypeRepository.existsById(medicalImageTypeId)){
+                return ApiResponse.error("No se encontró el tipo de imagen médica con ID: " + medicalImageTypeId);
+            }
+
+            List<MedicalImgResponseDTO> dtos = medicalImgRepository
+                    .findUndiagnosedImagesByDoctorAndMedicalImageType(doctorId, medicalImageTypeId)
+                    .stream()
+                    .map(medicalImgMapper::toResponseDTO)
+                    .toList();
+
+            return ApiResponse.success(dtos, "Imágenes médicas no diagnosticadas obtenidas exitosamente");
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error("Error al obtener imágenes médicas no diagnosticadas: " + ex.getMessage());
+        }
+    }
+
     // DELETE
     @Transactional
     public ApiResponse<Void> delete(Integer id) {

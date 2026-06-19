@@ -6,6 +6,7 @@ import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeUpdateDTO;
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeResponseDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Services.MedicalImageTypeService;
+
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -75,5 +76,4 @@ public class MedicalImageTypeController {
 		if (response.isSuccess()) return ResponseEntity.ok(response);
 		return ResponseEntity.badRequest().body(response);
 	}
-
 }

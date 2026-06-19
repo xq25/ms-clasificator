@@ -21,4 +21,6 @@ public class DatasetCreateDTO {
     @NotNull(message = "El ID del diagnosstico | enfermedad para el que esta diseñado el dataset no puede ser null")
     private Integer medicalDiagnosticId;
 
+    @NotNull(message = "El tipo de imagen a clasificar no puede ser null")
+    private Integer medicalImageTypeId;
 }

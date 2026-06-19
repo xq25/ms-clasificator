@@ -38,6 +38,11 @@ public class InternalController {
         return this.internalService.existRelationWithPatient(userId);
     }
 
+    @GetMapping("exists-doctor-in-area/{doctorId}/{evaluationAreaId}")
+    public boolean existsDoctorInArea(@PathVariable Integer doctorId, @PathVariable Integer evaluationAreaId){
+        return this.internalService.existsDoctorInArea(doctorId, evaluationAreaId);
+    }
+
     @PostMapping("register/doctor")
     public boolean registerDoctor(@RequestBody DoctorBaseDTO doctorBaseDTO){
         ApiResponse<DoctorSummaryDTO> registerResponse =  this.doctorService.create(doctorBaseDTO);

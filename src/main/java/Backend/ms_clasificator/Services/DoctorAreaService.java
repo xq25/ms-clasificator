@@ -167,6 +167,8 @@ public class DoctorAreaService {
             DoctorArea doctorArea = doctorAreaRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Relación DoctorArea no encontrada con ID: " + id));
 
+            doctorArea.getEvaluationArea().setDoctorsCount(doctorArea.getEvaluationArea().getDoctorsCount() - 1); // Decrementamos el contador de doctores en el área
+
             doctorAreaRepository.delete(doctorArea);
             return ApiResponse.success("Relación DoctorArea eliminada exitosamente");
 
@@ -189,6 +191,7 @@ public class DoctorAreaService {
                 return ApiResponse.error("No existe relación entre este doctor y esta área de evaluación");
             }
 
+            doctorArea.getEvaluationArea().setDoctorsCount(doctorArea.getEvaluationArea().getDoctorsCount() - 1); // Decrementamos el contador de doctores en el área
             doctorAreaRepository.delete(doctorArea);
             return ApiResponse.success("Doctor disociado del área de evaluación exitosamente");
 

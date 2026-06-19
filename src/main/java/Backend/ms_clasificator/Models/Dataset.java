@@ -1,10 +1,13 @@
 package Backend.ms_clasificator.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Entity
@@ -26,8 +29,14 @@ public class Dataset {
     @JoinColumn(name = "medical_diagnostic_id", nullable = false)
     private MedicalDiagnostic medicalDiagnostic;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "evaluation_area_id", nullable = true)
-    private EvaluationArea evaluationArea;
+    // Carga el tipo de imagen que se va a clasificar.
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "medical_image_type_id", nullable = false)
+    private MedicalImageType medicalImageType;
+
+    // Solo lo colocamos para el cascade
+    @JsonIgnore
+    @OneToMany(mappedBy = "dataset", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DatasetCategory> datasetCategories;
 
 }

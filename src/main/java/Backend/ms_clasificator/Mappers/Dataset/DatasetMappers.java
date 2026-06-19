@@ -4,9 +4,9 @@ import Backend.ms_clasificator.DTOs.Dataset.DatasetCreateDTO;
 import Backend.ms_clasificator.DTOs.Dataset.DatasetResponseDTO;
 import Backend.ms_clasificator.DTOs.Dataset.DatasetSummaryDTO;
 import Backend.ms_clasificator.DTOs.Dataset.DatasetUpdateDTO;
-import Backend.ms_clasificator.Mappers.EvaluationAreaMappers.EvaluationAreaMapper;
 import Backend.ms_clasificator.Mappers.Mapper;
 import Backend.ms_clasificator.Mappers.MedicalDiagnosticMappers.MedicalDiagnosticMapper;
+import Backend.ms_clasificator.Mappers.MedicalImageTypeMappers.MedicalImageTypeMapper;
 import Backend.ms_clasificator.Models.Dataset;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ public class DatasetMappers implements Mapper<Dataset, DatasetCreateDTO, Dataset
     private MedicalDiagnosticMapper medicalDiagnosticMapper;
 
     @Autowired
-    private EvaluationAreaMapper evaluationAreaMapper;
+    private MedicalImageTypeMapper medicalImageTypeMapper;
 
     @Override
     public Dataset toEntity(DatasetCreateDTO datasetCreateDTO) {
@@ -63,8 +63,9 @@ public class DatasetMappers implements Mapper<Dataset, DatasetCreateDTO, Dataset
 
         return DatasetResponseDTO.builder()
                 .id(dataset.getId())
+                .name(dataset.getName())
                 .medicalDiagnostic(dataset.getMedicalDiagnostic() != null ? medicalDiagnosticMapper.toSummaryDTO(dataset.getMedicalDiagnostic()) : null)
-                .evaluationArea(dataset.getEvaluationArea() != null ?  evaluationAreaMapper.toSummaryDTO(dataset.getEvaluationArea()): null)
+                .medicalImageType(dataset.getMedicalImageType() != null ? medicalImageTypeMapper.toSummaryDTO(dataset.getMedicalImageType()) : null)
                 .build();
     }
 

@@ -8,7 +8,6 @@ import Backend.ms_clasificator.Mappers.EvaluationAreaMappers.EvaluationAreaMappe
 import Backend.ms_clasificator.Models.EvaluationArea;
 import Backend.ms_clasificator.Repositories.EvaluationAreaRepository;
 import Backend.ms_clasificator.Repositories.MedicalImageTypeRepository;
-import Backend.ms_clasificator.Repositories.DatasetRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -27,10 +26,6 @@ public class EvaluationAreaService {
 
     @Autowired
     private MedicalImageTypeRepository medicalImageTypeRepository;
-
-    @Autowired
-    private DatasetRepository datasetRepository;
-
 
     /**
      * Obtener todas las áreas de evaluación
@@ -144,10 +139,6 @@ public class EvaluationAreaService {
             // Validamos que no tenga tipos de imagenes medicas asociadas a esta area
             if (medicalImageTypeRepository.existsByEvaluationAreaId(id)) {
                 return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene tipos de imágenes médicas asociadas");
-            }
-            // Validamos que no tenga una dataset asociada
-            if(datasetRepository.existsByEvaluationAreaId(id)){
-                return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene datasets asociadas");
             }
 
             evaluationAreaRepository.delete(evaluationArea);

@@ -33,9 +33,4 @@ public class EvaluationArea {
     @JsonIgnore
     @OneToMany(mappedBy = "evaluationArea", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DoctorArea> doctorAreas;
-
-    // No es necesario cargar la configuracion(Dataset) para clasificar, que tiene asiganada esta area de evaluacion.
-    @JsonIgnore
-    @OneToOne(mappedBy = "evaluationArea", optional = true)
-    private Dataset dataset;
 }

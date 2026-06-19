@@ -81,4 +81,5 @@ public class MedicalImg extends SystemDatum{
     private ClinicalRecord clinicalRecord;
 
 
+
 }
