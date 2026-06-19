@@ -8,6 +8,7 @@ import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.PatientMappers.PatientMapper;
 import Backend.ms_clasificator.Models.Patient;
 import Backend.ms_clasificator.Models.UserInfo;
+import Backend.ms_clasificator.Repositories.MedicalImgRepository;
 import Backend.ms_clasificator.Repositories.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,6 +23,9 @@ public class PatientService {
 
     @Autowired
     private PatientRepository patientRepository;
+
+    @Autowired
+    private MedicalImgRepository medicalImgRepository;
 
     @Autowired
     private PatientMapper patientMapper;
@@ -186,7 +190,11 @@ public class PatientService {
     }
 
     /**
-     * Eliminar un paciente por ID
+     * Eliminar un paciente por ID.
+     * Orden de operaciones:
+     *   1. Desvincular MedicalImg → clinical_record_id = NULL (UPDATE masivo por JPQL)
+     *   2. Eliminar Patient → cascade + orphanRemoval borra los ClinicalRecord automáticamente
+     *
      * @param id ID del paciente a eliminar
      * @return ApiResponse con el resultado de la operación
      */
@@ -196,9 +204,16 @@ public class PatientService {
             Patient patient = patientRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado con ID: " + id));
 
-            // Un paciente se puede eliminar sin restricciones. Pero hay que mostrar una alerta antes de hacerlo.
+            // 1. Desvincular en bloque todas las imágenes médicas ligadas a los
+            //    ClinicalRecord de este paciente. Necesario antes del DELETE para
+            //    evitar violaciones de FK (medical_img.clinical_record_id → clinical_record.id).
+            medicalImgRepository.detachImagesByPatientId(id);
 
+            // 2. Eliminar el paciente.
+            //    Patient.clinicalRecords tiene cascade = ALL + orphanRemoval = true,
+            //    por lo que JPA elimina los ClinicalRecord automáticamente.
             patientRepository.delete(patient);
+
             return ApiResponse.success("Paciente eliminado exitosamente");
 
         } catch (DataIntegrityViolationException ex) {

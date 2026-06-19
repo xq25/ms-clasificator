@@ -2,7 +2,6 @@ package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.Dataset.DatasetCreateDTO;
 import Backend.ms_clasificator.DTOs.Dataset.DatasetResponseDTO;
-import Backend.ms_clasificator.DTOs.Dataset.DatasetSummaryDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.DTOs.Dataset.DatasetUpdateDTO;
 import Backend.ms_clasificator.Services.DatasetService;
@@ -26,8 +25,8 @@ public class DatasetController {
      * @return Lista de todas las configuraciones
      */
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<DatasetSummaryDTO>>> findAll() {
-        ApiResponse<List<DatasetSummaryDTO>> response = datasetService.findAll();
+    public ResponseEntity<ApiResponse<List<DatasetResponseDTO>>> findAll() {
+        ApiResponse<List<DatasetResponseDTO>> response = datasetService.findAll();
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 

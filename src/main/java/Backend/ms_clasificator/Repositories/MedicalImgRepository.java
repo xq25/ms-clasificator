@@ -2,8 +2,10 @@ package Backend.ms_clasificator.Repositories;
 
 import Backend.ms_clasificator.Models.MedicalImg;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -33,6 +35,22 @@ public interface MedicalImgRepository extends JpaRepository<MedicalImg, Integer>
     List<MedicalImg> findUndiagnosedImagesByDoctorAndMedicalImageType(@Param("doctorId") Integer doctorId, @Param("medicalImageTypeId") Integer medicalImageTypeId);
 
     boolean existsByMedicalImageTypeId(Integer medicalImageTypeId);
+
+    /**
+     * Desvincular en bloque todas las imágenes médicas asociadas a los ClinicalRecord
+     * de un paciente específico, poniendo clinical_record_id = NULL.
+     * Se debe ejecutar ANTES de eliminar el Patient para evitar violaciones de FK.
+     *
+     * @param patientId ID del paciente cuyos registros clínicos se van a eliminar
+     */
+    @Modifying
+    @Transactional
+    @Query("""
+        UPDATE MedicalImg m
+        SET m.clinicalRecord = null
+        WHERE m.clinicalRecord.patient.id = :patientId
+    """)
+    void detachImagesByPatientId(@Param("patientId") Integer patientId);
 
 
 }

@@ -40,11 +40,11 @@ public class DatasetService {
      * @return Lista de todas las configuraciones
      */
     @Transactional(readOnly = true)
-    public ApiResponse<List<DatasetSummaryDTO>> findAll() {
+    public ApiResponse<List<DatasetResponseDTO>> findAll() {
 
-        List<DatasetSummaryDTO> datasets = datasetRepository.findAll()
+        List<DatasetResponseDTO> datasets = datasetRepository.findAll()
                 .stream()
-                .map(datasetMappers::toSummaryDTO)
+                .map(datasetMappers::toResponseDTO)
                 .toList();
         return ApiResponse.success(datasets, "Datasets obtenidos exitosamente");
 

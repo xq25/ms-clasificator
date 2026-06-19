@@ -1,5 +1,6 @@
 package Backend.ms_clasificator.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Entity
@@ -30,5 +32,9 @@ public class Patient {
 
     @Column(name="user_id", nullable = false, unique = true)
     private String userId;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "patient", orphanRemoval = true, cascade = CascadeType.ALL)
+    private List<ClinicalRecord> clinicalRecords;
 
 }
