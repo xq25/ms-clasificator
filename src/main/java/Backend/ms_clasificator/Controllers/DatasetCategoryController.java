@@ -3,6 +3,7 @@ package Backend.ms_clasificator.Controllers;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryCreateDTO;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryResponseDTO;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategorySummaryDTO;
+import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Services.DatasetCategoryService;
 import jakarta.validation.Valid;
@@ -79,7 +80,18 @@ public class DatasetCategoryController {
         }
     }
 
-    // No existe proceso explicito de actualizacion, ya que no hay atributos modificables mas alla de las relaciones.
+    @PutMapping("{id}")
+    public ResponseEntity<ApiResponse<DatasetCategoryResponseDTO>> update(@PathVariable Integer id, @Valid @RequestBody DatasetCategoryUpdateDTO datasetCategoryUpdateDTO) {
+        ApiResponse<DatasetCategoryResponseDTO> response = this.datasetCategoryService.update(id, datasetCategoryUpdateDTO);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+
 
     /**
      * Eliminar una categoria de un dataset

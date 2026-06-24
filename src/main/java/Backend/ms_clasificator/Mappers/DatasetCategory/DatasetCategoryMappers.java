@@ -22,6 +22,7 @@ public class DatasetCategoryMappers implements Mapper<DatasetCategory, DatasetCa
         }
 
         return DatasetCategory.builder()
+                .name(datasetCategoryCreateDTO.getName())
                 // Las relaciones se asignan en el Service
                 .build();
     }
@@ -45,6 +46,7 @@ public class DatasetCategoryMappers implements Mapper<DatasetCategory, DatasetCa
 
         return DatasetCategoryResponseDTO.builder()
                 .id(datasetCategory.getId())
+                .name(datasetCategory.getName())
                 .numValue(datasetCategory.getNumValue())
                 .dataset(datasetCategory.getDataset() != null ? datasetMapper.toSummaryDTO(datasetCategory.getDataset()) : null)
                 .build();
@@ -58,6 +60,7 @@ public class DatasetCategoryMappers implements Mapper<DatasetCategory, DatasetCa
 
         return DatasetCategorySummaryDTO.builder()
                 .id(datasetCategory.getId())
+                .name(datasetCategory.getName())
                 .numValue(datasetCategory.getNumValue())
                 .build();
     }

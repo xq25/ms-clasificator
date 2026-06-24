@@ -146,7 +146,6 @@ public class SecurityServices {
                 );
 
         if (response.getBody() != null) {
-            System.out.println(response.getBody());
             return response.getBody();
         }
         return null;

@@ -20,6 +20,9 @@ public class DatasetCategory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "name", nullable = false)
+    private String name;
+
     private Integer numValue;
 
     // Cargamos el dataset al que pertenece para mostrar unicamnete le id para futuras consultas

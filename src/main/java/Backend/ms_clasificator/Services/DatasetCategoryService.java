@@ -3,6 +3,7 @@ package Backend.ms_clasificator.Services;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryCreateDTO;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryResponseDTO;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategorySummaryDTO;
+import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
 import Backend.ms_clasificator.Mappers.DatasetCategory.DatasetCategoryMappers;
 import Backend.ms_clasificator.Models.Dataset;
@@ -112,6 +113,25 @@ public class DatasetCategoryService {
             datasetCategory.setNumValue(nextNumValue);
 
             return ApiResponse.success(datasetCategoryMappers.toResponseDTO(datasetCategoryRepository.save(datasetCategory)), "Categoria de dataset creado exitosamente");
+
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        }
+    }
+
+    public ApiResponse<DatasetCategoryResponseDTO> update(Integer id, DatasetCategoryUpdateDTO datasetCategoryCreateDTO) {
+        try {
+            if (datasetCategoryCreateDTO == null) {
+                return ApiResponse.error("El DTO no puede ser nulo");
+            }
+
+            DatasetCategory datasetCategory = datasetCategoryRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Categoria de dataset no encontrada con ID: " + id));
+
+            // Solo se puede actualizar el nombre de la categoria, por coherencia secuencia de los numValues
+            datasetCategory.setName(datasetCategoryCreateDTO.getName());
+
+            return ApiResponse.success(datasetCategoryMappers.toResponseDTO(datasetCategoryRepository.save(datasetCategory)), "Categoria de dataset actualizado exitosamente");
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());

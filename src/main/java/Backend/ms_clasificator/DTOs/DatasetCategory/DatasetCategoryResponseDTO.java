@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class DatasetCategoryResponseDTO {
     private Integer id;
+    private String name;
     private Integer numValue;
     private DatasetSummaryDTO dataset;
 }
