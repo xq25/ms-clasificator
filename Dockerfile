@@ -22,6 +22,9 @@ RUN ./mvnw package -DskipTests -B
 FROM eclipse-temurin:21-jre-alpine AS runtime
 WORKDIR /app
 
+# wget viene en alpine y lo usa el health check del compose
+RUN apk add --no-cache wget
+
 # Usuario no-root
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
