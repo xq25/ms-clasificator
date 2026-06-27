@@ -1,10 +1,13 @@
 package Backend.ms_clasificator.Services;
 
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Patient.PatientCreateDTO;
 import Backend.ms_clasificator.DTOs.Patient.PatientResponseDTO;
 import Backend.ms_clasificator.DTOs.Patient.PatientSummaryDTO;
 import Backend.ms_clasificator.DTOs.Patient.PatientUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.PatientMappers.PatientMapper;
 import Backend.ms_clasificator.Models.Patient;
 import Backend.ms_clasificator.Models.UserInfo;
@@ -37,8 +40,26 @@ public class PatientService {
      * @return Lista de todos los pacientes
      */
     @Transactional(readOnly = true)
-    public List<PatientSummaryDTO> findAll() {
-        return patientRepository.findAll().stream().map(patientMapper::toSummaryDTO).toList();
+    public ApiResponse<PagedResponse<PatientSummaryDTO>> findAll(PageRequestDTO pageRequest) {
+        Page<PatientSummaryDTO> page = patientRepository.findAll(pageRequest.toPageable())
+                .map(patientMapper::toSummaryDTO);
+
+        return ApiResponse.success(
+                PagedResponse.<PatientSummaryDTO>builder()
+                        .content(page.getContent())
+                        .page(page.getNumber())
+                        .size(page.getSize())
+                        .totalElements(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .last(page.isLast())
+                        .build(),
+                "Pacientes encontrados exitosamente"
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<Long> count() {
+        return ApiResponse.success(patientRepository.countAll(), "Total de pacientes");
     }
 
     /**

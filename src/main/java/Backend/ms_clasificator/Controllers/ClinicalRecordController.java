@@ -4,20 +4,14 @@ import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordCreateDTO;
 import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordResponseDTO;
 import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordSummaryDTO;
 import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordUpdateDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
 import Backend.ms_clasificator.Services.ClinicalRecordService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/clinical-records")
@@ -27,10 +21,15 @@ public class ClinicalRecordController {
 	private ClinicalRecordService clinicalRecordService;
 
 	@GetMapping("")
-	public ResponseEntity<ApiResponse<List<ClinicalRecordSummaryDTO>>> findAll() {
-		ApiResponse<List<ClinicalRecordSummaryDTO>> response = this.clinicalRecordService.findAll();
-		if (response.isSuccess()) return ResponseEntity.ok(response);
-		return ResponseEntity.badRequest().body(response);
+	public ResponseEntity<ApiResponse<PagedResponse<ClinicalRecordSummaryDTO>>> findAll(
+			@Valid @ModelAttribute PageRequestDTO pageRequest) {
+		ApiResponse<PagedResponse<ClinicalRecordSummaryDTO>> response = this.clinicalRecordService.findAll(pageRequest);
+		return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+	}
+
+	@GetMapping("count")
+	public ResponseEntity<ApiResponse<Long>> count() {
+		return ResponseEntity.ok(clinicalRecordService.count());
 	}
 
 	@GetMapping("{id}")
@@ -41,10 +40,11 @@ public class ClinicalRecordController {
 	}
 
 	@GetMapping("patient/{patientId}")
-	public ResponseEntity<ApiResponse<List<ClinicalRecordSummaryDTO>>> findByPatientId(@PathVariable Integer patientId) {
-		ApiResponse<List<ClinicalRecordSummaryDTO>> response = this.clinicalRecordService.findByPatientId(patientId);
-		if (response.isSuccess()) return ResponseEntity.ok(response);
-		return ResponseEntity.badRequest().body(response);
+	public ResponseEntity<ApiResponse<PagedResponse<ClinicalRecordSummaryDTO>>> findByPatientId(
+			@PathVariable Integer patientId,
+			@Valid @ModelAttribute PageRequestDTO pageRequest) {
+		ApiResponse<PagedResponse<ClinicalRecordSummaryDTO>> response = this.clinicalRecordService.findByPatientId(patientId, pageRequest);
+		return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
 	}
 
 	@PostMapping("")

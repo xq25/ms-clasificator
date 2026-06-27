@@ -178,7 +178,6 @@ public class SecurityServices {
         // Obtenemos el nombre del usuario
         String username = this.getUserNameById(userId);
         if (username == null){
-            System.out.println("Error al obtener el nombre del usuario con ID: " + userId);
             return null;
         }
 

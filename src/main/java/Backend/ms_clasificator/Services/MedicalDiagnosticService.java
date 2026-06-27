@@ -4,7 +4,10 @@ import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticCreateDTO
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticResponseDTO;
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticSummaryDTO;
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticUpdateDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.MedicalDiagnosticMappers.MedicalDiagnosticMapper;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import Backend.ms_clasificator.Repositories.DiagnosticCategoryDatasetRepository;
@@ -34,16 +37,27 @@ public class MedicalDiagnosticService {
 
 
 
-    /**
-     * Obtener todos los diagnósticos médicos
-     * @return Lista de todos los diagnósticos
-     */
     @Transactional(readOnly = true)
-    public List<MedicalDiagnosticResponseDTO> findAll() {
-        return medicalDiagnosticRepository.findAll()
-                .stream()
-                .map(medicalDiagnosticMapper::toResponseDTO)
-                .toList();
+    public ApiResponse<PagedResponse<MedicalDiagnosticResponseDTO>> findAll(PageRequestDTO pageRequest) {
+        Page<MedicalDiagnosticResponseDTO> page = medicalDiagnosticRepository.findAll(pageRequest.toPageable())
+                .map(medicalDiagnosticMapper::toResponseDTO);
+
+        return ApiResponse.success(
+                PagedResponse.<MedicalDiagnosticResponseDTO>builder()
+                        .content(page.getContent())
+                        .page(page.getNumber())
+                        .size(page.getSize())
+                        .totalElements(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .last(page.isLast())
+                        .build(),
+                "Diagnósticos médicos encontrados exitosamente"
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<Long> count() {
+        return ApiResponse.success(medicalDiagnosticRepository.countAll(), "Total de diagnósticos médicos");
     }
 
     @Transactional(readOnly = true)

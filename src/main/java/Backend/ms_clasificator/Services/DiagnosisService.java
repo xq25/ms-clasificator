@@ -3,7 +3,10 @@ package Backend.ms_clasificator.Services;
 import Backend.ms_clasificator.DTOs.Diagnosis.DiagnosisCreateDTO;
 import Backend.ms_clasificator.DTOs.Diagnosis.DiagnosisResponseDTO;
 import Backend.ms_clasificator.DTOs.Diagnosis.DiagnosisSummaryDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.DiagnosisMappers.DiagnosisMapper;
 import Backend.ms_clasificator.Models.ClinicalRecord;
 import Backend.ms_clasificator.Models.Diagnosis;
@@ -34,14 +37,26 @@ public class DiagnosisService {
     private DiagnosisMapper diagnosisMapper;
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<DiagnosisSummaryDTO>> findAll() {
-        List<DiagnosisSummaryDTO> diagnosis = this.diagnosisRepository.findAll()
-                .stream()
-                .map(diagnosisMapper::toSummaryDTO)
-                .toList();
+    public ApiResponse<PagedResponse<DiagnosisSummaryDTO>> findAll(PageRequestDTO pageRequest) {
+        Page<DiagnosisSummaryDTO> page = diagnosisRepository.findAll(pageRequest.toPageable())
+                .map(diagnosisMapper::toSummaryDTO);
 
-        return ApiResponse.success(diagnosis, "Diagnosticos obtenidos exitosamente");
+        return ApiResponse.success(
+                PagedResponse.<DiagnosisSummaryDTO>builder()
+                        .content(page.getContent())
+                        .page(page.getNumber())
+                        .size(page.getSize())
+                        .totalElements(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .last(page.isLast())
+                        .build(),
+                "Diagnosticos obtenidos exitosamente"
+        );
+    }
 
+    @Transactional(readOnly = true)
+    public ApiResponse<Long> count() {
+        return ApiResponse.success(diagnosisRepository.countAll(), "Total de diagnósticos");
     }
 
     @Transactional(readOnly = true)
@@ -57,24 +72,30 @@ public class DiagnosisService {
         }
     }
 
-    //Metodo fundamental, cargamos los diagnosticos que ha dado un medico en una visita medica.
     @Transactional(readOnly = true)
-    public ApiResponse<List<DiagnosisSummaryDTO>> findByClinicalRecordId(Integer clinicalRecordId) {
+    public ApiResponse<PagedResponse<DiagnosisSummaryDTO>> findByClinicalRecordId(Integer clinicalRecordId, PageRequestDTO pageRequest) {
 
-        if(!clinicalRecordRepository.existsById(clinicalRecordId)){
+        if (!clinicalRecordRepository.existsById(clinicalRecordId)) {
             return ApiResponse.error("Clinical Record no encontrado con ID: " + clinicalRecordId);
         }
 
-        List<DiagnosisSummaryDTO> diagnosis = diagnosisRepository.findByClinicalRecordId(clinicalRecordId)
-                .stream()
-                .map(diagnosisMapper::toSummaryDTO)
-                .toList();
-        if (diagnosis.isEmpty()){
-            return ApiResponse.success(diagnosis, "No se encontraron Diagnosis para el Clinical Record ID: " + clinicalRecordId);
-        }
+        Page<DiagnosisSummaryDTO> page = diagnosisRepository
+                .findByClinicalRecordId(clinicalRecordId, pageRequest.toPageable())
+                .map(diagnosisMapper::toSummaryDTO);
 
-        return ApiResponse.success(diagnosis, "Diagnosis encontrado por Clinical Record");
-
+        return ApiResponse.success(
+                PagedResponse.<DiagnosisSummaryDTO>builder()
+                        .content(page.getContent())
+                        .page(page.getNumber())
+                        .size(page.getSize())
+                        .totalElements(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .last(page.isLast())
+                        .build(),
+                page.isEmpty()
+                        ? "No se encontraron Diagnosis para el Clinical Record ID: " + clinicalRecordId
+                        : "Diagnosis encontrado por Clinical Record"
+        );
     }
 
     public ApiResponse<DiagnosisResponseDTO> create(DiagnosisCreateDTO dto) {

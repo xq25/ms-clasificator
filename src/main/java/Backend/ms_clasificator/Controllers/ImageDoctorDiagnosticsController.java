@@ -4,15 +4,15 @@ package Backend.ms_clasificator.Controllers;
 import Backend.ms_clasificator.DTOs.ImageDoctorDiagnostics.ImageDoctorDiagnosticsCreateDTO;
 import Backend.ms_clasificator.DTOs.ImageDoctorDiagnostics.ImageDoctorDiagnosticsResponseDTO;
 import Backend.ms_clasificator.DTOs.ImageDoctorDiagnostics.ImageDoctorDiagnosticsSummaryDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
 import Backend.ms_clasificator.Services.ImageDoctorDiagnosticsService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/image-doctor-diagnostics")
@@ -21,17 +21,17 @@ public class ImageDoctorDiagnosticsController {
     @Autowired
     private ImageDoctorDiagnosticsService imageDoctorDiagnosticsService;
 
-    /**
-     * Obtener todas las asociaciones imagen-diagnóstico
-     */
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<ImageDoctorDiagnosticsSummaryDTO>>> findAll() {
+    public ResponseEntity<ApiResponse<PagedResponse<ImageDoctorDiagnosticsSummaryDTO>>> findAll(
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<ImageDoctorDiagnosticsSummaryDTO>> response =
+                imageDoctorDiagnosticsService.findAll(pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
 
-        ApiResponse<List<ImageDoctorDiagnosticsSummaryDTO>> response = imageDoctorDiagnosticsService.findAll();
-
-        return response.isSuccess()
-                ? ResponseEntity.ok(response)
-                : ResponseEntity.badRequest().body(response);
+    @GetMapping("count")
+    public ResponseEntity<ApiResponse<Long>> count() {
+        return ResponseEntity.ok(imageDoctorDiagnosticsService.count());
     }
 
     /**
@@ -47,17 +47,13 @@ public class ImageDoctorDiagnosticsController {
                 : ResponseEntity.badRequest().body(response);
     }
 
-    /**
-     * Obtener todos los diagnósticos asociados a una imagen
-     */
     @GetMapping("image-diagnostic/{imageDiagnosticId}")
-    public ResponseEntity<ApiResponse<List<ImageDoctorDiagnosticsSummaryDTO>>> findByImageDiagnosticId(@PathVariable Integer imageDiagnosticId) {
-
-        ApiResponse<List<ImageDoctorDiagnosticsSummaryDTO>> response = imageDoctorDiagnosticsService.findByImageDiagnosticId(imageDiagnosticId);
-
-        return response.isSuccess()
-                ? ResponseEntity.ok(response)
-                : ResponseEntity.badRequest().body(response);
+    public ResponseEntity<ApiResponse<PagedResponse<ImageDoctorDiagnosticsSummaryDTO>>> findByImageDiagnosticId(
+            @PathVariable Integer imageDiagnosticId,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<ImageDoctorDiagnosticsSummaryDTO>> response =
+                imageDoctorDiagnosticsService.findByImageDiagnosticId(imageDiagnosticId, pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
     /**

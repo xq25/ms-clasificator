@@ -3,16 +3,15 @@ package Backend.ms_clasificator.Controllers;
 import Backend.ms_clasificator.DTOs.Diagnosis.DiagnosisCreateDTO;
 import Backend.ms_clasificator.DTOs.Diagnosis.DiagnosisResponseDTO;
 import Backend.ms_clasificator.DTOs.Diagnosis.DiagnosisSummaryDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
-import Backend.ms_clasificator.Models.Diagnosis;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
 import Backend.ms_clasificator.Services.DiagnosisService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/diagnosis")
@@ -21,19 +20,16 @@ public class DiagnosisController {
     @Autowired
     private DiagnosisService diagnosisService;
 
-    /**
-     * Obtener todos los diagnósticos
-     * @return Lista de todos los diagnósticos
-     */
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<DiagnosisSummaryDTO>>> findAll() {
-        ApiResponse<List<DiagnosisSummaryDTO>> response = diagnosisService.findAll();
+    public ResponseEntity<ApiResponse<PagedResponse<DiagnosisSummaryDTO>>> findAll(
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<DiagnosisSummaryDTO>> response = diagnosisService.findAll(pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
 
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+    @GetMapping("count")
+    public ResponseEntity<ApiResponse<Long>> count() {
+        return ResponseEntity.ok(diagnosisService.count());
     }
 
     /**
@@ -52,20 +48,12 @@ public class DiagnosisController {
         }
     }
 
-    /**
-     * Obtener los diagnósticos de una visita médica (Clinical Record)
-     * @param clinicalRecordId ID del Clinical Record
-     * @return Diagnósticos encontrados para la visita
-     */
     @GetMapping("clinical-record/{clinicalRecordId}")
-    public ResponseEntity<ApiResponse<List<DiagnosisSummaryDTO>>> findByClinicalRecordId(@PathVariable Integer clinicalRecordId) {
-        ApiResponse<List<DiagnosisSummaryDTO>> response = diagnosisService.findByClinicalRecordId(clinicalRecordId);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<ApiResponse<PagedResponse<DiagnosisSummaryDTO>>> findByClinicalRecordId(
+            @PathVariable Integer clinicalRecordId,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<DiagnosisSummaryDTO>> response = diagnosisService.findByClinicalRecordId(clinicalRecordId, pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
     /**

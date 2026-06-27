@@ -4,15 +4,15 @@ import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticCreateDTO
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticResponseDTO;
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticSummaryDTO;
 import Backend.ms_clasificator.DTOs.MedicalDiagnostic.MedicalDiagnosticUpdateDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
 import Backend.ms_clasificator.Services.MedicalDiagnosticService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/medical-diagnostics")
@@ -21,14 +21,16 @@ public class MedicalDiagnosticController {
     @Autowired
     private MedicalDiagnosticService medicalDiagnosticService;
 
-    /**
-     * Obtener todos los diagnósticos médicos
-     * @return Lista de todos los diagnósticos
-     */
     @GetMapping("")
-    public ResponseEntity<List<MedicalDiagnosticResponseDTO>> findAll() {
-        List<MedicalDiagnosticResponseDTO> diagnostics = medicalDiagnosticService.findAll();
-        return ResponseEntity.ok(diagnostics);
+    public ResponseEntity<ApiResponse<PagedResponse<MedicalDiagnosticResponseDTO>>> findAll(
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<MedicalDiagnosticResponseDTO>> response = medicalDiagnosticService.findAll(pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("count")
+    public ResponseEntity<ApiResponse<Long>> count() {
+        return ResponseEntity.ok(medicalDiagnosticService.count());
     }
 
     /**
