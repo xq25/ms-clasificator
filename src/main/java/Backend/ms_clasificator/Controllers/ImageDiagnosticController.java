@@ -3,15 +3,15 @@ package Backend.ms_clasificator.Controllers;
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticCreateDTO;
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticResponseDTO;
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticSummaryDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
 import Backend.ms_clasificator.Services.ImageDiagnosticService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/image-diagnostics")
@@ -20,14 +20,16 @@ public class ImageDiagnosticController {
     @Autowired
     private ImageDiagnosticService imageDiagnosticService;
 
-    /**
-     * Obtener todos los diagnósticos de imagen
-     * @return Lista de todos los diagnósticos
-     */
     @GetMapping("")
-    public ResponseEntity<List<ImageDiagnosticSummaryDTO>> findAll() {
-        List<ImageDiagnosticSummaryDTO> diagnostics = imageDiagnosticService.findAll();
-        return ResponseEntity.ok(diagnostics);
+    public ResponseEntity<ApiResponse<PagedResponse<ImageDiagnosticSummaryDTO>>> findAll(
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<ImageDiagnosticSummaryDTO>> response = imageDiagnosticService.findAll(pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("count")
+    public ResponseEntity<ApiResponse<Long>> count() {
+        return ResponseEntity.ok(imageDiagnosticService.count());
     }
 
     /**
@@ -47,25 +49,19 @@ public class ImageDiagnosticController {
     }
 
     @GetMapping("doctor/{doctorId}")
-    public ResponseEntity<ApiResponse<List<ImageDiagnosticSummaryDTO>>> findByDoctorId(@PathVariable Integer doctorId) {
-        ApiResponse<List<ImageDiagnosticSummaryDTO>> response = imageDiagnosticService.findByDoctorId(doctorId);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<ApiResponse<PagedResponse<ImageDiagnosticSummaryDTO>>> findByDoctorId(
+            @PathVariable Integer doctorId,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<ImageDiagnosticSummaryDTO>> response = imageDiagnosticService.findByDoctorId(doctorId, pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
     @GetMapping("image/{medicalImageId}")
-    public ResponseEntity<ApiResponse<List<ImageDiagnosticSummaryDTO>>> findByMedicalImageId(@PathVariable Integer medicalImageId) {
-        ApiResponse<List<ImageDiagnosticSummaryDTO>> response = imageDiagnosticService.findByMedicalImgId(medicalImageId);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+    public ResponseEntity<ApiResponse<PagedResponse<ImageDiagnosticSummaryDTO>>> findByMedicalImageId(
+            @PathVariable Integer medicalImageId,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<ImageDiagnosticSummaryDTO>> response = imageDiagnosticService.findByMedicalImgId(medicalImageId, pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
     /**

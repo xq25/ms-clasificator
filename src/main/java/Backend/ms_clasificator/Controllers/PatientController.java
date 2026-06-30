@@ -1,18 +1,18 @@
 package Backend.ms_clasificator.Controllers;
 
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Patient.PatientCreateDTO;
 import Backend.ms_clasificator.DTOs.Patient.PatientResponseDTO;
 import Backend.ms_clasificator.DTOs.Patient.PatientSummaryDTO;
 import Backend.ms_clasificator.DTOs.Patient.PatientUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
 import Backend.ms_clasificator.Services.PatientService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/patients")
@@ -26,9 +26,15 @@ public class PatientController {
      * @return Lista de todos los pacientes
      */
     @GetMapping("")
-    public ResponseEntity<List<PatientSummaryDTO>> findAll() {
-        List<PatientSummaryDTO> patients = patientService.findAll();
-        return ResponseEntity.ok(patients);
+    public ResponseEntity<ApiResponse<PagedResponse<PatientSummaryDTO>>> findAll(
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<PatientSummaryDTO>> response = patientService.findAll(pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("count")
+    public ResponseEntity<ApiResponse<Long>> count() {
+        return ResponseEntity.ok(patientService.count());
     }
 
     /**

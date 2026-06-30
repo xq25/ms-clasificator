@@ -3,7 +3,10 @@ package Backend.ms_clasificator.Services;
 import Backend.ms_clasificator.DTOs.ImageDoctorDiagnostics.ImageDoctorDiagnosticsCreateDTO;
 import Backend.ms_clasificator.DTOs.ImageDoctorDiagnostics.ImageDoctorDiagnosticsResponseDTO;
 import Backend.ms_clasificator.DTOs.ImageDoctorDiagnostics.ImageDoctorDiagnosticsSummaryDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.ImageDoctorDiagnosticsMappers.ImageDoctorDiagnosticsMapper;
 import Backend.ms_clasificator.Models.ImageDiagnostic;
 import Backend.ms_clasificator.Models.ImageDoctorDiagnostics;
@@ -32,19 +35,27 @@ public class ImageDoctorDiagnosticsService {
     @Autowired
     private MedicalDiagnosticRepository medicalDiagnosticRepository;
 
-    /**
-     * Obtener todos los diagnósticos médicos asignados a imágenes.
-     */
     @Transactional(readOnly = true)
-    public ApiResponse<List<ImageDoctorDiagnosticsSummaryDTO>> findAll() {
+    public ApiResponse<PagedResponse<ImageDoctorDiagnosticsSummaryDTO>> findAll(PageRequestDTO pageRequest) {
+        Page<ImageDoctorDiagnosticsSummaryDTO> page = repository.findAll(pageRequest.toPageable())
+                .map(mapper::toSummaryDTO);
 
-        List<ImageDoctorDiagnosticsSummaryDTO> diagnostics =
-                repository.findAll()
-                        .stream()
-                        .map(mapper::toSummaryDTO)
-                        .toList();
+        return ApiResponse.success(
+                PagedResponse.<ImageDoctorDiagnosticsSummaryDTO>builder()
+                        .content(page.getContent())
+                        .page(page.getNumber())
+                        .size(page.getSize())
+                        .totalElements(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .last(page.isLast())
+                        .build(),
+                "Diagnósticos de imágenes obtenidos exitosamente"
+        );
+    }
 
-        return ApiResponse.success(diagnostics, "Diagnósticos de imágenes obtenidos exitosamente");
+    @Transactional(readOnly = true)
+    public ApiResponse<Long> count() {
+        return ApiResponse.success(repository.countAll(), "Total de diagnósticos de imágenes");
     }
 
     /**
@@ -65,23 +76,28 @@ public class ImageDoctorDiagnosticsService {
         }
     }
 
-    /**
-     * Obtener diagnósticos asociados al diagnostico de una imagen
-     */
     @Transactional(readOnly = true)
-    public ApiResponse<List<ImageDoctorDiagnosticsSummaryDTO>> findByImageDiagnosticId(Integer imageDiagnosticId) {
-
+    public ApiResponse<PagedResponse<ImageDoctorDiagnosticsSummaryDTO>> findByImageDiagnosticId(Integer imageDiagnosticId, PageRequestDTO pageRequest) {
         try {
-            if(!imageDiagnosticRepository.existsById(imageDiagnosticId)){
+            if (!imageDiagnosticRepository.existsById(imageDiagnosticId)) {
                 return ApiResponse.error("ImageDiagnostic no encontrado con ID: " + imageDiagnosticId);
             }
-            List<ImageDoctorDiagnosticsSummaryDTO> diagnostics = repository.findByImageDiagnosticId(imageDiagnosticId)
-                            .stream()
-                            .map(mapper::toSummaryDTO)
-                            .toList();
 
-            return ApiResponse.success(diagnostics, "Diagnósticos obtenidos exitosamente");
+            Page<ImageDoctorDiagnosticsSummaryDTO> page = repository
+                    .findByImageDiagnosticId(imageDiagnosticId, pageRequest.toPageable())
+                    .map(mapper::toSummaryDTO);
 
+            return ApiResponse.success(
+                    PagedResponse.<ImageDoctorDiagnosticsSummaryDTO>builder()
+                            .content(page.getContent())
+                            .page(page.getNumber())
+                            .size(page.getSize())
+                            .totalElements(page.getTotalElements())
+                            .totalPages(page.getTotalPages())
+                            .last(page.isLast())
+                            .build(),
+                    "Diagnósticos obtenidos exitosamente"
+            );
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         }

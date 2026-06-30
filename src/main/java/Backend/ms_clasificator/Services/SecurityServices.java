@@ -146,7 +146,6 @@ public class SecurityServices {
                 );
 
         if (response.getBody() != null) {
-            System.out.println(response.getBody());
             return response.getBody();
         }
         return null;
@@ -179,7 +178,6 @@ public class SecurityServices {
         // Obtenemos el nombre del usuario
         String username = this.getUserNameById(userId);
         if (username == null){
-            System.out.println("Error al obtener el nombre del usuario con ID: " + userId);
             return null;
         }
 

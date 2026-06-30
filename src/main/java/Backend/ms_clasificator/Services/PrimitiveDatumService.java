@@ -1,9 +1,12 @@
 package Backend.ms_clasificator.Services;
 
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.PrimitiveDatum.PrimitiveDatumCreateDTO;
 import Backend.ms_clasificator.DTOs.PrimitiveDatum.PrimitiveDatumResponseDTO;
 import Backend.ms_clasificator.DTOs.PrimitiveDatum.PrimitiveDatumUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.PrimitiveDatumMappers.PrimitiveDatumMapper;
 import Backend.ms_clasificator.Models.PrimitiveDatum;
 import Backend.ms_clasificator.Repositories.PrimitiveDatumRepository;
@@ -25,16 +28,30 @@ public class PrimitiveDatumService {
 	private PrimitiveDatumMapper primitiveDatumMapper;
 
 	@Transactional(readOnly = true)
-	public ApiResponse<List<PrimitiveDatumResponseDTO>> findAll() {
+	public ApiResponse<PagedResponse<PrimitiveDatumResponseDTO>> findAll(PageRequestDTO pageRequest) {
 		try {
-			List<PrimitiveDatumResponseDTO> response = primitiveDatumRepository.findAll()
-					.stream()
-					.map(primitiveDatumMapper::toResponseDTO)
-					.toList();
-			return ApiResponse.success(response, "Datos primitivos obtenidos exitosamente");
+			Page<PrimitiveDatumResponseDTO> page = primitiveDatumRepository.findAll(pageRequest.toPageable())
+					.map(primitiveDatumMapper::toResponseDTO);
+
+			return ApiResponse.success(
+					PagedResponse.<PrimitiveDatumResponseDTO>builder()
+							.content(page.getContent())
+							.page(page.getNumber())
+							.size(page.getSize())
+							.totalElements(page.getTotalElements())
+							.totalPages(page.getTotalPages())
+							.last(page.isLast())
+							.build(),
+					"Datos primitivos obtenidos exitosamente"
+			);
 		} catch (Exception ex) {
 			return ApiResponse.error("Error al listar datos primitivos: " + ex.getMessage());
 		}
+	}
+
+	@Transactional(readOnly = true)
+	public ApiResponse<Long> count() {
+		return ApiResponse.success(primitiveDatumRepository.countAll(), "Total de datos primitivos");
 	}
 
 	@Transactional(readOnly = true)

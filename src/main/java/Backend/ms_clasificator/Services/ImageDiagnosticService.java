@@ -3,7 +3,10 @@ package Backend.ms_clasificator.Services;
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticCreateDTO;
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticResponseDTO;
 import Backend.ms_clasificator.DTOs.ImageDiagnostic.ImageDiagnosticSummaryDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.ImageDiagnosticMappers.ImageDiagnosticMapper;
 import Backend.ms_clasificator.Models.*;
 import Backend.ms_clasificator.Repositories.*;
@@ -32,16 +35,27 @@ public class ImageDiagnosticService {
     @Autowired
     private DoctorAreaRepository doctorAreaRepository;
 
-    /**
-     * Obtener todos los diagnósticos de imagen
-     * @return Lista de todos los diagnósticos de imagen
-     */
     @Transactional(readOnly = true)
-    public List<ImageDiagnosticSummaryDTO> findAll() {
-        return imageDiagnosticRepository.findAll()
-                .stream()
-                .map(imageDiagnosticMapper::toSummaryDTO)
-                .toList();
+    public ApiResponse<PagedResponse<ImageDiagnosticSummaryDTO>> findAll(PageRequestDTO pageRequest) {
+        Page<ImageDiagnosticSummaryDTO> page = imageDiagnosticRepository.findAll(pageRequest.toPageable())
+                .map(imageDiagnosticMapper::toSummaryDTO);
+
+        return ApiResponse.success(
+                PagedResponse.<ImageDiagnosticSummaryDTO>builder()
+                        .content(page.getContent())
+                        .page(page.getNumber())
+                        .size(page.getSize())
+                        .totalElements(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .last(page.isLast())
+                        .build(),
+                "Diagnósticos de imagen obtenidos exitosamente"
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<Long> count() {
+        return ApiResponse.success(imageDiagnosticRepository.countAll(), "Total de diagnósticos de imagen");
     }
 
     @Transactional(readOnly = true)
@@ -59,37 +73,50 @@ public class ImageDiagnosticService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<ImageDiagnosticSummaryDTO>> findByDoctorId(Integer doctorId) {
+    public ApiResponse<PagedResponse<ImageDiagnosticSummaryDTO>> findByDoctorId(Integer doctorId, PageRequestDTO pageRequest) {
         try {
-            List<ImageDiagnosticSummaryDTO> diagnostics = imageDiagnosticRepository.findByDoctorId(doctorId)
-                    .stream()
-                    .map(imageDiagnosticMapper::toSummaryDTO)
-                    .toList();
+            Page<ImageDiagnosticSummaryDTO> page = imageDiagnosticRepository
+                    .findByDoctorId(doctorId, pageRequest.toPageable())
+                    .map(imageDiagnosticMapper::toSummaryDTO);
 
-            if(diagnostics.isEmpty()){
-                return ApiResponse.success(diagnostics,"No se encontraron diagnósticos de imagen para el doctor con ID: " + doctorId);
-            }
-            return ApiResponse.success(diagnostics, "Diagnósticos de imagen encontrados exitosamente para el doctor con ID: " + doctorId);
-
+            return ApiResponse.success(
+                    PagedResponse.<ImageDiagnosticSummaryDTO>builder()
+                            .content(page.getContent())
+                            .page(page.getNumber())
+                            .size(page.getSize())
+                            .totalElements(page.getTotalElements())
+                            .totalPages(page.getTotalPages())
+                            .last(page.isLast())
+                            .build(),
+                    page.isEmpty()
+                            ? "No se encontraron diagnósticos de imagen para el doctor con ID: " + doctorId
+                            : "Diagnósticos de imagen encontrados exitosamente para el doctor con ID: " + doctorId
+            );
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         }
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<ImageDiagnosticSummaryDTO>> findByMedicalImgId(Integer medicalImgId) {
+    public ApiResponse<PagedResponse<ImageDiagnosticSummaryDTO>> findByMedicalImgId(Integer medicalImgId, PageRequestDTO pageRequest) {
         try {
-            List<ImageDiagnosticSummaryDTO> diagnostics = imageDiagnosticRepository.findByMedicalImgId(medicalImgId)
-                    .stream()
-                    .map(imageDiagnosticMapper::toSummaryDTO)
-                    .toList();
+            Page<ImageDiagnosticSummaryDTO> page = imageDiagnosticRepository
+                    .findByMedicalImgId(medicalImgId, pageRequest.toPageable())
+                    .map(imageDiagnosticMapper::toSummaryDTO);
 
-            if(diagnostics.isEmpty()){
-                return ApiResponse.success(diagnostics,"No se encontraron diagnósticos de imagen para la imagen médica con ID: " + medicalImgId);
-            }
-
-            return ApiResponse.success(diagnostics, "Diagnósticos de imagen encontrados exitosamente para la imagen médica con ID: " + medicalImgId);
-
+            return ApiResponse.success(
+                    PagedResponse.<ImageDiagnosticSummaryDTO>builder()
+                            .content(page.getContent())
+                            .page(page.getNumber())
+                            .size(page.getSize())
+                            .totalElements(page.getTotalElements())
+                            .totalPages(page.getTotalPages())
+                            .last(page.isLast())
+                            .build(),
+                    page.isEmpty()
+                            ? "No se encontraron diagnósticos de imagen para la imagen médica con ID: " + medicalImgId
+                            : "Diagnósticos de imagen encontrados exitosamente para la imagen médica con ID: " + medicalImgId
+            );
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         }

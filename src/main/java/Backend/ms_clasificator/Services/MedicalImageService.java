@@ -3,7 +3,10 @@ package Backend.ms_clasificator.Services;
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgResponseDTO;
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgSummaryDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.MedicalImgMappers.MedicalImgMapper;
 import Backend.ms_clasificator.Models.ClinicalRecord;
 import Backend.ms_clasificator.Models.MedicalImageType;
@@ -95,12 +98,26 @@ public class MedicalImageService {
 
     // LECTURAS
     @Transactional(readOnly = true)
-    public ApiResponse<List<MedicalImgSummaryDTO>> findAll() {
-        List<MedicalImgSummaryDTO> dtos = medicalImgRepository.findAll()
-                .stream()
-                .map(medicalImgMapper::toSummaryDTO)
-                .toList();
-        return ApiResponse.success(dtos, "Imágenes médicas obtenidas exitosamente");
+    public ApiResponse<PagedResponse<MedicalImgSummaryDTO>> findAll(PageRequestDTO pageRequest) {
+        Page<MedicalImgSummaryDTO> page = medicalImgRepository.findAll(pageRequest.toPageable())
+                .map(medicalImgMapper::toSummaryDTO);
+
+        return ApiResponse.success(
+                PagedResponse.<MedicalImgSummaryDTO>builder()
+                        .content(page.getContent())
+                        .page(page.getNumber())
+                        .size(page.getSize())
+                        .totalElements(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .last(page.isLast())
+                        .build(),
+                "Imágenes médicas obtenidas exitosamente"
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<Long> count() {
+        return ApiResponse.success(medicalImgRepository.countAll(), "Total de imágenes médicas");
     }
 
     @Transactional(readOnly = true)
@@ -116,40 +133,56 @@ public class MedicalImageService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<MedicalImgResponseDTO>> findByMedicalImageType(Integer medicalImageTypeId) {
+    public ApiResponse<PagedResponse<MedicalImgResponseDTO>> findByMedicalImageType(Integer medicalImageTypeId, PageRequestDTO pageRequest) {
         try {
-            if(!medicalImageTypeRepository.existsById(medicalImageTypeId)){
+            if (!medicalImageTypeRepository.existsById(medicalImageTypeId)) {
                 return ApiResponse.error("No se encontró el tipo de imagen médica con ID: " + medicalImageTypeId);
             }
 
-            List<MedicalImgResponseDTO> dtos = medicalImgRepository.findByMedicalImageTypeId(medicalImageTypeId)
-                    .stream()
-                    .map(medicalImgMapper::toResponseDTO)
-                    .toList();
+            Page<MedicalImgResponseDTO> page = medicalImgRepository
+                    .findByMedicalImageTypeId(medicalImageTypeId, pageRequest.toPageable())
+                    .map(medicalImgMapper::toResponseDTO);
 
-            return ApiResponse.success(dtos, "Imágenes médicas obtenidas exitosamente");
+            return ApiResponse.success(
+                    PagedResponse.<MedicalImgResponseDTO>builder()
+                            .content(page.getContent())
+                            .page(page.getNumber())
+                            .size(page.getSize())
+                            .totalElements(page.getTotalElements())
+                            .totalPages(page.getTotalPages())
+                            .last(page.isLast())
+                            .build(),
+                    "Imágenes médicas obtenidas exitosamente"
+            );
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error("Error al obtener imágenes médicas por tipo: " + ex.getMessage());
         }
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<MedicalImgSummaryDTO>> findByClinicalRecord(Integer clinicalRecordId) {
+    public ApiResponse<PagedResponse<MedicalImgSummaryDTO>> findByClinicalRecord(Integer clinicalRecordId, PageRequestDTO pageRequest) {
         try {
-            if(!clinicalRecordRepository.existsById(clinicalRecordId)){
+            if (!clinicalRecordRepository.existsById(clinicalRecordId)) {
                 return ApiResponse.error("No se encontró el registro clínico con ID: " + clinicalRecordId);
             }
 
-            List<MedicalImgSummaryDTO> dtos = medicalImgRepository.findByClinicalRecordId(clinicalRecordId)
-                    .stream()
-                    .map(medicalImgMapper::toSummaryDTO)
-                    .toList();
+            Page<MedicalImgSummaryDTO> page = medicalImgRepository
+                    .findByClinicalRecordId(clinicalRecordId, pageRequest.toPageable())
+                    .map(medicalImgMapper::toSummaryDTO);
 
-            if(dtos.isEmpty()){
-                return ApiResponse.success(dtos,"No se encontraron imágenes médicas para este clinical record");
-            }
-
-            return ApiResponse.success(dtos, "Imágenes médicas obtenidas exitosamente");
+            return ApiResponse.success(
+                    PagedResponse.<MedicalImgSummaryDTO>builder()
+                            .content(page.getContent())
+                            .page(page.getNumber())
+                            .size(page.getSize())
+                            .totalElements(page.getTotalElements())
+                            .totalPages(page.getTotalPages())
+                            .last(page.isLast())
+                            .build(),
+                    page.isEmpty()
+                            ? "No se encontraron imágenes médicas para este clinical record"
+                            : "Imágenes médicas obtenidas exitosamente"
+            );
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error("Error al obtener imágenes médicas por registro clínico: " + ex.getMessage());
         }

@@ -1,6 +1,8 @@
 package Backend.ms_clasificator.Repositories;
 
 import Backend.ms_clasificator.Models.MedicalImg;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,14 +13,11 @@ import java.util.List;
 
 public interface MedicalImgRepository extends JpaRepository<MedicalImg, Integer> {
 
-
-    /** Buscar todas las imágenes médicas por medical_image_type_id
-     * @param medicalImageTypeId ID del tipo de imagen médica
-     * @return Lista de imágenes médicas del tipo
-     * */
     List<MedicalImg> findByMedicalImageTypeId(Integer medicalImageTypeId);
+    Page<MedicalImg> findByMedicalImageTypeId(Integer medicalImageTypeId, Pageable pageable);
 
     List<MedicalImg> findByClinicalRecordId(Integer clinicalRecordId);
+    Page<MedicalImg> findByClinicalRecordId(Integer clinicalRecordId, Pageable pageable);
 
     // Consulta para la busqueda de las iamgenes con un tipo de imagen especifico que no han sido diagnosticadas por un doctor en especifico
     @Query("""
@@ -35,6 +34,9 @@ public interface MedicalImgRepository extends JpaRepository<MedicalImg, Integer>
     List<MedicalImg> findUndiagnosedImagesByDoctorAndMedicalImageType(@Param("doctorId") Integer doctorId, @Param("medicalImageTypeId") Integer medicalImageTypeId);
 
     boolean existsByMedicalImageTypeId(Integer medicalImageTypeId);
+
+    @Query("SELECT COUNT(m) FROM MedicalImg m")
+    long countAll();
 
     /**
      * Desvincular en bloque todas las imágenes médicas asociadas a los ClinicalRecord

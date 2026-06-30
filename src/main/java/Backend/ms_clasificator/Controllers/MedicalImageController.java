@@ -3,7 +3,9 @@ package Backend.ms_clasificator.Controllers;
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgResponseDTO;
 import Backend.ms_clasificator.DTOs.MedicalImg.MedicalImgSummaryDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
 import Backend.ms_clasificator.Services.MedicalImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -56,8 +58,15 @@ public class MedicalImageController {
 
     // LECTURA
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<MedicalImgSummaryDTO>>> findAll() {
-        return ResponseEntity.ok(medicalImageService.findAll());
+    public ResponseEntity<ApiResponse<PagedResponse<MedicalImgSummaryDTO>>> findAll(
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<MedicalImgSummaryDTO>> response = medicalImageService.findAll(pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("count")
+    public ResponseEntity<ApiResponse<Long>> count() {
+        return ResponseEntity.ok(medicalImageService.count());
     }
 
     @GetMapping("{id}")
@@ -69,21 +78,21 @@ public class MedicalImageController {
     }
 
     @GetMapping("image-type/{medicalImageTypeId}")
-    public ResponseEntity<ApiResponse<List<MedicalImgResponseDTO>>> findByMedicalImageType(@PathVariable Integer medicalImageTypeId) {
-        ApiResponse<List<MedicalImgResponseDTO>> response =
-                medicalImageService.findByMedicalImageType(medicalImageTypeId);
-        return response.isSuccess()
-                ? ResponseEntity.ok(response)
-                : ResponseEntity.badRequest().body(response);
+    public ResponseEntity<ApiResponse<PagedResponse<MedicalImgResponseDTO>>> findByMedicalImageType(
+            @PathVariable Integer medicalImageTypeId,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<MedicalImgResponseDTO>> response =
+                medicalImageService.findByMedicalImageType(medicalImageTypeId, pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
     @GetMapping("clinical-record/{clinicalRecordId}")
-    public ResponseEntity<ApiResponse<List<MedicalImgSummaryDTO>>> findByClinicalRecord(@PathVariable Integer clinicalRecordId) {
-        ApiResponse<List<MedicalImgSummaryDTO>> response =
-                medicalImageService.findByClinicalRecord(clinicalRecordId);
-        return response.isSuccess()
-                ? ResponseEntity.ok(response)
-                : ResponseEntity.badRequest().body(response);
+    public ResponseEntity<ApiResponse<PagedResponse<MedicalImgSummaryDTO>>> findByClinicalRecord(
+            @PathVariable Integer clinicalRecordId,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<MedicalImgSummaryDTO>> response =
+                medicalImageService.findByClinicalRecord(clinicalRecordId, pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
     @GetMapping("undianosed/doctor/{doctorId}/image-type/{medicalImageTypeId}")

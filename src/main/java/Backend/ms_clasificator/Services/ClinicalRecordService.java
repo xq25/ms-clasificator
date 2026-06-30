@@ -4,7 +4,10 @@ import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordCreateDTO;
 import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordResponseDTO;
 import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordSummaryDTO;
 import Backend.ms_clasificator.DTOs.ClinicalRecord.ClinicalRecordUpdateDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.ClinicalRecordMappers.ClinicalRecordMapper;
 import Backend.ms_clasificator.Models.ClinicalRecord;
 import Backend.ms_clasificator.Models.Patient;
@@ -33,16 +36,27 @@ public class ClinicalRecordService {
     @Autowired
     private ClinicalRecordMapper clinicalRecordMapper;
 
-    // No cargamos toda la informacion adicional
     @Transactional(readOnly = true)
-    public ApiResponse<List<ClinicalRecordSummaryDTO>> findAll() {
+    public ApiResponse<PagedResponse<ClinicalRecordSummaryDTO>> findAll(PageRequestDTO pageRequest) {
+        Page<ClinicalRecordSummaryDTO> page = clinicalRecordRepository.findAll(pageRequest.toPageable())
+                .map(clinicalRecordMapper::toSummaryDTO);
 
-        List<ClinicalRecordSummaryDTO> response = clinicalRecordRepository.findAll()
-                .stream()
-                .map(clinicalRecordMapper::toSummaryDTO)
-                .toList();
-        return ApiResponse.success(response, "Registros médicos obtenidos exitosamente");
+        return ApiResponse.success(
+                PagedResponse.<ClinicalRecordSummaryDTO>builder()
+                        .content(page.getContent())
+                        .page(page.getNumber())
+                        .size(page.getSize())
+                        .totalElements(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .last(page.isLast())
+                        .build(),
+                "Registros médicos obtenidos exitosamente"
+        );
+    }
 
+    @Transactional(readOnly = true)
+    public ApiResponse<Long> count() {
+        return ApiResponse.success(clinicalRecordRepository.countAll(), "Total de registros médicos");
     }
 
     // No cargamos toda la informacion
@@ -60,21 +74,28 @@ public class ClinicalRecordService {
         }
     }
 
-    // No cargamos toda la informacion
     @Transactional(readOnly = true)
-    public ApiResponse<List<ClinicalRecordSummaryDTO>> findByPatientId(Integer patientId){
+    public ApiResponse<PagedResponse<ClinicalRecordSummaryDTO>> findByPatientId(Integer patientId, PageRequestDTO pageRequest) {
         try {
-            // Validar que existe el paciente
             if (!this.patientRepository.existsById(patientId)) {
                 return ApiResponse.error("Paciente no encontrado con ID: " + patientId);
             }
 
-            List<ClinicalRecordSummaryDTO> response = clinicalRecordRepository.findByPatientId(patientId)
-                    .stream()
-                    .map(clinicalRecordMapper::toSummaryDTO)
-                    .toList();
+            Page<ClinicalRecordSummaryDTO> page = clinicalRecordRepository
+                    .findByPatientId(patientId, pageRequest.toPageable())
+                    .map(clinicalRecordMapper::toSummaryDTO);
 
-            return ApiResponse.success(response, "Registros médicos obtenidos exitosamente");
+            return ApiResponse.success(
+                    PagedResponse.<ClinicalRecordSummaryDTO>builder()
+                            .content(page.getContent())
+                            .page(page.getNumber())
+                            .size(page.getSize())
+                            .totalElements(page.getTotalElements())
+                            .totalPages(page.getTotalPages())
+                            .last(page.isLast())
+                            .build(),
+                    "Registros médicos obtenidos exitosamente"
+            );
 
         } catch (Exception ex) {
             return ApiResponse.error("Error al listar registros médicos: " + ex.getMessage());
