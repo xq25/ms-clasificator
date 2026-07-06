@@ -3,7 +3,10 @@ package Backend.ms_clasificator.Services;
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaCreateDTO;
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaResponseDTO;
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaUpdateDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.EvaluationAreaMappers.EvaluationAreaMapper;
 import Backend.ms_clasificator.Models.EvaluationArea;
 import Backend.ms_clasificator.Repositories.EvaluationAreaRepository;
@@ -32,14 +35,26 @@ public class EvaluationAreaService {
      * @return Lista de todas las áreas de evaluación
      */
     @Transactional(readOnly = true)
-    public ApiResponse<List<EvaluationAreaResponseDTO>> findAll() {
+    public ApiResponse<PagedResponse<EvaluationAreaResponseDTO>> findAll(PageRequestDTO pageRequest) {
+        Page<EvaluationAreaResponseDTO> page = evaluationAreaRepository.findAll(pageRequest.toPageable())
+                .map(evaluationAreaMapper::toResponseDTO);
 
-        List<EvaluationAreaResponseDTO> response = evaluationAreaRepository.findAll()
-                .stream()
-                .map(evaluationAreaMapper::toResponseDTO)
-                .toList();
-        return ApiResponse.success(response, "Areas de evaluacion obtenidas exitosamente");
+        return ApiResponse.success(
+                PagedResponse.<EvaluationAreaResponseDTO>builder()
+                        .content(page.getContent())
+                        .page(page.getNumber())
+                        .size(page.getSize())
+                        .totalElements(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .last(page.isLast())
+                        .build(),
+                "Areas de evaluacion obtenidas exitosamente"
+        );
+    }
 
+    @Transactional(readOnly = true)
+    public ApiResponse<Long> count() {
+        return ApiResponse.success(evaluationAreaRepository.countAll(), "Total de áreas de evaluación");
     }
 
     /**
@@ -93,6 +108,7 @@ public class EvaluationAreaService {
      * @param evaluationAreaUpdateDTO DTO con datos a actualizar
      * @return ApiResponse<EvaluationArea> con el resultado de la operación
      */
+    @Transactional
     public ApiResponse<EvaluationAreaResponseDTO> update(Integer id, EvaluationAreaUpdateDTO evaluationAreaUpdateDTO) {
         try {
             if (evaluationAreaUpdateDTO == null) {

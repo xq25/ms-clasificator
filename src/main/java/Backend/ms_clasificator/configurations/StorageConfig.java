@@ -41,10 +41,10 @@ public class StorageConfig {
     public ImageStorageService imageStorageService(
             MinioClient minioClient,
             @Value("${storage.minio.bucket}") String bucket,
-            @Value("${storage.minio.endpoint}") String endpoint) {
+            @Value("${storage.minio.public-endpoint:${storage.minio.endpoint}}") String publicEndpoint) {
 
-        log.info("[Storage] Provider activo: MinIO | bucket={}", bucket);
-        return new MinioImageStorageService(minioClient, bucket, endpoint);
+        log.info("[Storage] Provider activo: MinIO | bucket={} | publicEndpoint={}", bucket, publicEndpoint);
+        return new MinioImageStorageService(minioClient, bucket, publicEndpoint);
     }
 
     // ============================================================

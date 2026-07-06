@@ -3,7 +3,10 @@ package Backend.ms_clasificator.Services;
 import Backend.ms_clasificator.DTOs.DoctorArea.DoctorAreaCreateDTO;
 import Backend.ms_clasificator.DTOs.DoctorArea.DoctorAreaResponseDTO;
 import Backend.ms_clasificator.DTOs.DoctorArea.DoctorAreaSummaryDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.DoctorAreaMappers.DoctorAreaMapper;
 import Backend.ms_clasificator.Models.Doctor;
 import Backend.ms_clasificator.Models.DoctorArea;
@@ -38,12 +41,26 @@ public class DoctorAreaService {
      * @return Lista de todas las relaciones
      */
     @Transactional(readOnly = true)
-    public ApiResponse<List<DoctorAreaSummaryDTO>> findAll() {
-        List<DoctorAreaSummaryDTO> doctorAreas =  doctorAreaRepository.findAll()
-                .stream().map(doctorAreaMapper::toSummaryDTO)
-                .toList();
+    public ApiResponse<PagedResponse<DoctorAreaSummaryDTO>> findAll(PageRequestDTO pageRequest) {
+        Page<DoctorAreaSummaryDTO> page = doctorAreaRepository.findAll(pageRequest.toPageable())
+                .map(doctorAreaMapper::toSummaryDTO);
 
-        return ApiResponse.success(doctorAreas, "Relaciones DoctorArea obtenidas exitosamente");
+        return ApiResponse.success(
+                PagedResponse.<DoctorAreaSummaryDTO>builder()
+                        .content(page.getContent())
+                        .page(page.getNumber())
+                        .size(page.getSize())
+                        .totalElements(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .last(page.isLast())
+                        .build(),
+                "Relaciones DoctorArea obtenidas exitosamente"
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<Long> count() {
+        return ApiResponse.success(doctorAreaRepository.countAll(), "Total de relaciones DoctorArea");
     }
 
     /**

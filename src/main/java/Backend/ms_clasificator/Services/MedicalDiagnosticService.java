@@ -121,6 +121,7 @@ public class MedicalDiagnosticService {
         }
     }
 
+    @Transactional
     public ApiResponse<MedicalDiagnosticResponseDTO> update(Integer id, MedicalDiagnosticUpdateDTO medicalDiagnosticUpdateDTO) {
         try {
             if (medicalDiagnosticUpdateDTO == null) {

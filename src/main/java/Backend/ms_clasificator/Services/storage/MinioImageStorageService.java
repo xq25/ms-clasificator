@@ -63,6 +63,11 @@ public class MinioImageStorageService implements ImageStorageService {
                             .expiry(7, TimeUnit.DAYS)
                             .build()
             );
+            // Replace internal Docker endpoint with the public one (nginx proxy).
+            // nginx sets Host: minio when forwarding, so the presigned signature remains valid.
+            java.net.URI uri = java.net.URI.create(url);
+            String internalBase = uri.getScheme() + "://" + uri.getAuthority();
+            url = url.replace(internalBase, publicEndpoint);
             log.debug("[MinIO] URL generada para key={}", imageKey);
             return url;
 

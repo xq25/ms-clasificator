@@ -4,7 +4,10 @@ import Backend.ms_clasificator.DTOs.Dataset.DatasetCreateDTO;
 import Backend.ms_clasificator.DTOs.Dataset.DatasetResponseDTO;
 import Backend.ms_clasificator.DTOs.Dataset.DatasetSummaryDTO;
 import Backend.ms_clasificator.DTOs.Dataset.DatasetUpdateDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.Dataset.DatasetMappers;
 import Backend.ms_clasificator.Models.MedicalDiagnostic;
 import Backend.ms_clasificator.Models.Dataset;
@@ -40,14 +43,26 @@ public class DatasetService {
      * @return Lista de todas las configuraciones
      */
     @Transactional(readOnly = true)
-    public ApiResponse<List<DatasetResponseDTO>> findAll() {
+    public ApiResponse<PagedResponse<DatasetResponseDTO>> findAll(PageRequestDTO pageRequest) {
+        Page<DatasetResponseDTO> page = datasetRepository.findAll(pageRequest.toPageable())
+                .map(datasetMappers::toResponseDTO);
 
-        List<DatasetResponseDTO> datasets = datasetRepository.findAll()
-                .stream()
-                .map(datasetMappers::toResponseDTO)
-                .toList();
-        return ApiResponse.success(datasets, "Datasets obtenidos exitosamente");
+        return ApiResponse.success(
+                PagedResponse.<DatasetResponseDTO>builder()
+                        .content(page.getContent())
+                        .page(page.getNumber())
+                        .size(page.getSize())
+                        .totalElements(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .last(page.isLast())
+                        .build(),
+                "Datasets obtenidos exitosamente"
+        );
+    }
 
+    @Transactional(readOnly = true)
+    public ApiResponse<Long> count() {
+        return ApiResponse.success(datasetRepository.countAll(), "Total de Datasets");
     }
 
     /**

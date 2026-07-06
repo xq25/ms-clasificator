@@ -2,7 +2,9 @@ package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.Dataset.DatasetCreateDTO;
 import Backend.ms_clasificator.DTOs.Dataset.DatasetResponseDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
 import Backend.ms_clasificator.DTOs.Dataset.DatasetUpdateDTO;
 import Backend.ms_clasificator.Services.DatasetService;
 import jakarta.validation.Valid;
@@ -25,9 +27,15 @@ public class DatasetController {
      * @return Lista de todas las configuraciones
      */
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<DatasetResponseDTO>>> findAll() {
-        ApiResponse<List<DatasetResponseDTO>> response = datasetService.findAll();
+    public ResponseEntity<ApiResponse<PagedResponse<DatasetResponseDTO>>> findAll(
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<DatasetResponseDTO>> response = datasetService.findAll(pageRequest);
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("count")
+    public ResponseEntity<ApiResponse<Long>> count() {
+        return ResponseEntity.ok(datasetService.count());
     }
 
     /**
