@@ -3,7 +3,10 @@ package Backend.ms_clasificator.Services;
 import Backend.ms_clasificator.DTOs.DiagnosticCategoryDataset.DiagnosticCategoryDatasetCreateDTO;
 import Backend.ms_clasificator.DTOs.DiagnosticCategoryDataset.DiagnosticCategoryDatasetResponseDTO;
 import Backend.ms_clasificator.DTOs.DiagnosticCategoryDataset.DiagnosticCategoryDatasetSummaryDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.DiagnosticCategoryDatasetMappers.DiagnosticCategoryDatasetMapper;
 import Backend.ms_clasificator.Models.DatasetCategory;
 import Backend.ms_clasificator.Models.DiagnosticCategoryDataset;
@@ -32,21 +35,33 @@ public class DiagnosticCategoryDatasetService {
     private MedicalDiagnosticRepository medicalDiagnosticRepository;
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<DiagnosticCategoryDatasetSummaryDTO>> findAll() {
+    public ApiResponse<PagedResponse<DiagnosticCategoryDatasetSummaryDTO>> findAll(PageRequestDTO pageRequest) {
         try {
-            List<DiagnosticCategoryDatasetSummaryDTO> data = repository.findAll()
-                    .stream()
-                    .map(mapper::toSummaryDTO)
-                    .toList();
+            Page<DiagnosticCategoryDatasetSummaryDTO> page = repository.findAll(pageRequest.toPageable())
+                    .map(mapper::toSummaryDTO);
 
-            return ApiResponse.success(data,
-                    "DiagnosticCategoryDatasets obtenidos exitosamente");
+            return ApiResponse.success(
+                    PagedResponse.<DiagnosticCategoryDatasetSummaryDTO>builder()
+                            .content(page.getContent())
+                            .page(page.getNumber())
+                            .size(page.getSize())
+                            .totalElements(page.getTotalElements())
+                            .totalPages(page.getTotalPages())
+                            .last(page.isLast())
+                            .build(),
+                    "DiagnosticCategoryDatasets obtenidos exitosamente"
+            );
 
         } catch (Exception ex) {
             return ApiResponse.error(
                     "Error al listar DiagnosticCategoryDatasets: "
                             + ex.getMessage());
         }
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<Long> count() {
+        return ApiResponse.success(repository.countAll(), "Total de DiagnosticCategoryDatasets");
     }
 
     @Transactional(readOnly = true)

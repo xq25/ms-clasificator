@@ -4,7 +4,9 @@ import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryCreateDTO;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryResponseDTO;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategorySummaryDTO;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryUpdateDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
 import Backend.ms_clasificator.Services.DatasetCategoryService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +28,15 @@ public class DatasetCategoryController {
      * @return Lista de todos los estados
      */
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<DatasetCategoryResponseDTO>>> findAll() {
-        ApiResponse<java.util.List<DatasetCategoryResponseDTO>> response = this.datasetCategoryService.findAll();
+    public ResponseEntity<ApiResponse<PagedResponse<DatasetCategoryResponseDTO>>> findAll(
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<DatasetCategoryResponseDTO>> response = this.datasetCategoryService.findAll(pageRequest);
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("count")
+    public ResponseEntity<ApiResponse<Long>> count() {
+        return ResponseEntity.ok(this.datasetCategoryService.count());
     }
 
     /**

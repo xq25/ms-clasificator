@@ -181,6 +181,7 @@ public class PatientService {
      * @param patientUpdateDTO DTO con datos a actualizar
      * @return ApiResponse<Patient> con el resultado de la operación
      */
+    @Transactional
     public ApiResponse<PatientSummaryDTO> update(Integer id, PatientUpdateDTO patientUpdateDTO) {
         try {
             if (patientUpdateDTO == null) {

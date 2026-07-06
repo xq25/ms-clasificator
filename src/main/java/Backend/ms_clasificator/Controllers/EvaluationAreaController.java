@@ -2,7 +2,9 @@ package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaCreateDTO;
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaUpdateDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaResponseDTO;
 import Backend.ms_clasificator.Services.EvaluationAreaService;
 import jakarta.validation.Valid;
@@ -25,10 +27,16 @@ public class EvaluationAreaController {
      * @return Lista de todas las áreas de evaluación
      */
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<EvaluationAreaResponseDTO>>> findAll() {
-        ApiResponse<List<EvaluationAreaResponseDTO>> response = evaluationAreaService.findAll();
+    public ResponseEntity<ApiResponse<PagedResponse<EvaluationAreaResponseDTO>>> findAll(
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<EvaluationAreaResponseDTO>> response = evaluationAreaService.findAll(pageRequest);
         if (response.isSuccess()) return ResponseEntity.ok(response);
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("count")
+    public ResponseEntity<ApiResponse<Long>> count() {
+        return ResponseEntity.ok(evaluationAreaService.count());
     }
 
     /**

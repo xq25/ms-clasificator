@@ -4,7 +4,9 @@ import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeSummaryDTO;
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeUpdateDTO;
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeResponseDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
 import Backend.ms_clasificator.Services.MedicalImageTypeService;
 
 import jakarta.validation.Valid;
@@ -22,10 +24,16 @@ public class MedicalImageTypeController {
 	private MedicalImageTypeService medicalImageTypeService;
 
 	@GetMapping("")
-	public ResponseEntity<ApiResponse<List<MedicalImageTypeSummaryDTO>>> find(){
-		ApiResponse<List<MedicalImageTypeSummaryDTO>> response = this.medicalImageTypeService.findAll();
+	public ResponseEntity<ApiResponse<PagedResponse<MedicalImageTypeSummaryDTO>>> find(
+			@Valid @ModelAttribute PageRequestDTO pageRequest){
+		ApiResponse<PagedResponse<MedicalImageTypeSummaryDTO>> response = this.medicalImageTypeService.findAll(pageRequest);
 		if (response.isSuccess()) return ResponseEntity.ok(response);
 		return ResponseEntity.badRequest().body(response);
+	}
+
+	@GetMapping("count")
+	public ResponseEntity<ApiResponse<Long>> count() {
+		return ResponseEntity.ok(this.medicalImageTypeService.count());
 	}
 
 	@GetMapping("{id}")

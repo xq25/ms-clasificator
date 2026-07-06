@@ -4,7 +4,10 @@ import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryCreateDTO;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryResponseDTO;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategorySummaryDTO;
 import Backend.ms_clasificator.DTOs.DatasetCategory.DatasetCategoryUpdateDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.DatasetCategory.DatasetCategoryMappers;
 import Backend.ms_clasificator.Models.Dataset;
 import Backend.ms_clasificator.Models.DatasetCategory;
@@ -34,14 +37,26 @@ public class DatasetCategoryService {
      * @return Lista de todos los estados
      */
     @Transactional(readOnly = true)
-    public ApiResponse<List<DatasetCategoryResponseDTO>> findAll() {
+    public ApiResponse<PagedResponse<DatasetCategoryResponseDTO>> findAll(PageRequestDTO pageRequest) {
+        Page<DatasetCategoryResponseDTO> page = datasetCategoryRepository.findAll(pageRequest.toPageable())
+                .map(datasetCategoryMappers::toResponseDTO);
 
-        List<DatasetCategoryResponseDTO> response = datasetCategoryRepository.findAll()
-                .stream()
-                .map(datasetCategoryMappers::toResponseDTO)
-                .toList();
-        return ApiResponse.success(response, "Categorias de dataset obtenidas exitosamente");
+        return ApiResponse.success(
+                PagedResponse.<DatasetCategoryResponseDTO>builder()
+                        .content(page.getContent())
+                        .page(page.getNumber())
+                        .size(page.getSize())
+                        .totalElements(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .last(page.isLast())
+                        .build(),
+                "Categorias de dataset obtenidas exitosamente"
+        );
+    }
 
+    @Transactional(readOnly = true)
+    public ApiResponse<Long> count() {
+        return ApiResponse.success(datasetCategoryRepository.countAll(), "Total de categorías de dataset");
     }
 
     /**
@@ -119,6 +134,7 @@ public class DatasetCategoryService {
         }
     }
 
+    @Transactional
     public ApiResponse<DatasetCategoryResponseDTO> update(Integer id, DatasetCategoryUpdateDTO datasetCategoryCreateDTO) {
         try {
             if (datasetCategoryCreateDTO == null) {

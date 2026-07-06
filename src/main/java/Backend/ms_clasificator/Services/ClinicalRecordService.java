@@ -124,6 +124,7 @@ public class ClinicalRecordService {
         }
     }
 
+    @Transactional
     public ApiResponse<ClinicalRecordResponseDTO> update(Integer id, ClinicalRecordUpdateDTO dto) {
         try {
             if (dto == null) {

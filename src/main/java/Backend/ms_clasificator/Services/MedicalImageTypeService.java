@@ -4,7 +4,10 @@ import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeCreateDTO;
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeResponseDTO;
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeSummaryDTO;
 import Backend.ms_clasificator.DTOs.MedicalImageType.MedicalImageTypeUpdateDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.MedicalImageTypeMappers.MedicalImageTypeMapper;
 import Backend.ms_clasificator.Models.EvaluationArea;
 import Backend.ms_clasificator.Models.MedicalImageType;
@@ -33,13 +36,26 @@ public class MedicalImageTypeService {
     private MedicalImageTypeMapper medicalImageTypeMapper;
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<MedicalImageTypeSummaryDTO>> findAll() {
-        List<MedicalImageTypeSummaryDTO> response = medicalImageTypeRepository.findAll()
-                .stream()
-                .map(medicalImageTypeMapper::toSummaryDTO)
-                .toList();
-        return ApiResponse.success(response, "Tipos de imagen obtenidos exitosamente");
+    public ApiResponse<PagedResponse<MedicalImageTypeSummaryDTO>> findAll(PageRequestDTO pageRequest) {
+        Page<MedicalImageTypeSummaryDTO> page = medicalImageTypeRepository.findAll(pageRequest.toPageable())
+                .map(medicalImageTypeMapper::toSummaryDTO);
 
+        return ApiResponse.success(
+                PagedResponse.<MedicalImageTypeSummaryDTO>builder()
+                        .content(page.getContent())
+                        .page(page.getNumber())
+                        .size(page.getSize())
+                        .totalElements(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .last(page.isLast())
+                        .build(),
+                "Tipos de imagen obtenidos exitosamente"
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<Long> count() {
+        return ApiResponse.success(medicalImageTypeRepository.countAll(), "Total de tipos de imagen");
     }
 
     @Transactional(readOnly = true)
@@ -87,6 +103,7 @@ public class MedicalImageTypeService {
 
     }
 
+    @Transactional
     public ApiResponse<MedicalImageTypeResponseDTO> update(Integer id, MedicalImageTypeUpdateDTO dto) {
         try {
             if (dto == null) {

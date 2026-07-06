@@ -3,7 +3,9 @@ package Backend.ms_clasificator.Controllers;
 import Backend.ms_clasificator.DTOs.Doctor.DoctorBaseDTO;
 import Backend.ms_clasificator.DTOs.Doctor.DoctorSummaryDTO;
 import Backend.ms_clasificator.DTOs.Doctor.DoctorUpdateDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
 import Backend.ms_clasificator.DTOs.Doctor.DoctorResponseDTO;
 import Backend.ms_clasificator.Services.DoctorService;
 import jakarta.validation.Valid;
@@ -21,10 +23,16 @@ public class DoctorController {
     private DoctorService doctorService;
 
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<DoctorSummaryDTO>>> find(){
-        ApiResponse<List<DoctorSummaryDTO>> response = this.doctorService.findAll();
+    public ResponseEntity<ApiResponse<PagedResponse<DoctorSummaryDTO>>> find(
+            @Valid @ModelAttribute PageRequestDTO pageRequest){
+        ApiResponse<PagedResponse<DoctorSummaryDTO>> response = this.doctorService.findAll(pageRequest);
         if (response.isSuccess()) return ResponseEntity.ok(response);
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("count")
+    public ResponseEntity<ApiResponse<Long>> count() {
+        return ResponseEntity.ok(this.doctorService.count());
     }
 
     @GetMapping("{id}")

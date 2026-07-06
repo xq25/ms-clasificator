@@ -3,7 +3,9 @@ package Backend.ms_clasificator.Controllers;
 import Backend.ms_clasificator.DTOs.DiagnosticCategoryDataset.DiagnosticCategoryDatasetCreateDTO;
 import Backend.ms_clasificator.DTOs.DiagnosticCategoryDataset.DiagnosticCategoryDatasetResponseDTO;
 import Backend.ms_clasificator.DTOs.DiagnosticCategoryDataset.DiagnosticCategoryDatasetSummaryDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
 import Backend.ms_clasificator.Services.DiagnosticCategoryDatasetService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,14 +27,20 @@ public class DiagnosticCategoryDatasetController {
      * @return Lista de asociaciones diagnóstico-categoría
      */
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<DiagnosticCategoryDatasetSummaryDTO>>> findAll() {
+    public ResponseEntity<ApiResponse<PagedResponse<DiagnosticCategoryDatasetSummaryDTO>>> findAll(
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
 
-        ApiResponse<List<DiagnosticCategoryDatasetSummaryDTO>> response =
-                this.diagnosticCategoryDatasetService.findAll();
+        ApiResponse<PagedResponse<DiagnosticCategoryDatasetSummaryDTO>> response =
+                this.diagnosticCategoryDatasetService.findAll(pageRequest);
 
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("count")
+    public ResponseEntity<ApiResponse<Long>> count() {
+        return ResponseEntity.ok(this.diagnosticCategoryDatasetService.count());
     }
 
     /**

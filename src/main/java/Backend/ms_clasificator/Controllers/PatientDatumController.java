@@ -1,16 +1,20 @@
 package Backend.ms_clasificator.Controllers;
 
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumCreateDTO;
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumResponseDTO;
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumSummaryDTO;
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
 import Backend.ms_clasificator.Services.PatientDatumService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,10 +32,16 @@ public class PatientDatumController {
 	private PatientDatumService patientDatumService;
 
 	@GetMapping("")
-	public ResponseEntity<ApiResponse<List<PatientDatumSummaryDTO	>>> findAll() {
-		ApiResponse<List<PatientDatumSummaryDTO>> response = this.patientDatumService.findAll();
+	public ResponseEntity<ApiResponse<PagedResponse<PatientDatumSummaryDTO>>> findAll(
+			@Valid @ModelAttribute PageRequestDTO pageRequest) {
+		ApiResponse<PagedResponse<PatientDatumSummaryDTO>> response = this.patientDatumService.findAll(pageRequest);
 		if (response.isSuccess()) return ResponseEntity.ok(response);
 		return ResponseEntity.badRequest().body(response);
+	}
+
+	@GetMapping("count")
+	public ResponseEntity<ApiResponse<Long>> count() {
+		return ResponseEntity.ok(this.patientDatumService.count());
 	}
 
 	@GetMapping("{id}")

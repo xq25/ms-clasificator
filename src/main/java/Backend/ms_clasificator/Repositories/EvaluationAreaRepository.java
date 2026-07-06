@@ -26,4 +26,7 @@ public interface EvaluationAreaRepository extends JpaRepository<EvaluationArea, 
 
     boolean existsByName(String name);
     boolean existsByCodeArea(String codeArea);
+
+    @Query("SELECT COUNT(ea) FROM EvaluationArea ea")
+    long countAll();
 }

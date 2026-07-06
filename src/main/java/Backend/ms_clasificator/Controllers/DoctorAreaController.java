@@ -3,7 +3,9 @@ package Backend.ms_clasificator.Controllers;
 import Backend.ms_clasificator.DTOs.DoctorArea.DoctorAreaCreateDTO;
 import Backend.ms_clasificator.DTOs.DoctorArea.DoctorAreaResponseDTO;
 import Backend.ms_clasificator.DTOs.DoctorArea.DoctorAreaSummaryDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
 import Backend.ms_clasificator.Services.DoctorAreaService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,14 +27,20 @@ public class DoctorAreaController {
      * @return Lista de todas las relaciones
      */
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<DoctorAreaSummaryDTO>>> findAll() {
-        ApiResponse<List<DoctorAreaSummaryDTO>> response = this.doctorAreaService.findAll();
+    public ResponseEntity<ApiResponse<PagedResponse<DoctorAreaSummaryDTO>>> findAll(
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<DoctorAreaSummaryDTO>> response = this.doctorAreaService.findAll(pageRequest);
 
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.badRequest().body(response);
         }
+    }
+
+    @GetMapping("count")
+    public ResponseEntity<ApiResponse<Long>> count() {
+        return ResponseEntity.ok(this.doctorAreaService.count());
     }
 
     /**

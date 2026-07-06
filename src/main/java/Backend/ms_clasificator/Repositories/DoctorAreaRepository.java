@@ -17,4 +17,7 @@ public interface DoctorAreaRepository extends JpaRepository<DoctorArea, Integer>
     List<DoctorArea>findByDoctorId(Integer doctor_id);
     List<DoctorArea>findByEvaluationAreaId(Integer evaluationAreaId);
 
+    @Query("SELECT COUNT(da) FROM DoctorArea da")
+    long countAll();
+
 }

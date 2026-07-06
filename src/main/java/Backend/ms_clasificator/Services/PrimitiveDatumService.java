@@ -90,6 +90,7 @@ public class PrimitiveDatumService {
 		}
 	}
 
+	@Transactional
 	public ApiResponse<PrimitiveDatumResponseDTO> update(Integer id, PrimitiveDatumUpdateDTO dto) {
 		try {
 			if (dto == null) {

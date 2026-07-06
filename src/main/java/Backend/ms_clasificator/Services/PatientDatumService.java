@@ -1,10 +1,13 @@
 package Backend.ms_clasificator.Services;
 
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumCreateDTO;
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumResponseDTO;
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumSummaryDTO;
 import Backend.ms_clasificator.DTOs.PatientDatum.PatientDatumUpdateDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.PatientDatumMappers.PatientDatumMapper;
 import Backend.ms_clasificator.Models.ClinicalRecord;
 import Backend.ms_clasificator.Models.PatientDatum;
@@ -35,12 +38,26 @@ public class PatientDatumService {
 	private PatientDatumMapper patientDatumMapper;
 
 	@Transactional(readOnly = true)
-	public ApiResponse<List<PatientDatumSummaryDTO>> findAll() {
-		List<PatientDatumSummaryDTO> response = patientDatumRepository.findAll()
-				.stream()
-				.map(patientDatumMapper::toSummaryDTO)
-				.toList();
-		return ApiResponse.success(response, "Patient Datum obtenidos exitosamente");
+	public ApiResponse<PagedResponse<PatientDatumSummaryDTO>> findAll(PageRequestDTO pageRequest) {
+		Page<PatientDatumSummaryDTO> page = patientDatumRepository.findAll(pageRequest.toPageable())
+				.map(patientDatumMapper::toSummaryDTO);
+
+		return ApiResponse.success(
+				PagedResponse.<PatientDatumSummaryDTO>builder()
+						.content(page.getContent())
+						.page(page.getNumber())
+						.size(page.getSize())
+						.totalElements(page.getTotalElements())
+						.totalPages(page.getTotalPages())
+						.last(page.isLast())
+						.build(),
+				"Patient Datum obtenidos exitosamente"
+		);
+	}
+
+	@Transactional(readOnly = true)
+	public ApiResponse<Long> count() {
+		return ApiResponse.success(patientDatumRepository.countAll(), "Total de Patient Datum");
 	}
 
 	@Transactional(readOnly = true)

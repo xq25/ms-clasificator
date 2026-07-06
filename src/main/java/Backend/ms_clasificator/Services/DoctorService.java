@@ -4,7 +4,10 @@ import Backend.ms_clasificator.DTOs.Doctor.DoctorBaseDTO;
 import Backend.ms_clasificator.DTOs.Doctor.DoctorResponseDTO;
 import Backend.ms_clasificator.DTOs.Doctor.DoctorSummaryDTO;
 import Backend.ms_clasificator.DTOs.Doctor.DoctorUpdateDTO;
+import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
+import Backend.ms_clasificator.DTOs.Response.PagedResponse;
+import org.springframework.data.domain.Page;
 import Backend.ms_clasificator.Mappers.DoctorMappers.DoctorMapper;
 import Backend.ms_clasificator.Models.Doctor;
 import Backend.ms_clasificator.Models.UserInfo;
@@ -38,11 +41,26 @@ public class DoctorService {
      * @return Lista de todos los doctores
      */
     @Transactional(readOnly = true)
-    public ApiResponse<List<DoctorSummaryDTO>> findAll() {
-        List<DoctorSummaryDTO> doctors = this.doctorRepository.findAll()
-                .stream().map(doctorMapper::toSummaryDTO).toList();
+    public ApiResponse<PagedResponse<DoctorSummaryDTO>> findAll(PageRequestDTO pageRequest) {
+        Page<DoctorSummaryDTO> page = doctorRepository.findAll(pageRequest.toPageable())
+                .map(doctorMapper::toSummaryDTO);
 
-        return ApiResponse.success(doctors, "Doctores encontrados exitosamente");
+        return ApiResponse.success(
+                PagedResponse.<DoctorSummaryDTO>builder()
+                        .content(page.getContent())
+                        .page(page.getNumber())
+                        .size(page.getSize())
+                        .totalElements(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .last(page.isLast())
+                        .build(),
+                "Doctores encontrados exitosamente"
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<Long> count() {
+        return ApiResponse.success(doctorRepository.countAll(), "Total de doctores");
     }
 
     /**
@@ -152,6 +170,7 @@ public class DoctorService {
      * @param doctorUpdateDTO DTO con datos a actualizar
      * @return ApiResponse<Doctor> con el resultado de la operación
      */
+    @Transactional
     public ApiResponse<DoctorSummaryDTO> update(Integer id, DoctorUpdateDTO doctorUpdateDTO) {
         try {
             if (doctorUpdateDTO == null) {

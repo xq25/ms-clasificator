@@ -27,4 +27,7 @@ public interface DoctorRepository extends JpaRepository<Doctor, Integer> {
     boolean existsByCode(String code);
     boolean existsByUserId(String userId);
 
+    @Query("SELECT COUNT(d) FROM Doctor d")
+    long countAll();
+
 }
