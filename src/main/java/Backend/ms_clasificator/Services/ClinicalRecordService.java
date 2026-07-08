@@ -19,7 +19,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.Date;
 
 @Service
 public class ClinicalRecordService {
@@ -111,6 +111,10 @@ public class ClinicalRecordService {
             Patient patient = patientRepository.findById(dto.getPatientId()).orElse(null);
             if (patient == null) {
                 return ApiResponse.error("El paciente asignado no existe, con id " + dto.getPatientId());
+            }
+
+            if(dto.getVisitDate().after(new Date())){
+                return ApiResponse.error("La fecha de la visita no puede ser superior a la fecha actual");
             }
 
             ClinicalRecord clinicalRecord = clinicalRecordMapper.toEntity(dto);

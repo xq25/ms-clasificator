@@ -1,6 +1,25 @@
-git version: '3.8'
+version: '3.8'
 
 services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-clasificator
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: jacobo123
+      MYSQL_DATABASE: db-clasificator
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Solo se ejecuta la primera vez que el volumen está vacío
+      - ./docker/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pjacob123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   minio:
     image: minio/minio:latest
     container_name: minio-clasificator
@@ -20,8 +39,11 @@ services:
       retries: 3
 
 volumes:
+  mysql_data:
   minio_data:
 
 # Uso:
-# docker-compose up -d minio
-# Consola: http://localhost:9001 (minioadmin / minioadmin)
+# docker-compose up -d mysql     → solo MySQL con datos iniciales
+# docker-compose up -d minio     → solo MinIO
+# docker-compose up -d           → ambos servicios
+# Consola MinIO: http://localhost:9001 (minioadmin / minioadmin)

@@ -133,6 +133,9 @@ public class PatientDatumService {
 			PrimitiveDatum primitiveDatum = primitiveDatumRepository.findById(dto.getPrimitiveDatumId())
 					.orElseThrow(() -> new IllegalArgumentException("Primitive Datum no encontrado con ID: " + dto.getPrimitiveDatumId()));
 
+			// Validamos que el valor del dato corresponda con el tipo de dato primitivo.
+			primitiveDatum.getType().validate(dto.getDescription());
+
 			PatientDatum patientDatum = patientDatumMapper.toEntity(dto);
 			patientDatum.setClinicalRecord(clinicalRecord);
 			patientDatum.setPrimitiveDatum(primitiveDatum);

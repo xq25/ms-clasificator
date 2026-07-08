@@ -18,7 +18,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.Date;
 
 @Service
 public class PatientService {
@@ -149,6 +149,10 @@ public class PatientService {
             // Validar que no exista paciente con el mismo documento
             if (patientRepository.findByDocument(patientCreateDTO.getDocument()).orElse(null) != null) {
                 return ApiResponse.error("Ya existe un paciente con el documento: " + patientCreateDTO.getDocument());
+            }
+
+            if(patientCreateDTO.getDob() != null && patientCreateDTO.getDob().after(new Date())) {
+                return ApiResponse.error("La fecha de nacimiento no puede ser futura");
             }
 
             // Validar que exista este user_id en ms-security
