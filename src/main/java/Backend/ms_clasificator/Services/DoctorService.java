@@ -59,6 +59,29 @@ public class DoctorService {
     }
 
     @Transactional(readOnly = true)
+    public ApiResponse<PagedResponse<DoctorSummaryDTO>> searchByCode(String query, PageRequestDTO pageRequest) {
+        try {
+            Page<DoctorSummaryDTO> page = doctorRepository
+                    .findByCodeContainingIgnoreCase(query, pageRequest.toPageable())
+                    .map(doctorMapper::toSummaryDTO);
+
+            return ApiResponse.success(
+                    PagedResponse.<DoctorSummaryDTO>builder()
+                            .content(page.getContent())
+                            .page(page.getNumber())
+                            .size(page.getSize())
+                            .totalElements(page.getTotalElements())
+                            .totalPages(page.getTotalPages())
+                            .last(page.isLast())
+                            .build(),
+                    "Resultados de búsqueda por código"
+            );
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar doctores por código: " + ex.getMessage());
+        }
+    }
+
+    @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
         return ApiResponse.success(doctorRepository.countAll(), "Total de doctores");
     }

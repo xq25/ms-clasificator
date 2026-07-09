@@ -54,6 +54,29 @@ public class MedicalImageTypeService {
     }
 
     @Transactional(readOnly = true)
+    public ApiResponse<PagedResponse<MedicalImageTypeSummaryDTO>> searchByName(String query, PageRequestDTO pageRequest) {
+        try {
+            Page<MedicalImageTypeSummaryDTO> page = medicalImageTypeRepository
+                    .findByNameContainingIgnoreCase(query, pageRequest.toPageable())
+                    .map(medicalImageTypeMapper::toSummaryDTO);
+
+            return ApiResponse.success(
+                    PagedResponse.<MedicalImageTypeSummaryDTO>builder()
+                            .content(page.getContent())
+                            .page(page.getNumber())
+                            .size(page.getSize())
+                            .totalElements(page.getTotalElements())
+                            .totalPages(page.getTotalPages())
+                            .last(page.isLast())
+                            .build(),
+                    "Resultados de búsqueda por nombre"
+            );
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar tipos de imagen por nombre: " + ex.getMessage());
+        }
+    }
+
+    @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
         return ApiResponse.success(medicalImageTypeRepository.countAll(), "Total de tipos de imagen");
     }

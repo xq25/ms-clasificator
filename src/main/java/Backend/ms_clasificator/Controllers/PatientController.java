@@ -32,6 +32,14 @@ public class PatientController {
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
+    @GetMapping("search/by-document")
+    public ResponseEntity<ApiResponse<PagedResponse<PatientSummaryDTO>>> searchByDocument(
+            @RequestParam String query,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<PatientSummaryDTO>> response = patientService.searchByDocument(query, pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
     @GetMapping("count")
     public ResponseEntity<ApiResponse<Long>> count() {
         return ResponseEntity.ok(patientService.count());

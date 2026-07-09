@@ -31,6 +31,14 @@ public class MedicalImageTypeController {
 		return ResponseEntity.badRequest().body(response);
 	}
 
+	@GetMapping("search/by-name")
+	public ResponseEntity<ApiResponse<PagedResponse<MedicalImageTypeSummaryDTO>>> searchByName(
+			@RequestParam String query,
+			@Valid @ModelAttribute PageRequestDTO pageRequest) {
+		ApiResponse<PagedResponse<MedicalImageTypeSummaryDTO>> response = medicalImageTypeService.searchByName(query, pageRequest);
+		return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+	}
+
 	@GetMapping("count")
 	public ResponseEntity<ApiResponse<Long>> count() {
 		return ResponseEntity.ok(this.medicalImageTypeService.count());

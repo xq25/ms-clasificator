@@ -58,6 +58,29 @@ public class PatientService {
     }
 
     @Transactional(readOnly = true)
+    public ApiResponse<PagedResponse<PatientSummaryDTO>> searchByDocument(String query, PageRequestDTO pageRequest) {
+        try {
+            Page<PatientSummaryDTO> page = patientRepository
+                    .findByDocumentContainingIgnoreCase(query, pageRequest.toPageable())
+                    .map(patientMapper::toSummaryDTO);
+
+            return ApiResponse.success(
+                    PagedResponse.<PatientSummaryDTO>builder()
+                            .content(page.getContent())
+                            .page(page.getNumber())
+                            .size(page.getSize())
+                            .totalElements(page.getTotalElements())
+                            .totalPages(page.getTotalPages())
+                            .last(page.isLast())
+                            .build(),
+                    "Resultados de búsqueda por documento"
+            );
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar pacientes por documento: " + ex.getMessage());
+        }
+    }
+
+    @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
         return ApiResponse.success(patientRepository.countAll(), "Total de pacientes");
     }

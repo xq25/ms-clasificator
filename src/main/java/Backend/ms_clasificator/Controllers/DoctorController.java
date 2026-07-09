@@ -30,6 +30,14 @@ public class DoctorController {
         return ResponseEntity.badRequest().body(response);
     }
 
+    @GetMapping("search/by-code")
+    public ResponseEntity<ApiResponse<PagedResponse<DoctorSummaryDTO>>> searchByCode(
+            @RequestParam String query,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<DoctorSummaryDTO>> response = doctorService.searchByCode(query, pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
     @GetMapping("count")
     public ResponseEntity<ApiResponse<Long>> count() {
         return ResponseEntity.ok(this.doctorService.count());

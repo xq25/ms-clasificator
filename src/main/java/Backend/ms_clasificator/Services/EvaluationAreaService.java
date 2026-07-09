@@ -2,6 +2,7 @@ package Backend.ms_clasificator.Services;
 
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaCreateDTO;
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaResponseDTO;
+import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaSummaryDTO;
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaUpdateDTO;
 import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
@@ -50,6 +51,52 @@ public class EvaluationAreaService {
                         .build(),
                 "Areas de evaluacion obtenidas exitosamente"
         );
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<PagedResponse<EvaluationAreaSummaryDTO>> searchByName(String query, PageRequestDTO pageRequest) {
+        try {
+            Page<EvaluationAreaSummaryDTO> page = evaluationAreaRepository
+                    .findByNameContainingIgnoreCase(query, pageRequest.toPageable())
+                    .map(evaluationAreaMapper::toSummaryDTO);
+
+            return ApiResponse.success(
+                    PagedResponse.<EvaluationAreaSummaryDTO>builder()
+                            .content(page.getContent())
+                            .page(page.getNumber())
+                            .size(page.getSize())
+                            .totalElements(page.getTotalElements())
+                            .totalPages(page.getTotalPages())
+                            .last(page.isLast())
+                            .build(),
+                    "Resultados de búsqueda por nombre"
+            );
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar áreas de evaluación por nombre: " + ex.getMessage());
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<PagedResponse<EvaluationAreaSummaryDTO>> searchByCode(String query, PageRequestDTO pageRequest) {
+        try {
+            Page<EvaluationAreaSummaryDTO> page = evaluationAreaRepository
+                    .findByCodeAreaContainingIgnoreCase(query, pageRequest.toPageable())
+                    .map(evaluationAreaMapper::toSummaryDTO);
+
+            return ApiResponse.success(
+                    PagedResponse.<EvaluationAreaSummaryDTO>builder()
+                            .content(page.getContent())
+                            .page(page.getNumber())
+                            .size(page.getSize())
+                            .totalElements(page.getTotalElements())
+                            .totalPages(page.getTotalPages())
+                            .last(page.isLast())
+                            .build(),
+                    "Resultados de búsqueda por código"
+            );
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar áreas de evaluación por código: " + ex.getMessage());
+        }
     }
 
     @Transactional(readOnly = true)

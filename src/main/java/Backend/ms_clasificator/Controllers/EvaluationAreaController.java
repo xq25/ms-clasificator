@@ -1,6 +1,7 @@
 package Backend.ms_clasificator.Controllers;
 
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaCreateDTO;
+import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaSummaryDTO;
 import Backend.ms_clasificator.DTOs.EvaluationArea.EvaluationAreaUpdateDTO;
 import Backend.ms_clasificator.DTOs.Pagination.PageRequestDTO;
 import Backend.ms_clasificator.DTOs.Response.ApiResponse;
@@ -32,6 +33,22 @@ public class EvaluationAreaController {
         ApiResponse<PagedResponse<EvaluationAreaResponseDTO>> response = evaluationAreaService.findAll(pageRequest);
         if (response.isSuccess()) return ResponseEntity.ok(response);
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("search/by-name")
+    public ResponseEntity<ApiResponse<PagedResponse<EvaluationAreaSummaryDTO>>> searchByName(
+            @RequestParam String query,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<EvaluationAreaSummaryDTO>> response = evaluationAreaService.searchByName(query, pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("search/by-code")
+    public ResponseEntity<ApiResponse<PagedResponse<EvaluationAreaSummaryDTO>>> searchByCode(
+            @RequestParam String query,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<EvaluationAreaSummaryDTO>> response = evaluationAreaService.searchByCode(query, pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
     @GetMapping("count")
