@@ -56,6 +56,52 @@ public class MedicalDiagnosticService {
     }
 
     @Transactional(readOnly = true)
+    public ApiResponse<PagedResponse<MedicalDiagnosticSummaryDTO>> searchByName(String query, PageRequestDTO pageRequest) {
+        try {
+            Page<MedicalDiagnosticSummaryDTO> page = medicalDiagnosticRepository
+                    .findByDiagnosticNameContainingIgnoreCase(query, pageRequest.toPageable())
+                    .map(medicalDiagnosticMapper::toSummaryDTO);
+
+            return ApiResponse.success(
+                    PagedResponse.<MedicalDiagnosticSummaryDTO>builder()
+                            .content(page.getContent())
+                            .page(page.getNumber())
+                            .size(page.getSize())
+                            .totalElements(page.getTotalElements())
+                            .totalPages(page.getTotalPages())
+                            .last(page.isLast())
+                            .build(),
+                    "Resultados de búsqueda por nombre"
+            );
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar diagnósticos por nombre: " + ex.getMessage());
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<PagedResponse<MedicalDiagnosticSummaryDTO>> searchByCode(String query, PageRequestDTO pageRequest) {
+        try {
+            Page<MedicalDiagnosticSummaryDTO> page = medicalDiagnosticRepository
+                    .findByDiagnosticCodeContainingIgnoreCase(query, pageRequest.toPageable())
+                    .map(medicalDiagnosticMapper::toSummaryDTO);
+
+            return ApiResponse.success(
+                    PagedResponse.<MedicalDiagnosticSummaryDTO>builder()
+                            .content(page.getContent())
+                            .page(page.getNumber())
+                            .size(page.getSize())
+                            .totalElements(page.getTotalElements())
+                            .totalPages(page.getTotalPages())
+                            .last(page.isLast())
+                            .build(),
+                    "Resultados de búsqueda por código"
+            );
+        } catch (Exception ex) {
+            return ApiResponse.error("Error al buscar diagnósticos por código: " + ex.getMessage());
+        }
+    }
+
+    @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
         return ApiResponse.success(medicalDiagnosticRepository.countAll(), "Total de diagnósticos médicos");
     }

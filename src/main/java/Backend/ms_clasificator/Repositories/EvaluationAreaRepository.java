@@ -1,6 +1,8 @@
 package Backend.ms_clasificator.Repositories;
 
 import Backend.ms_clasificator.Models.EvaluationArea;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -29,4 +31,8 @@ public interface EvaluationAreaRepository extends JpaRepository<EvaluationArea, 
 
     @Query("SELECT COUNT(ea) FROM EvaluationArea ea")
     long countAll();
+
+    Page<EvaluationArea> findByNameContainingIgnoreCase(String query, Pageable pageable);
+
+    Page<EvaluationArea> findByCodeAreaContainingIgnoreCase(String query, Pageable pageable);
 }

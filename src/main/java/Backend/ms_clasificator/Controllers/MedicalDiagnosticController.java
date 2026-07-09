@@ -30,6 +30,22 @@ public class MedicalDiagnosticController {
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
+    @GetMapping("search/by-name")
+    public ResponseEntity<ApiResponse<PagedResponse<MedicalDiagnosticSummaryDTO>>> searchByName(
+            @RequestParam String query,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<MedicalDiagnosticSummaryDTO>> response = medicalDiagnosticService.searchByName(query, pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("search/by-code")
+    public ResponseEntity<ApiResponse<PagedResponse<MedicalDiagnosticSummaryDTO>>> searchByCode(
+            @RequestParam String query,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        ApiResponse<PagedResponse<MedicalDiagnosticSummaryDTO>> response = medicalDiagnosticService.searchByCode(query, pageRequest);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
     @GetMapping("count")
     public ResponseEntity<ApiResponse<Long>> count() {
         return ResponseEntity.ok(medicalDiagnosticService.count());
