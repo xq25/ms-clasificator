@@ -1,0 +1,23 @@
+package backend.msclasificator.patient.api.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.Date;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class PatientSummaryDTO {
+
+    private Integer id;
+    private String document;
+    private Date dob;
+    private String sex;
+    private String userId;
+
+}

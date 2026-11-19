@@ -46,5 +46,5 @@ storage:
 
 logging:
   level:
-    Backend.ms_clasificator: INFO
+    backend.msclasificator: INFO
     software.amazon.awssdk: WARN
