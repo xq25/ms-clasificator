@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface DatasetCategoryRepository extends JpaRepository<DatasetCategory, Integer> {
+public interface DatasetCategoryJpaRepository extends JpaRepository<DatasetCategory, Integer> {
     List<DatasetCategory> findByDatasetId(Integer datasetId); //pa traer todos los estados de una config
 
     @Query("SELECT COUNT(dc) FROM DatasetCategory dc")

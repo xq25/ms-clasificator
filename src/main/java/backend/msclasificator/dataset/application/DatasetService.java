@@ -2,33 +2,20 @@ package backend.msclasificator.dataset.application;
 
 import backend.msclasificator.dataset.api.dto.DatasetCreateDTO;
 import backend.msclasificator.dataset.api.dto.DatasetResponseDTO;
-import backend.msclasificator.dataset.api.dto.DatasetSummaryDTO;
 import backend.msclasificator.dataset.api.dto.DatasetUpdateDTO;
 import backend.msclasificator.shared.api.PageRequestDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
-import org.springframework.data.domain.Page;
+import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.dataset.api.mapper.DatasetMapper;
 import backend.msclasificator.diagnosiscatalog.domain.MedicalDiagnostic;
 import backend.msclasificator.dataset.domain.Dataset;
 import backend.msclasificator.dataset.domain.DatasetCategory;
 import backend.msclasificator.medicalimage.domain.MedicalImageType;
-import backend.msclasificator.clinicalrecord.infrastructure.persistence.ClinicalRecordRepository;
-import backend.msclasificator.dataset.infrastructure.persistence.DatasetCategoryRepository;
-import backend.msclasificator.dataset.infrastructure.persistence.DatasetRepository;
-import backend.msclasificator.clinicalrecord.infrastructure.persistence.DiagnosisRepository;
-import backend.msclasificator.dataset.infrastructure.persistence.CategoryDiagnosticRepository;
-import backend.msclasificator.doctor.infrastructure.persistence.DoctorAreaRepository;
-import backend.msclasificator.doctor.infrastructure.persistence.DoctorRepository;
-import backend.msclasificator.doctor.infrastructure.persistence.EvaluationAreaRepository;
-import backend.msclasificator.classification.infrastructure.persistence.ImageClassificationRepository;
-import backend.msclasificator.classification.infrastructure.persistence.ClassificationDiagnosisRepository;
+import backend.msclasificator.dataset.application.port.out.DatasetCategoryRepository;
+import backend.msclasificator.dataset.application.port.out.DatasetRepository;
 import backend.msclasificator.diagnosiscatalog.infrastructure.persistence.MedicalDiagnosticRepository;
 import backend.msclasificator.medicalimage.infrastructure.persistence.MedicalImageTypeRepository;
-import backend.msclasificator.medicalimage.infrastructure.persistence.MedicalImageRepository;
-import backend.msclasificator.clinicalrecord.infrastructure.persistence.PatientDatumRepository;
-import backend.msclasificator.patient.infrastructure.persistence.PatientRepository;
-import backend.msclasificator.clinicalrecord.infrastructure.persistence.PrimitiveDatumRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,17 +46,17 @@ public class DatasetService {
      */
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<DatasetResponseDTO>> findAll(PageRequestDTO pageRequest) {
-        Page<DatasetResponseDTO> page = datasetRepository.findAll(pageRequest.toPageable())
+        PageResult<DatasetResponseDTO> page = datasetRepository.findAll(pageRequest.toPageQuery())
                 .map(datasetMappers::toResponseDTO);
 
         return ApiResponse.success(
                 PagedResponse.<DatasetResponseDTO>builder()
-                        .content(page.getContent())
-                        .page(page.getNumber())
-                        .size(page.getSize())
-                        .totalElements(page.getTotalElements())
-                        .totalPages(page.getTotalPages())
-                        .last(page.isLast())
+                        .content(page.content())
+                        .page(page.page())
+                        .size(page.size())
+                        .totalElements(page.totalElements())
+                        .totalPages(page.totalPages())
+                        .last(page.last())
                         .build(),
                 "Datasets obtenidos exitosamente"
         );
@@ -77,7 +64,7 @@ public class DatasetService {
 
     @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
-        return ApiResponse.success(datasetRepository.countAll(), "Total de Datasets");
+        return ApiResponse.success(datasetRepository.count(), "Total de Datasets");
     }
 
     /**

@@ -10,7 +10,7 @@ import backend.msclasificator.shared.api.PagedResponse;
 import org.springframework.data.domain.Page;
 import backend.msclasificator.diagnosiscatalog.api.mapper.MedicalDiagnosticMapper;
 import backend.msclasificator.diagnosiscatalog.domain.MedicalDiagnostic;
-import backend.msclasificator.dataset.infrastructure.persistence.CategoryDiagnosticRepository;
+import backend.msclasificator.dataset.application.port.out.CategoryDiagnosticRepository;
 import backend.msclasificator.classification.infrastructure.persistence.ClassificationDiagnosisRepository;
 import backend.msclasificator.diagnosiscatalog.infrastructure.persistence.MedicalDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;

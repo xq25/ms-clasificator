@@ -7,12 +7,12 @@ import backend.msclasificator.dataset.api.dto.DatasetCategoryUpdateDTO;
 import backend.msclasificator.shared.api.PageRequestDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
-import org.springframework.data.domain.Page;
+import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.dataset.api.mapper.DatasetCategoryMapper;
 import backend.msclasificator.dataset.domain.Dataset;
 import backend.msclasificator.dataset.domain.DatasetCategory;
-import backend.msclasificator.dataset.infrastructure.persistence.DatasetCategoryRepository;
-import backend.msclasificator.dataset.infrastructure.persistence.DatasetRepository;
+import backend.msclasificator.dataset.application.port.out.DatasetCategoryRepository;
+import backend.msclasificator.dataset.application.port.out.DatasetRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,17 +38,17 @@ public class DatasetCategoryService {
      */
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<DatasetCategoryResponseDTO>> findAll(PageRequestDTO pageRequest) {
-        Page<DatasetCategoryResponseDTO> page = datasetCategoryRepository.findAll(pageRequest.toPageable())
+        PageResult<DatasetCategoryResponseDTO> page = datasetCategoryRepository.findAll(pageRequest.toPageQuery())
                 .map(datasetCategoryMappers::toResponseDTO);
 
         return ApiResponse.success(
                 PagedResponse.<DatasetCategoryResponseDTO>builder()
-                        .content(page.getContent())
-                        .page(page.getNumber())
-                        .size(page.getSize())
-                        .totalElements(page.getTotalElements())
-                        .totalPages(page.getTotalPages())
-                        .last(page.isLast())
+                        .content(page.content())
+                        .page(page.page())
+                        .size(page.size())
+                        .totalElements(page.totalElements())
+                        .totalPages(page.totalPages())
+                        .last(page.last())
                         .build(),
                 "Categorias de dataset obtenidas exitosamente"
         );
@@ -56,7 +56,7 @@ public class DatasetCategoryService {
 
     @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
-        return ApiResponse.success(datasetCategoryRepository.countAll(), "Total de categorías de dataset");
+        return ApiResponse.success(datasetCategoryRepository.count(), "Total de categorías de dataset");
     }
 
     /**
