@@ -128,6 +128,7 @@ Estado: fase 1 completada (paquetes y nombres). Fase 2 pendiente: los servicios 
 - **Explicar + ejemplificar antes de aplicar cambios**; implementar solo con autorización explícita.
 - **No agregar librerías/dependencias sin aprobación** (ADR-004).
 - **Ramas (ADR-005):** `feat/re-estructuracion` es la rama de integración (nueva main). Cada actividad sale de ella como `refactor/…`, `feat/…`, `fix/…` o `docs/…` y vuelve a ella; `main` se actualiza solo al final.
+- **Integración vía PR (ADR-006):** Claude crea la rama de actividad, hace commit y `push` de esa rama. El usuario abre el PR (base `feat/re-estructuracion`) y hace el merge en GitHub. Claude no hace merge ni push directo a `feat/re-estructuracion`/`main`. Antes de cada actividad: `git pull --ff-only` en `feat/re-estructuracion`.
 - **Toda decisión de arquitectura se registra como ADR** en [`docs/adr/`](docs/adr/README.md).
 - Renombrar clases no debe cambiar esquema ni API: fijar `@Table`/secuencias y conservar campos JSON y rutas (ADR-003).
 

@@ -10,7 +10,8 @@ Registro de las decisiones de arquitectura del proyecto. Cada decisión vive en 
 | [002](ADR-002-entidades-jpa-en-dominio.md) | Entidades JPA dentro del dominio (temporal) | Aceptado | Persistencia |
 | [003](ADR-003-convencion-de-nombres-y-paquetes.md) | Convención de nombres y paquetes | Aceptado | Código |
 | [004](ADR-004-politica-de-dependencias.md) | Política de incorporación de dependencias | Aceptado | Gobierno |
-| [005](ADR-005-estrategia-de-ramas.md) | Estrategia de ramas para la re-estructuración | Aceptado | Gobierno |
+| [005](ADR-005-estrategia-de-ramas.md) | Estrategia de ramas para la re-estructuración | Aceptado (modificado por 006) | Gobierno |
+| [006](ADR-006-integracion-via-pull-request.md) | Integración de actividades vía Pull Request | Aceptado | Gobierno |
 
 ## Plantilla
 
