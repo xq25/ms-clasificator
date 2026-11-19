@@ -1,0 +1,157 @@
+package backend.msclasificator.classification.application;
+
+import backend.msclasificator.classification.api.dto.ClassificationDiagnosisCreateDTO;
+import backend.msclasificator.classification.api.dto.ClassificationDiagnosisResponseDTO;
+import backend.msclasificator.classification.api.dto.ClassificationDiagnosisSummaryDTO;
+import backend.msclasificator.shared.api.PageRequestDTO;
+import backend.msclasificator.shared.api.ApiResponse;
+import backend.msclasificator.shared.api.PagedResponse;
+import org.springframework.data.domain.Page;
+import backend.msclasificator.classification.api.mapper.ClassificationDiagnosisMapper;
+import backend.msclasificator.classification.domain.ImageClassification;
+import backend.msclasificator.classification.domain.ClassificationDiagnosis;
+import backend.msclasificator.diagnosiscatalog.domain.MedicalDiagnostic;
+import backend.msclasificator.classification.infrastructure.persistence.ImageClassificationRepository;
+import backend.msclasificator.classification.infrastructure.persistence.ClassificationDiagnosisRepository;
+import backend.msclasificator.diagnosiscatalog.infrastructure.persistence.MedicalDiagnosticRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class ClassificationDiagnosisService {
+
+    @Autowired
+    private ClassificationDiagnosisRepository repository;
+
+    @Autowired
+    private ClassificationDiagnosisMapper mapper;
+
+    @Autowired
+    private ImageClassificationRepository imageDiagnosticRepository;
+
+    @Autowired
+    private MedicalDiagnosticRepository medicalDiagnosticRepository;
+
+    @Transactional(readOnly = true)
+    public ApiResponse<PagedResponse<ClassificationDiagnosisSummaryDTO>> findAll(PageRequestDTO pageRequest) {
+        Page<ClassificationDiagnosisSummaryDTO> page = repository.findAll(pageRequest.toPageable())
+                .map(mapper::toSummaryDTO);
+
+        return ApiResponse.success(
+                PagedResponse.<ClassificationDiagnosisSummaryDTO>builder()
+                        .content(page.getContent())
+                        .page(page.getNumber())
+                        .size(page.getSize())
+                        .totalElements(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .last(page.isLast())
+                        .build(),
+                "Diagnósticos de imágenes obtenidos exitosamente"
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<Long> count() {
+        return ApiResponse.success(repository.countAll(), "Total de diagnósticos de imágenes");
+    }
+
+    /**
+     * Buscar por ID.
+     */
+    @Transactional(readOnly = true)
+    public ApiResponse<ClassificationDiagnosisResponseDTO> findById(Integer id) {
+
+        try {
+            ClassificationDiagnosisResponseDTO diagnostic = repository.findById(id)
+                    .map(mapper::toResponseDTO)
+                    .orElseThrow(() -> new IllegalArgumentException("Diagnóstico de imagen no encontrado con ID: " + id));
+
+            return ApiResponse.success(diagnostic, "Diagnóstico encontrado");
+
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<PagedResponse<ClassificationDiagnosisSummaryDTO>> findByImageDiagnosticId(Integer imageDiagnosticId, PageRequestDTO pageRequest) {
+        try {
+            if (!imageDiagnosticRepository.existsById(imageDiagnosticId)) {
+                return ApiResponse.error("ImageClassification no encontrado con ID: " + imageDiagnosticId);
+            }
+
+            Page<ClassificationDiagnosisSummaryDTO> page = repository
+                    .findByImageDiagnosticId(imageDiagnosticId, pageRequest.toPageable())
+                    .map(mapper::toSummaryDTO);
+
+            return ApiResponse.success(
+                    PagedResponse.<ClassificationDiagnosisSummaryDTO>builder()
+                            .content(page.getContent())
+                            .page(page.getNumber())
+                            .size(page.getSize())
+                            .totalElements(page.getTotalElements())
+                            .totalPages(page.getTotalPages())
+                            .last(page.isLast())
+                            .build(),
+                    "Diagnósticos obtenidos exitosamente"
+            );
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        }
+    }
+
+    /**
+     * Crear asociación imagenDiagnostic-diagnóstico.
+     */
+    @Transactional
+    public ApiResponse<ClassificationDiagnosisResponseDTO> create(ClassificationDiagnosisCreateDTO dto) {
+        try {
+            if (dto == null) {
+                return ApiResponse.error("El DTO no puede ser nulo");
+            }
+
+            // Validamos que exista el diagnostico de imagen
+            ImageClassification imageDiagnostic = imageDiagnosticRepository.findById(dto.getImageDiagnosticId())
+                    .orElseThrow(() -> new IllegalArgumentException("ImageClassification no encontrado con ID: " + dto.getImageDiagnosticId()));
+
+            // Validamos que exista el medical diagnostic
+            MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(dto.getMedicalDiagnosticId())
+                    .orElseThrow(() -> new IllegalArgumentException("MedicalDiagnostic no encontrado con ID: " + dto.getMedicalDiagnosticId()));
+
+            // Validar que no se le asigne un diagnostico repetido a la imagen
+            if (repository.existsByImageDiagnosticIdAndMedicalDiagnosticId(imageDiagnostic.getId(), medicalDiagnostic.getId())){
+                return ApiResponse.error("Este diagnóstico ya fue asignado a la imagen");
+            }
+
+            ClassificationDiagnosis entity = mapper.toEntity(dto);
+            entity.setImageDiagnostic(imageDiagnostic);
+            entity.setMedicalDiagnostic(medicalDiagnostic);
+
+            return ApiResponse.success(mapper.toResponseDTO(repository.save(entity)), "Diagnóstico asignado exitosamente");
+
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        }
+    }
+
+
+    /**
+     * Eliminar asociación.
+     */
+    @Transactional
+    public ApiResponse<Void> delete(Integer id) {
+        try {
+            ClassificationDiagnosis entity = repository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Diagnóstico de imagen no encontrado con ID: " + id));
+
+            repository.delete(entity);
+            return ApiResponse.success("Diagnóstico eliminado exitosamente");
+
+        } catch (IllegalArgumentException ex) {
+            return ApiResponse.error(ex.getMessage());
+        }
+    }
+}

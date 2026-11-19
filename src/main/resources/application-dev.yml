@@ -31,5 +31,5 @@ storage:
 # ============================================================
 logging:
   level:
-    Backend.ms_clasificator: DEBUG
+    backend.msclasificator: DEBUG
     io.minio: INFO
