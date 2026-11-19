@@ -6,13 +6,13 @@ import backend.msclasificator.dataset.api.dto.CategoryDiagnosticSummaryDTO;
 import backend.msclasificator.shared.api.PageRequestDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
-import org.springframework.data.domain.Page;
+import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.dataset.api.mapper.CategoryDiagnosticMapper;
 import backend.msclasificator.dataset.domain.DatasetCategory;
 import backend.msclasificator.dataset.domain.CategoryDiagnostic;
 import backend.msclasificator.diagnosiscatalog.domain.MedicalDiagnostic;
-import backend.msclasificator.dataset.infrastructure.persistence.DatasetCategoryRepository;
-import backend.msclasificator.dataset.infrastructure.persistence.CategoryDiagnosticRepository;
+import backend.msclasificator.dataset.application.port.out.DatasetCategoryRepository;
+import backend.msclasificator.dataset.application.port.out.CategoryDiagnosticRepository;
 import backend.msclasificator.diagnosiscatalog.infrastructure.persistence.MedicalDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,17 +37,17 @@ public class CategoryDiagnosticService {
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<CategoryDiagnosticSummaryDTO>> findAll(PageRequestDTO pageRequest) {
         try {
-            Page<CategoryDiagnosticSummaryDTO> page = repository.findAll(pageRequest.toPageable())
+            PageResult<CategoryDiagnosticSummaryDTO> page = repository.findAll(pageRequest.toPageQuery())
                     .map(mapper::toSummaryDTO);
 
             return ApiResponse.success(
                     PagedResponse.<CategoryDiagnosticSummaryDTO>builder()
-                            .content(page.getContent())
-                            .page(page.getNumber())
-                            .size(page.getSize())
-                            .totalElements(page.getTotalElements())
-                            .totalPages(page.getTotalPages())
-                            .last(page.isLast())
+                            .content(page.content())
+                            .page(page.page())
+                            .size(page.size())
+                            .totalElements(page.totalElements())
+                            .totalPages(page.totalPages())
+                            .last(page.last())
                             .build(),
                     "DiagnosticCategoryDatasets obtenidos exitosamente"
             );
@@ -61,7 +61,7 @@ public class CategoryDiagnosticService {
 
     @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
-        return ApiResponse.success(repository.countAll(), "Total de DiagnosticCategoryDatasets");
+        return ApiResponse.success(repository.count(), "Total de DiagnosticCategoryDatasets");
     }
 
     @Transactional(readOnly = true)
@@ -141,7 +141,7 @@ public class CategoryDiagnosticService {
                 );
             }
 
-            if (repository.existsByDatasetCategoryDatasetIdAndMedicalDiagnosticId(
+            if (repository.existsByDatasetIdAndMedicalDiagnosticId(
                     datasetCategory.getDataset().getId(),
                     medicalDiagnostic.getId())) {
 

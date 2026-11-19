@@ -12,6 +12,7 @@ Registro de las decisiones de arquitectura del proyecto. Cada decisión vive en 
 | [004](ADR-004-politica-de-dependencias.md) | Política de incorporación de dependencias | Aceptado | Gobierno |
 | [005](ADR-005-estrategia-de-ramas.md) | Estrategia de ramas para la re-estructuración | Aceptado (modificado por 006) | Gobierno |
 | [006](ADR-006-integracion-via-pull-request.md) | Integración de actividades vía Pull Request | Aceptado | Gobierno |
+| [007](ADR-007-puertos-de-persistencia.md) | Puertos de persistencia y paginación propia | Aceptado | Persistencia |
 
 ## Plantilla
 

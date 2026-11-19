@@ -99,9 +99,9 @@ Se ejecuta al arrancar. Es idempotente (`INSERT IGNORE`). Carga:
 
 ## Convenciones de desarrollo
 - Respuesta estándar: `ApiResponse<T>` con `success`, `data` y `message`.
-- Paginación: `PageRequestDTO` → `PagedResponse<T>`.
-- Mappers manuales (sin MapStruct): un Mapper por entidad en `Mappers/`.
-- Repositorios extienden `JpaRepository` con queries JPQL donde se necesita.
+- Paginación: `PageRequestDTO.toPageQuery()` → puerto devuelve `PageResult<T>` → `PagedResponse<T>` (ADR-007).
+- Mappers manuales (sin MapStruct): un Mapper por entidad en `<feature>/api/mapper/`.
+- Persistencia (ADR-007): puerto `XRepository` en `application/port/out/`, Spring Data `XJpaRepository` + `XPersistenceAdapter` en `infrastructure/persistence/`. Migrado: `dataset`. Resto de features aún inyecta Spring Data directamente.
 - No hay tests unitarios implementados aún.
 - Proceso: **explicar + ejemplificar ANTES de aplicar cambios**; solo implementar con autorización explícita.
 
@@ -120,7 +120,7 @@ src/main/java/backend/msclasificator/
 └── platform/                  config/ (CORS, Web, HttpClient) y security/ (SecurityInterceptor)
 ```
 Regla de dependencia: `api → application → domain`; `infrastructure` implementa puertos de `application`.
-Estado: fase 1 completada (paquetes y nombres). Fase 2 pendiente: los servicios aún usan repositorios Spring Data directamente.
+Estado: fase 1 completada (paquetes y nombres). Fase 2 en curso: `dataset` migrado a puertos (ADR-007); el resto de features pendiente.
 
 ---
 

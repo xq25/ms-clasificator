@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface CategoryDiagnosticRepository extends JpaRepository<CategoryDiagnostic, Integer> {
+public interface CategoryDiagnosticJpaRepository extends JpaRepository<CategoryDiagnostic, Integer> {
     List<CategoryDiagnostic> findByDatasetCategoryId(Integer datasetCategoryId);
 
     List<CategoryDiagnostic> findByMedicalDiagnosticId(Integer medicalDiagnosticId);

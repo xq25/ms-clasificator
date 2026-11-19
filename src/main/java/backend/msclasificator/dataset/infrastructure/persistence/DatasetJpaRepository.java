@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.Optional;
 
-public interface DatasetRepository extends JpaRepository<Dataset, Integer> {
+public interface DatasetJpaRepository extends JpaRepository<Dataset, Integer> {
     List<Dataset> findByMedicalDiagnosticId(Integer medicalDiagnosticId); //pa buscar todas las configs asociadas a un diagnóstico
     Optional<Dataset> findByMedicalImageTypeId(Integer medicalImageTypeId);
     boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);  // pa validar antes de crear duplicados

@@ -3,9 +3,9 @@ package backend.msclasificator.shared.api;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
-import org.springframework.data.domain.PageRequest;
+import backend.msclasificator.shared.application.PageQuery;
+import backend.msclasificator.shared.infrastructure.persistence.PageMapper;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 @Data
 public class PageRequestDTO {
@@ -19,10 +19,12 @@ public class PageRequestDTO {
     private String sortBy    = "id";
     private String direction = "asc";
 
+    public PageQuery toPageQuery() {
+        return new PageQuery(page, size, sortBy, direction);
+    }
+
+    // Solo para servicios aún no migrados a puertos (ADR-007); eliminar al terminar la fase 2
     public Pageable toPageable() {
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
-        return PageRequest.of(page, size, sort);
+        return PageMapper.toPageable(toPageQuery());
     }
 }
