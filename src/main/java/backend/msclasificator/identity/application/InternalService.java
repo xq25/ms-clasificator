@@ -4,7 +4,7 @@ import backend.msclasificator.doctor.domain.Doctor;
 import backend.msclasificator.patient.domain.Patient;
 import backend.msclasificator.doctor.infrastructure.persistence.DoctorAreaRepository;
 import backend.msclasificator.doctor.infrastructure.persistence.DoctorRepository;
-import backend.msclasificator.patient.infrastructure.persistence.PatientRepository;
+import backend.msclasificator.patient.application.port.out.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
