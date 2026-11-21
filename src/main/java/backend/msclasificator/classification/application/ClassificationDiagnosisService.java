@@ -6,13 +6,13 @@ import backend.msclasificator.classification.api.dto.ClassificationDiagnosisSumm
 import backend.msclasificator.shared.api.PageRequestDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
-import org.springframework.data.domain.Page;
+import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.classification.api.mapper.ClassificationDiagnosisMapper;
 import backend.msclasificator.classification.domain.ImageClassification;
 import backend.msclasificator.classification.domain.ClassificationDiagnosis;
 import backend.msclasificator.diagnosiscatalog.domain.MedicalDiagnostic;
-import backend.msclasificator.classification.infrastructure.persistence.ImageClassificationRepository;
-import backend.msclasificator.classification.infrastructure.persistence.ClassificationDiagnosisRepository;
+import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
+import backend.msclasificator.classification.application.port.out.ClassificationDiagnosisRepository;
 import backend.msclasificator.diagnosiscatalog.application.port.out.MedicalDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,17 +37,17 @@ public class ClassificationDiagnosisService {
 
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<ClassificationDiagnosisSummaryDTO>> findAll(PageRequestDTO pageRequest) {
-        Page<ClassificationDiagnosisSummaryDTO> page = repository.findAll(pageRequest.toPageable())
+        PageResult<ClassificationDiagnosisSummaryDTO> page = repository.findAll(pageRequest.toPageQuery())
                 .map(mapper::toSummaryDTO);
 
         return ApiResponse.success(
                 PagedResponse.<ClassificationDiagnosisSummaryDTO>builder()
-                        .content(page.getContent())
-                        .page(page.getNumber())
-                        .size(page.getSize())
-                        .totalElements(page.getTotalElements())
-                        .totalPages(page.getTotalPages())
-                        .last(page.isLast())
+                        .content(page.content())
+                        .page(page.page())
+                        .size(page.size())
+                        .totalElements(page.totalElements())
+                        .totalPages(page.totalPages())
+                        .last(page.last())
                         .build(),
                 "Diagnósticos de imágenes obtenidos exitosamente"
         );
@@ -55,7 +55,7 @@ public class ClassificationDiagnosisService {
 
     @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
-        return ApiResponse.success(repository.countAll(), "Total de diagnósticos de imágenes");
+        return ApiResponse.success(repository.count(), "Total de diagnósticos de imágenes");
     }
 
     /**
@@ -83,18 +83,18 @@ public class ClassificationDiagnosisService {
                 return ApiResponse.error("ImageClassification no encontrado con ID: " + imageDiagnosticId);
             }
 
-            Page<ClassificationDiagnosisSummaryDTO> page = repository
-                    .findByImageDiagnosticId(imageDiagnosticId, pageRequest.toPageable())
+            PageResult<ClassificationDiagnosisSummaryDTO> page = repository
+                    .findByImageClassificationId(imageDiagnosticId, pageRequest.toPageQuery())
                     .map(mapper::toSummaryDTO);
 
             return ApiResponse.success(
                     PagedResponse.<ClassificationDiagnosisSummaryDTO>builder()
-                            .content(page.getContent())
-                            .page(page.getNumber())
-                            .size(page.getSize())
-                            .totalElements(page.getTotalElements())
-                            .totalPages(page.getTotalPages())
-                            .last(page.isLast())
+                            .content(page.content())
+                            .page(page.page())
+                            .size(page.size())
+                            .totalElements(page.totalElements())
+                            .totalPages(page.totalPages())
+                            .last(page.last())
                             .build(),
                     "Diagnósticos obtenidos exitosamente"
             );
@@ -122,7 +122,7 @@ public class ClassificationDiagnosisService {
                     .orElseThrow(() -> new IllegalArgumentException("MedicalDiagnostic no encontrado con ID: " + dto.getMedicalDiagnosticId()));
 
             // Validar que no se le asigne un diagnostico repetido a la imagen
-            if (repository.existsByImageDiagnosticIdAndMedicalDiagnosticId(imageDiagnostic.getId(), medicalDiagnostic.getId())){
+            if (repository.existsByImageClassificationIdAndMedicalDiagnosticId(imageDiagnostic.getId(), medicalDiagnostic.getId())){
                 return ApiResponse.error("Este diagnóstico ya fue asignado a la imagen");
             }
 
