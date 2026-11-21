@@ -12,6 +12,10 @@ public interface DatasetJpaRepository extends JpaRepository<Dataset, Integer> {
     Optional<Dataset> findByMedicalImageTypeId(Integer medicalImageTypeId);
     boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);  // pa validar antes de crear duplicados
     boolean existsByMedicalImageTypeId(Integer medicalImageTypeId); // pa validar antes de crear duplicados
+    boolean existsByName(String name);
+    boolean existsByNameAndIdNot(String name, Integer id);
+    boolean existsByMedicalDiagnosticIdAndIdNot(Integer medicalDiagnosticId, Integer id);
+    boolean existsByMedicalImageTypeIdAndIdNot(Integer medicalImageTypeId, Integer id);
 
     @Query("SELECT COUNT(d) FROM Dataset d")
     long countAll();

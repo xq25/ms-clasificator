@@ -139,6 +139,7 @@ public class DatasetService {
      * @param datasetCreateDTO DTO con datos de entrada
      * @return ApiResponse<UIConfig> con el resultado de la operación
      */
+    @Transactional
     public ApiResponse<DatasetResponseDTO> create(DatasetCreateDTO datasetCreateDTO) {
         try {
             if (datasetCreateDTO == null) {
@@ -156,6 +157,10 @@ public class DatasetService {
                     .findById(datasetCreateDTO.getMedicalImageTypeId())
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Tipo de imagen médica no encontrado con ID: " + datasetCreateDTO.getMedicalImageTypeId()));
+
+            if (datasetRepository.existsByName(datasetCreateDTO.getName())) {
+                return ApiResponse.error("Ya existe un dataset con el nombre: " + datasetCreateDTO.getName());
+            }
 
             // Validar que no exista ya un dataset para este diagnóstico
             if (datasetRepository.existsByMedicalDiagnosticId(datasetCreateDTO.getMedicalDiagnosticId())) {
@@ -205,24 +210,30 @@ public class DatasetService {
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Tipo de imagen médica no encontrado con ID: " + datasetUpdateDTO.getMedicalImageTypeId()));
 
-            // Validamos que no exista ya un dataset para ese diagnostico
-            if (datasetRepository.existsByMedicalDiagnosticId(datasetUpdateDTO.getMedicalDiagnosticId())) {
+            // Las validaciones de unicidad excluyen al propio dataset
+            if (datasetRepository.existsByNameAndIdNot(datasetUpdateDTO.getName(), id)) {
+                return ApiResponse.error("Ya existe un dataset con el nombre: " + datasetUpdateDTO.getName());
+            }
+
+            if (datasetRepository.existsByMedicalDiagnosticIdAndIdNot(datasetUpdateDTO.getMedicalDiagnosticId(), id)) {
                 return ApiResponse.error("Ya existe un Dataset para clasificar este diagnóstico médico");
             }
 
-            // Validamos que no exista ya un dataset para clasificar este tipo de imagen
-            if(datasetRepository.existsByMedicalImageTypeId(datasetUpdateDTO.getMedicalImageTypeId())) {
+            if (datasetRepository.existsByMedicalImageTypeIdAndIdNot(datasetUpdateDTO.getMedicalImageTypeId(), id)) {
                 return ApiResponse.error("Ya existe un Dataset para clasificar este tipo de imagen médica");
             }
 
-            // Validar que el Dataset no tenga ya categorias definidas para clasificacion.
-            // Al cambiar el diagnostico, todos las categorias quedan inutiles,
-            // ya que deben tener unicamente subDiagnosticos de este diagnostico padre.
-            List<DatasetCategory> datasetCategories = this.datasetCategoryRepository.findByDatasetId(id);
-            if (!datasetCategories.isEmpty()){
-                return ApiResponse.error("No se puede cambiar el diagnóstico médico de un Dataset que ya tiene categorías definidas para clasificación. Por favor, elimine primero las categorías asociadas a este Dataset antes");
+            // Las categorías solo pueden contener sub-diagnósticos del diagnóstico del dataset,
+            // por eso el diagnóstico no puede cambiar si ya hay categorías definidas.
+            boolean cambiaDiagnostico = !dataset.getMedicalDiagnostic().getId().equals(datasetUpdateDTO.getMedicalDiagnosticId());
+            if (cambiaDiagnostico) {
+                List<DatasetCategory> datasetCategories = this.datasetCategoryRepository.findByDatasetId(id);
+                if (!datasetCategories.isEmpty()) {
+                    return ApiResponse.error("No se puede cambiar el diagnóstico médico de un Dataset que ya tiene categorías definidas para clasificación. Por favor, elimine primero las categorías asociadas a este Dataset antes");
+                }
             }
 
+            dataset.setName(datasetUpdateDTO.getName());
             dataset.setMedicalDiagnostic(medicalDiagnostic);
             dataset.setMedicalImageType(medicalImageType);
             return ApiResponse.success(datasetMappers.toResponseDTO(datasetRepository.save(dataset)), "Dataset actualizado exitosamente");

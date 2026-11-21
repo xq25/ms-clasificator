@@ -54,9 +54,9 @@ class DatasetServiceTest {
 
     @BeforeEach
     void setUp() {
-        dataset = Dataset.builder().id(1).name("Rx tórax").build();
         diagnostic = MedicalDiagnostic.builder().id(10).diagnosticCode("J18").build();
         imageType = MedicalImageType.builder().id(5).name("Radiografía de Tórax").build();
+        dataset = Dataset.builder().id(1).name("Rx tórax").medicalDiagnostic(diagnostic).medicalImageType(imageType).build();
         responseDTO = DatasetResponseDTO.builder().id(1).name("Rx tórax").build();
     }
 
@@ -255,6 +255,20 @@ class DatasetServiceTest {
         }
 
         @Test
+        @DisplayName("nombre ya usado por otro dataset: error y no guarda")
+        void nombreDuplicado() {
+            when(medicalDiagnosticRepository.findById(10)).thenReturn(Optional.of(diagnostic));
+            when(medicalImageTypeRepository.findById(5)).thenReturn(Optional.of(imageType));
+            when(datasetRepository.existsByName("Rx tórax")).thenReturn(true);
+
+            ApiResponse<DatasetResponseDTO> response = service.create(dto);
+
+            assertThat(response.isSuccess()).isFalse();
+            assertThat(response.getMessage()).isEqualTo("Ya existe un dataset con el nombre: Rx tórax");
+            verify(datasetRepository, never()).save(any());
+        }
+
+        @Test
         @DisplayName("ya existe dataset para el diagnóstico: error")
         void diagnosticoDuplicado() {
             when(medicalDiagnosticRepository.findById(10)).thenReturn(Optional.of(diagnostic));
@@ -306,13 +320,28 @@ class DatasetServiceTest {
     @DisplayName("update")
     class Update {
 
-        private final DatasetUpdateDTO dto = DatasetUpdateDTO.builder()
-                .name("Nombre nuevo").medicalDiagnosticId(10).medicalImageTypeId(5).build();
+        private final MedicalDiagnostic otroDiagnostic = MedicalDiagnostic.builder().id(20).diagnosticCode("I20").build();
+        private final MedicalImageType otroTipo = MedicalImageType.builder().id(6).name("Ecocardiograma").build();
 
-        private void stubEntidadesExistentes() {
+        private DatasetUpdateDTO dto(String name, int diagnosticId, int imageTypeId) {
+            return DatasetUpdateDTO.builder().name(name).medicalDiagnosticId(diagnosticId).medicalImageTypeId(imageTypeId).build();
+        }
+
+        private void stubEntidades(MedicalDiagnostic diag, MedicalImageType tipo) {
             when(datasetRepository.findById(1)).thenReturn(Optional.of(dataset));
-            when(medicalDiagnosticRepository.findById(10)).thenReturn(Optional.of(diagnostic));
-            when(medicalImageTypeRepository.findById(5)).thenReturn(Optional.of(imageType));
+            when(medicalDiagnosticRepository.findById(diag.getId())).thenReturn(Optional.of(diag));
+            when(medicalImageTypeRepository.findById(tipo.getId())).thenReturn(Optional.of(tipo));
+        }
+
+        private Dataset capturarGuardado() {
+            ArgumentCaptor<Dataset> guardado = ArgumentCaptor.forClass(Dataset.class);
+            verify(datasetRepository).save(guardado.capture());
+            return guardado.getValue();
+        }
+
+        private void stubGuardado() {
+            when(datasetRepository.save(dataset)).thenReturn(dataset);
+            when(datasetMapper.toResponseDTO(dataset)).thenReturn(responseDTO);
         }
 
         @Test
@@ -326,44 +355,70 @@ class DatasetServiceTest {
         void datasetInexistente() {
             when(datasetRepository.findById(1)).thenReturn(Optional.empty());
 
-            assertThat(service.update(1, dto).getMessage()).isEqualTo("Dataset no encontrado con ID: 1");
+            assertThat(service.update(1, dto("X", 10, 5)).getMessage()).isEqualTo("Dataset no encontrado con ID: 1");
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO: rechaza aunque el diagnóstico sea el del propio dataset")
-        void rechazaDiagnosticoDelPropioDataset() {
-            stubEntidadesExistentes();
-            // existsByMedicalDiagnosticId no excluye el dataset que se está actualizando
-            when(datasetRepository.existsByMedicalDiagnosticId(10)).thenReturn(true);
+        @DisplayName("mismo diagnóstico y tipo, nombre nuevo: acepta, guarda el nombre y no consulta categorías")
+        void renombrarConservandoDiagnostico() {
+            stubEntidades(diagnostic, imageType);
+            stubGuardado();
 
-            ApiResponse<DatasetResponseDTO> response = service.update(1, dto);
+            ApiResponse<DatasetResponseDTO> response = service.update(1, dto("Nombre nuevo", 10, 5));
+
+            assertThat(response.isSuccess()).isTrue();
+            assertThat(response.getMessage()).isEqualTo("Dataset actualizado exitosamente");
+            Dataset guardado = capturarGuardado();
+            assertThat(guardado.getName()).isEqualTo("Nombre nuevo");
+            assertThat(guardado.getMedicalDiagnostic()).isSameAs(diagnostic);
+            assertThat(guardado.getMedicalImageType()).isSameAs(imageType);
+            verify(datasetCategoryRepository, never()).findByDatasetId(any());
+        }
+
+        @Test
+        @DisplayName("nombre usado por otro dataset: error y no guarda")
+        void nombreDuplicado() {
+            stubEntidades(diagnostic, imageType);
+            when(datasetRepository.existsByNameAndIdNot("Ocupado", 1)).thenReturn(true);
+
+            ApiResponse<DatasetResponseDTO> response = service.update(1, dto("Ocupado", 10, 5));
 
             assertThat(response.isSuccess()).isFalse();
+            assertThat(response.getMessage()).isEqualTo("Ya existe un dataset con el nombre: Ocupado");
+            verify(datasetRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("diagnóstico usado por otro dataset: error y no guarda")
+        void diagnosticoDeOtroDataset() {
+            stubEntidades(otroDiagnostic, imageType);
+            when(datasetRepository.existsByMedicalDiagnosticIdAndIdNot(20, 1)).thenReturn(true);
+
+            ApiResponse<DatasetResponseDTO> response = service.update(1, dto("Rx tórax", 20, 5));
+
             assertThat(response.getMessage()).isEqualTo("Ya existe un Dataset para clasificar este diagnóstico médico");
             verify(datasetRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("ya existe dataset para el tipo de imagen: error")
-        void tipoDuplicado() {
-            stubEntidadesExistentes();
-            when(datasetRepository.existsByMedicalDiagnosticId(10)).thenReturn(false);
-            when(datasetRepository.existsByMedicalImageTypeId(5)).thenReturn(true);
+        @DisplayName("tipo de imagen usado por otro dataset: error y no guarda")
+        void tipoDeOtroDataset() {
+            stubEntidades(diagnostic, otroTipo);
+            when(datasetRepository.existsByMedicalImageTypeIdAndIdNot(6, 1)).thenReturn(true);
 
-            assertThat(service.update(1, dto).getMessage())
-                    .isEqualTo("Ya existe un Dataset para clasificar este tipo de imagen médica");
+            ApiResponse<DatasetResponseDTO> response = service.update(1, dto("Rx tórax", 10, 6));
+
+            assertThat(response.getMessage()).isEqualTo("Ya existe un Dataset para clasificar este tipo de imagen médica");
             verify(datasetRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("dataset con categorías: no permite cambiar el diagnóstico")
-        void conCategorias() {
-            stubEntidadesExistentes();
-            when(datasetRepository.existsByMedicalDiagnosticId(10)).thenReturn(false);
-            when(datasetRepository.existsByMedicalImageTypeId(5)).thenReturn(false);
+        @DisplayName("cambia el diagnóstico con categorías existentes: error y no guarda")
+        void cambiaDiagnosticoConCategorias() {
+            stubEntidades(otroDiagnostic, imageType);
             when(datasetCategoryRepository.findByDatasetId(1)).thenReturn(List.of(new DatasetCategory()));
 
-            ApiResponse<DatasetResponseDTO> response = service.update(1, dto);
+            ApiResponse<DatasetResponseDTO> response = service.update(1, dto("Rx tórax", 20, 5));
 
             assertThat(response.isSuccess()).isFalse();
             assertThat(response.getMessage()).startsWith("No se puede cambiar el diagnóstico médico de un Dataset que ya tiene categorías");
@@ -371,25 +426,29 @@ class DatasetServiceTest {
         }
 
         @Test
-        @DisplayName("válido: cambia diagnóstico y tipo; BUG CONOCIDO: no actualiza el nombre")
-        void validoNoActualizaNombre() {
-            stubEntidadesExistentes();
-            when(datasetRepository.existsByMedicalDiagnosticId(10)).thenReturn(false);
-            when(datasetRepository.existsByMedicalImageTypeId(5)).thenReturn(false);
+        @DisplayName("cambia el diagnóstico sin categorías: acepta")
+        void cambiaDiagnosticoSinCategorias() {
+            stubEntidades(otroDiagnostic, imageType);
             when(datasetCategoryRepository.findByDatasetId(1)).thenReturn(List.of());
-            when(datasetRepository.save(dataset)).thenReturn(dataset);
-            when(datasetMapper.toResponseDTO(dataset)).thenReturn(responseDTO);
+            stubGuardado();
 
-            ApiResponse<DatasetResponseDTO> response = service.update(1, dto);
+            ApiResponse<DatasetResponseDTO> response = service.update(1, dto("Rx tórax", 20, 5));
 
             assertThat(response.isSuccess()).isTrue();
-            assertThat(response.getMessage()).isEqualTo("Dataset actualizado exitosamente");
-            ArgumentCaptor<Dataset> guardado = ArgumentCaptor.forClass(Dataset.class);
-            verify(datasetRepository).save(guardado.capture());
-            assertThat(guardado.getValue().getMedicalDiagnostic()).isSameAs(diagnostic);
-            assertThat(guardado.getValue().getMedicalImageType()).isSameAs(imageType);
-            // El DTO trae "Nombre nuevo" pero el servicio no lo asigna
-            assertThat(guardado.getValue().getName()).isEqualTo("Rx tórax");
+            assertThat(capturarGuardado().getMedicalDiagnostic()).isSameAs(otroDiagnostic);
+        }
+
+        @Test
+        @DisplayName("con categorías, mismo diagnóstico y otro tipo de imagen: acepta")
+        void cambiaTipoConCategorias() {
+            stubEntidades(diagnostic, otroTipo);
+            stubGuardado();
+
+            ApiResponse<DatasetResponseDTO> response = service.update(1, dto("Rx tórax", 10, 6));
+
+            assertThat(response.isSuccess()).isTrue();
+            assertThat(capturarGuardado().getMedicalImageType()).isSameAs(otroTipo);
+            verify(datasetCategoryRepository, never()).findByDatasetId(any());
         }
     }
 

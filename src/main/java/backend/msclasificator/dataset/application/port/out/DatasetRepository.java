@@ -23,6 +23,15 @@ public interface DatasetRepository {
 
     boolean existsByMedicalImageTypeId(Integer medicalImageTypeId);
 
+    boolean existsByName(String name);
+
+    // Variantes que excluyen al propio dataset, para validar duplicados al actualizar
+    boolean existsByNameAndIdNot(String name, Integer id);
+
+    boolean existsByMedicalDiagnosticIdAndIdNot(Integer medicalDiagnosticId, Integer id);
+
+    boolean existsByMedicalImageTypeIdAndIdNot(Integer medicalImageTypeId, Integer id);
+
     long count();
 
     Dataset save(Dataset dataset);

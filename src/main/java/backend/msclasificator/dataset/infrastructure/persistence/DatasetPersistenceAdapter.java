@@ -55,6 +55,26 @@ class DatasetPersistenceAdapter implements DatasetRepository {
     }
 
     @Override
+    public boolean existsByName(String name) {
+        return jpa.existsByName(name);
+    }
+
+    @Override
+    public boolean existsByNameAndIdNot(String name, Integer id) {
+        return jpa.existsByNameAndIdNot(name, id);
+    }
+
+    @Override
+    public boolean existsByMedicalDiagnosticIdAndIdNot(Integer medicalDiagnosticId, Integer id) {
+        return jpa.existsByMedicalDiagnosticIdAndIdNot(medicalDiagnosticId, id);
+    }
+
+    @Override
+    public boolean existsByMedicalImageTypeIdAndIdNot(Integer medicalImageTypeId, Integer id) {
+        return jpa.existsByMedicalImageTypeIdAndIdNot(medicalImageTypeId, id);
+    }
+
+    @Override
     public long count() {
         return jpa.countAll();
     }
