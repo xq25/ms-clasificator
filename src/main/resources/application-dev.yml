@@ -33,3 +33,4 @@ logging:
   level:
     backend.msclasificator: DEBUG
     io.minio: INFO
+    org.hibernate.SQL: DEBUG        # imprime cada SQL ejecutado (solo desarrollo local)
