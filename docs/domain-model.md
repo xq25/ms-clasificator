@@ -175,8 +175,9 @@ Valor de un `PrimitiveDatum` para una historia clínica específica.
 Reglas vigentes del feature `dataset`. Están verificadas por los tests de `src/test/java/.../dataset/application/`. Los comportamientos incorrectos aún no corregidos están en [bugs-conocidos.md](bugs-conocidos.md).
 
 ### Dataset
-- Un `MedicalDiagnostic` solo puede tener un dataset, y un `MedicalImageType` solo puede estar en un dataset.
-- No se puede cambiar el diagnóstico de un dataset que ya tiene categorías.
+- El nombre del dataset es único.
+- Un `MedicalDiagnostic` solo puede tener un dataset, y un `MedicalImageType` solo puede estar en un dataset. Al actualizar, estas validaciones excluyen al propio dataset.
+- Si el dataset ya tiene categorías, **no se puede cambiar su diagnóstico**, porque las categorías dependen de su árbol. El nombre y el tipo de imagen sí se pueden cambiar.
 - Al eliminar un dataset se eliminan en cascada sus categorías y las asignaciones de diagnósticos.
 
 ### DatasetCategory
