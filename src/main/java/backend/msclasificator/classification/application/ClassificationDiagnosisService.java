@@ -14,6 +14,10 @@ import backend.msclasificator.diagnosiscatalog.domain.MedicalDiagnostic;
 import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import backend.msclasificator.classification.application.port.out.ClassificationDiagnosisRepository;
 import backend.msclasificator.diagnosiscatalog.application.port.out.MedicalDiagnosticRepository;
+import backend.msclasificator.dataset.application.port.out.CategoryDiagnosticRepository;
+import backend.msclasificator.dataset.application.port.out.DatasetRepository;
+import backend.msclasificator.dataset.domain.Dataset;
+import backend.msclasificator.dataset.domain.DatasetCategory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +38,12 @@ public class ClassificationDiagnosisService {
 
     @Autowired
     private MedicalDiagnosticRepository medicalDiagnosticRepository;
+
+    @Autowired
+    private DatasetRepository datasetRepository;
+
+    @Autowired
+    private CategoryDiagnosticRepository categoryDiagnosticRepository;
 
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<ClassificationDiagnosisSummaryDTO>> findAll(PageRequestDTO pageRequest) {
@@ -126,6 +136,30 @@ public class ClassificationDiagnosisService {
                 return ApiResponse.error("Este diagnóstico ya fue asignado a la imagen");
             }
 
+            // El diagnóstico debe estar en una categoría del dataset del tipo de imagen,
+            // y todos los diagnósticos de la clasificación deben ser de esa misma categoría.
+            Integer medicalImageTypeId = imageDiagnostic.getMedicalImg().getMedicalImageType().getId();
+            Dataset dataset = datasetRepository.findByMedicalImageTypeId(medicalImageTypeId).orElse(null);
+            if (dataset == null) {
+                return ApiResponse.error("El tipo de imagen médica no tiene un dataset configurado");
+            }
+
+            DatasetCategory categoria = categoriaEnDataset(dataset, medicalDiagnostic.getId());
+            if (categoria == null) {
+                return ApiResponse.error("El diagnóstico no pertenece a ninguna categoría del dataset '" + dataset.getName() + "'");
+            }
+
+            for (ClassificationDiagnosis existente : repository.findByImageClassificationId(imageDiagnostic.getId())) {
+                DatasetCategory categoriaExistente = categoriaEnDataset(dataset, existente.getMedicalDiagnostic().getId());
+                if (categoriaExistente == null) {
+                    return ApiResponse.error("La imagen tiene diagnósticos que no pertenecen a ninguna categoría del dataset; no se pueden agregar más");
+                }
+                if (!categoriaExistente.getId().equals(categoria.getId())) {
+                    return ApiResponse.error("La imagen ya está clasificada en la categoría '" + categoriaExistente.getName()
+                            + "'; todos sus diagnósticos deben ser de la misma categoría");
+                }
+            }
+
             ClassificationDiagnosis entity = mapper.toEntity(dto);
             entity.setImageDiagnostic(imageDiagnostic);
             entity.setMedicalDiagnostic(medicalDiagnostic);
@@ -153,5 +187,11 @@ public class ClassificationDiagnosisService {
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         }
+    }
+
+    private DatasetCategory categoriaEnDataset(Dataset dataset, Integer medicalDiagnosticId) {
+        return categoryDiagnosticRepository.findByDatasetIdAndMedicalDiagnosticId(dataset.getId(), medicalDiagnosticId)
+                .map(cd -> cd.getDatasetCategory())
+                .orElse(null);
     }
 }

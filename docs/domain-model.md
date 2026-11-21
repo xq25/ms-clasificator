@@ -190,9 +190,16 @@ Reglas vigentes del feature `dataset`. Están verificadas por los tests de `src/
 - **La raíz del dataset no se puede asignar a una categoría.** Las categorías agrupan solo sub-diagnósticos.
 - Un mismo diagnóstico no puede estar en dos categorías del mismo dataset.
 
-### ClassificationDiagnosis (etiquetado por doctores)
-- Un diagnóstico no se puede asignar dos veces a la misma clasificación de imagen.
-- *Pendiente de definir:* si el diagnóstico debe pertenecer al árbol del dataset del tipo de imagen (bug #7).
+### ImageClassification (un doctor clasifica una imagen)
+- **Solo se pueden clasificar imágenes cuyo tipo tiene un dataset configurado.**
+- El tipo de imagen debe tener un área de evaluación, y el doctor debe pertenecer a esa área.
+- Un doctor solo puede clasificar una vez la misma imagen.
+
+### ClassificationDiagnosis (diagnósticos que el doctor asigna a su clasificación)
+- **Solo son válidos los diagnósticos asignados a alguna categoría del dataset del tipo de imagen.** Así, toda etiqueta se traduce a una clase (`numValue`) del dataset.
+- **Una clasificación puede tener varios diagnósticos, pero todos de la misma categoría.** La imagen queda en una sola clase y el doctor puede precisar varios sub-diagnósticos de esa clase.
+- Un diagnóstico no se puede asignar dos veces a la misma clasificación.
+- Los datos creados antes de estas reglas no se modifican. Si una clasificación ya tiene diagnósticos sin categoría, no se le pueden agregar más (ver [bugs-conocidos.md](bugs-conocidos.md), #7).
 
 ---
 

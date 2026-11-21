@@ -8,31 +8,14 @@ import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
 import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.classification.api.mapper.ImageClassificationMapper;
-import backend.msclasificator.clinicalrecord.domain.ClinicalRecord;
-import backend.msclasificator.dataset.domain.Dataset;
-import backend.msclasificator.dataset.domain.DatasetCategory;
-import backend.msclasificator.clinicalrecord.domain.Diagnosis;
-import backend.msclasificator.dataset.domain.CategoryDiagnostic;
 import backend.msclasificator.doctor.domain.Doctor;
-import backend.msclasificator.doctor.domain.DoctorArea;
-import backend.msclasificator.doctor.domain.EvaluationArea;
 import backend.msclasificator.classification.domain.ImageClassification;
-import backend.msclasificator.classification.domain.ClassificationDiagnosis;
-import backend.msclasificator.diagnosiscatalog.domain.MedicalDiagnostic;
-import backend.msclasificator.medicalimage.domain.MedicalImageType;
 import backend.msclasificator.medicalimage.domain.MedicalImage;
-import backend.msclasificator.patient.domain.Patient;
-import backend.msclasificator.clinicalrecord.domain.PatientDatum;
-import backend.msclasificator.patient.domain.PatientSex;
-import backend.msclasificator.clinicalrecord.domain.PrimitiveDatum;
-import backend.msclasificator.clinicalrecord.domain.PrimitiveType;
-import backend.msclasificator.clinicalrecord.domain.PrimitiveUnit;
-import backend.msclasificator.shared.domain.SystemDatum;
-import backend.msclasificator.identity.domain.UserInfo;
 import backend.msclasificator.doctor.application.port.out.DoctorAreaRepository;
 import backend.msclasificator.doctor.application.port.out.DoctorRepository;
 import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
+import backend.msclasificator.dataset.application.port.out.DatasetRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,6 +40,9 @@ public class ImageClassificationService {
 
     @Autowired
     private DoctorAreaRepository doctorAreaRepository;
+
+    @Autowired
+    private DatasetRepository datasetRepository;
 
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<ImageClassificationSummaryDTO>> findAll(PageRequestDTO pageRequest) {
@@ -159,6 +145,11 @@ public class ImageClassificationService {
             // Validamos que la imagen exista
             MedicalImage medicalImg = medicalImgRepository.findById(imageDiagnosticCreateDTO.getMedicalImgId())
                     .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + imageDiagnosticCreateDTO.getMedicalImgId()));
+
+            // Solo se clasifican imágenes cuyo tipo tiene un dataset configurado
+            if (!datasetRepository.existsByMedicalImageTypeId(medicalImg.getMedicalImageType().getId())) {
+                return ApiResponse.error("El tipo de imagen médica no tiene un dataset configurado; no se puede clasificar");
+            }
 
         // Validamos que ese medico si pueda diagnosticar ese tipo de imagenes medicas
             // Validamos que este tipo de imagen tenga area de evaluacion asignada.

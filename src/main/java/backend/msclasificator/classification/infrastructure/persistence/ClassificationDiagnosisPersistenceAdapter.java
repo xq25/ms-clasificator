@@ -7,6 +7,7 @@ import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.shared.infrastructure.persistence.PageMapper;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 // Las consultas derivadas JPA conservan los nombres de campo de la entidad (imageDiagnostic) — ADR-003
@@ -27,6 +28,11 @@ class ClassificationDiagnosisPersistenceAdapter implements ClassificationDiagnos
     @Override
     public PageResult<ClassificationDiagnosis> findByImageClassificationId(Integer imageClassificationId, PageQuery query) {
         return PageMapper.toResult(jpa.findByImageDiagnosticId(imageClassificationId, PageMapper.toPageable(query)));
+    }
+
+    @Override
+    public List<ClassificationDiagnosis> findByImageClassificationId(Integer imageClassificationId) {
+        return jpa.findByImageDiagnosticId(imageClassificationId);
     }
 
     @Override
