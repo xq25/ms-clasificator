@@ -7,10 +7,10 @@ import backend.msclasificator.doctor.api.dto.EvaluationAreaUpdateDTO;
 import backend.msclasificator.shared.api.PageRequestDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
-import org.springframework.data.domain.Page;
+import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.doctor.api.mapper.EvaluationAreaMapper;
 import backend.msclasificator.doctor.domain.EvaluationArea;
-import backend.msclasificator.doctor.infrastructure.persistence.EvaluationAreaRepository;
+import backend.msclasificator.doctor.application.port.out.EvaluationAreaRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -37,17 +37,17 @@ public class EvaluationAreaService {
      */
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<EvaluationAreaResponseDTO>> findAll(PageRequestDTO pageRequest) {
-        Page<EvaluationAreaResponseDTO> page = evaluationAreaRepository.findAll(pageRequest.toPageable())
+        PageResult<EvaluationAreaResponseDTO> page = evaluationAreaRepository.findAll(pageRequest.toPageQuery())
                 .map(evaluationAreaMapper::toResponseDTO);
 
         return ApiResponse.success(
                 PagedResponse.<EvaluationAreaResponseDTO>builder()
-                        .content(page.getContent())
-                        .page(page.getNumber())
-                        .size(page.getSize())
-                        .totalElements(page.getTotalElements())
-                        .totalPages(page.getTotalPages())
-                        .last(page.isLast())
+                        .content(page.content())
+                        .page(page.page())
+                        .size(page.size())
+                        .totalElements(page.totalElements())
+                        .totalPages(page.totalPages())
+                        .last(page.last())
                         .build(),
                 "Areas de evaluacion obtenidas exitosamente"
         );
@@ -56,18 +56,18 @@ public class EvaluationAreaService {
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<EvaluationAreaSummaryDTO>> searchByName(String query, PageRequestDTO pageRequest) {
         try {
-            Page<EvaluationAreaSummaryDTO> page = evaluationAreaRepository
-                    .findByNameContainingIgnoreCase(query, pageRequest.toPageable())
+            PageResult<EvaluationAreaSummaryDTO> page = evaluationAreaRepository
+                    .searchByName(query, pageRequest.toPageQuery())
                     .map(evaluationAreaMapper::toSummaryDTO);
 
             return ApiResponse.success(
                     PagedResponse.<EvaluationAreaSummaryDTO>builder()
-                            .content(page.getContent())
-                            .page(page.getNumber())
-                            .size(page.getSize())
-                            .totalElements(page.getTotalElements())
-                            .totalPages(page.getTotalPages())
-                            .last(page.isLast())
+                            .content(page.content())
+                            .page(page.page())
+                            .size(page.size())
+                            .totalElements(page.totalElements())
+                            .totalPages(page.totalPages())
+                            .last(page.last())
                             .build(),
                     "Resultados de búsqueda por nombre"
             );
@@ -79,18 +79,18 @@ public class EvaluationAreaService {
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<EvaluationAreaSummaryDTO>> searchByCode(String query, PageRequestDTO pageRequest) {
         try {
-            Page<EvaluationAreaSummaryDTO> page = evaluationAreaRepository
-                    .findByCodeAreaContainingIgnoreCase(query, pageRequest.toPageable())
+            PageResult<EvaluationAreaSummaryDTO> page = evaluationAreaRepository
+                    .searchByCode(query, pageRequest.toPageQuery())
                     .map(evaluationAreaMapper::toSummaryDTO);
 
             return ApiResponse.success(
                     PagedResponse.<EvaluationAreaSummaryDTO>builder()
-                            .content(page.getContent())
-                            .page(page.getNumber())
-                            .size(page.getSize())
-                            .totalElements(page.getTotalElements())
-                            .totalPages(page.getTotalPages())
-                            .last(page.isLast())
+                            .content(page.content())
+                            .page(page.page())
+                            .size(page.size())
+                            .totalElements(page.totalElements())
+                            .totalPages(page.totalPages())
+                            .last(page.last())
                             .build(),
                     "Resultados de búsqueda por código"
             );
@@ -101,7 +101,7 @@ public class EvaluationAreaService {
 
     @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
-        return ApiResponse.success(evaluationAreaRepository.countAll(), "Total de áreas de evaluación");
+        return ApiResponse.success(evaluationAreaRepository.count(), "Total de áreas de evaluación");
     }
 
     /**
@@ -166,13 +166,13 @@ public class EvaluationAreaService {
                     .orElseThrow(() -> new IllegalArgumentException("Área de evaluación no encontrada con ID: " + id));
 
             // Validar que no exista otro área con el mismo nombre
-            EvaluationArea existingByName = evaluationAreaRepository.findByName(evaluationAreaUpdateDTO.getName());
+            EvaluationArea existingByName = evaluationAreaRepository.findByName(evaluationAreaUpdateDTO.getName()).orElse(null);
             if (existingByName != null && !existingByName.getId().equals(id)) {
                 return ApiResponse.error("Ya existe un área de evaluación con el nombre: " + evaluationAreaUpdateDTO.getName());
             }
 
             // Validar que no exista otro área con el mismo código
-            EvaluationArea existingByCode = evaluationAreaRepository.findByCodeArea(evaluationAreaUpdateDTO.getCodeArea());
+            EvaluationArea existingByCode = evaluationAreaRepository.findByCodeArea(evaluationAreaUpdateDTO.getCodeArea()).orElse(null);
             if (existingByCode != null && !existingByCode.getId().equals(id)) {
                 return ApiResponse.error("Ya existe un área de evaluación con el código: " + evaluationAreaUpdateDTO.getCodeArea());
             }

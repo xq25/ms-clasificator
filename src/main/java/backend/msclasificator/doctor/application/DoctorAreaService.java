@@ -6,14 +6,14 @@ import backend.msclasificator.doctor.api.dto.DoctorAreaSummaryDTO;
 import backend.msclasificator.shared.api.PageRequestDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
-import org.springframework.data.domain.Page;
+import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.doctor.api.mapper.DoctorAreaMapper;
 import backend.msclasificator.doctor.domain.Doctor;
 import backend.msclasificator.doctor.domain.DoctorArea;
 import backend.msclasificator.doctor.domain.EvaluationArea;
-import backend.msclasificator.doctor.infrastructure.persistence.DoctorAreaRepository;
-import backend.msclasificator.doctor.infrastructure.persistence.DoctorRepository;
-import backend.msclasificator.doctor.infrastructure.persistence.EvaluationAreaRepository;
+import backend.msclasificator.doctor.application.port.out.DoctorAreaRepository;
+import backend.msclasificator.doctor.application.port.out.DoctorRepository;
+import backend.msclasificator.doctor.application.port.out.EvaluationAreaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,17 +42,17 @@ public class DoctorAreaService {
      */
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<DoctorAreaSummaryDTO>> findAll(PageRequestDTO pageRequest) {
-        Page<DoctorAreaSummaryDTO> page = doctorAreaRepository.findAll(pageRequest.toPageable())
+        PageResult<DoctorAreaSummaryDTO> page = doctorAreaRepository.findAll(pageRequest.toPageQuery())
                 .map(doctorAreaMapper::toSummaryDTO);
 
         return ApiResponse.success(
                 PagedResponse.<DoctorAreaSummaryDTO>builder()
-                        .content(page.getContent())
-                        .page(page.getNumber())
-                        .size(page.getSize())
-                        .totalElements(page.getTotalElements())
-                        .totalPages(page.getTotalPages())
-                        .last(page.isLast())
+                        .content(page.content())
+                        .page(page.page())
+                        .size(page.size())
+                        .totalElements(page.totalElements())
+                        .totalPages(page.totalPages())
+                        .last(page.last())
                         .build(),
                 "Relaciones DoctorArea obtenidas exitosamente"
         );
@@ -60,7 +60,7 @@ public class DoctorAreaService {
 
     @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
-        return ApiResponse.success(doctorAreaRepository.countAll(), "Total de relaciones DoctorArea");
+        return ApiResponse.success(doctorAreaRepository.count(), "Total de relaciones DoctorArea");
     }
 
     /**
@@ -202,7 +202,7 @@ public class DoctorAreaService {
      */
     public ApiResponse<Void> deleteByDoctorAndArea(Integer doctorId, Integer evaluationAreaId) {
         try {
-            DoctorArea doctorArea = doctorAreaRepository.findByDoctorIdAndEvaluationAreaId(doctorId, evaluationAreaId);
+            DoctorArea doctorArea = doctorAreaRepository.findByDoctorIdAndEvaluationAreaId(doctorId, evaluationAreaId).orElse(null);
 
             if (doctorArea == null) {
                 return ApiResponse.error("No existe relación entre este doctor y esta área de evaluación");
