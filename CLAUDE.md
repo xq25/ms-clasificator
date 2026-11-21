@@ -102,7 +102,8 @@ Se ejecuta al arrancar. Es idempotente (`INSERT IGNORE`). Carga:
 - Paginación: `PageRequestDTO.toPageQuery()` → puerto devuelve `PageResult<T>` → `PagedResponse<T>` (ADR-007).
 - Mappers manuales (sin MapStruct): un Mapper por entidad en `<feature>/api/mapper/`.
 - Persistencia (ADR-007): puerto `XRepository` en `application/port/out/`, Spring Data `XJpaRepository` + `XPersistenceAdapter` en `infrastructure/persistence/`. Migrado: `dataset`, `diagnosiscatalog`, `medicalimage`, `patient`. Resto de features aún inyecta Spring Data directamente.
-- No hay tests unitarios implementados aún.
+- Tests (ADR-008): unitarios de servicios con JUnit 5 + Mockito (sin Spring ni BD), de **caracterización** (fijan el comportamiento actual; bugs marcados `BUG CONOCIDO`). En `src/test/java/.../<feature>/application/<Servicio>Test.java`. Ejecutar: `mvnw test -Dtest='*ServiceTest' -Dsurefire.failIfNoSpecifiedTests=false`. Cubierto: `dataset`. `contextLoads` requiere MySQL + MinIO.
+- Bugs detectados y pendientes de decisión: [`docs/bugs-conocidos.md`](docs/bugs-conocidos.md). No se corrigen dentro de refactors.
 - Proceso: **explicar + ejemplificar ANTES de aplicar cambios**; solo implementar con autorización explícita.
 
 ---
@@ -127,7 +128,7 @@ Estado: fase 1 completada (paquetes y nombres). Fase 2 en curso: `dataset`, `dia
 ## Reglas de trabajo
 - **Explicar + ejemplificar antes de aplicar cambios**; implementar solo con autorización explícita.
 - **No agregar librerías/dependencias sin aprobación** (ADR-004).
-- **Ramas (ADR-005):** `feat/re-estructuracion` es la rama de integración (nueva main). Cada actividad sale de ella como `refactor/…`, `feat/…`, `fix/…` o `docs/…` y vuelve a ella; `main` se actualiza solo al final.
+- **Ramas (ADR-005):** `feat/re-estructuracion` es la rama de integración (nueva main). Cada actividad sale de ella como `refactor/…`, `feat/…`, `fix/…`, `docs/…` o `test/…` (ADR-008) y vuelve a ella; `main` se actualiza solo al final.
 - **Integración vía PR (ADR-006):** Claude crea la rama de actividad, hace commit y `push` de esa rama. El usuario abre el PR (base `feat/re-estructuracion`) y hace el merge en GitHub. Claude no hace merge ni push directo a `feat/re-estructuracion`/`main`. Antes de cada actividad: `git pull --ff-only` en `feat/re-estructuracion`.
 - **Toda decisión de arquitectura se registra como ADR** en [`docs/adr/`](docs/adr/README.md).
 - Renombrar clases no debe cambiar esquema ni API: fijar `@Table`/secuencias y conservar campos JSON y rutas (ADR-003).
@@ -137,3 +138,4 @@ Estado: fase 1 completada (paquetes y nombres). Fase 2 en curso: `dataset`, `dia
 ## Documentación interna
 - [`docs/adr/`](docs/adr/README.md) — decisiones de arquitectura (ADR-001…)
 - [`docs/domain-model.md`](docs/domain-model.md) — modelo de dominio
+- [`docs/bugs-conocidos.md`](docs/bugs-conocidos.md) — bugs detectados pendientes de corrección

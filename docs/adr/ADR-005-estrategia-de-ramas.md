@@ -1,6 +1,6 @@
 # ADR-005: Estrategia de ramas para la re-estructuración
 
-- **Estado:** Aceptado — flujo de integración (punto 3) modificado por [ADR-006](ADR-006-integracion-via-pull-request.md)
+- **Estado:** Aceptado — flujo de integración (punto 3) modificado por [ADR-006](ADR-006-integracion-via-pull-request.md); prefijo `test/` añadido por [ADR-008](ADR-008-estrategia-de-pruebas.md)
 - **Fecha:** 2026-11-19
 - **Área:** Gobierno
 
