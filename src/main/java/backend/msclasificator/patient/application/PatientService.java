@@ -173,7 +173,7 @@ public class    PatientService {
             // Validar que exista este user_id en ms-security
             boolean exist = this.securityServices.existUserById(patientCreateDTO.getUserId());
             if(!exist){
-                return ApiResponse.error("No existe un usuario con id" + patientCreateDTO.getUserId());
+                return ApiResponse.error("No existe un usuario con el userId: " + patientCreateDTO.getUserId() + ". No se puede crear el paciente sin un usuario asociado.");
             }
 
             // Validar que no exista paciente con el mismo userId
@@ -183,7 +183,7 @@ public class    PatientService {
 
             // Asignamos el rol por defecto a este paciente
             boolean assingRole = this.securityServices.assignDefaultRole(patientCreateDTO.getUserId(), "patient");
-            String roleInfo = assingRole?"Rol 'patient' asignado correctamente al usuario.": "No se pudo asignar el rol 'doctor' al usuario.";
+            String roleInfo = assingRole?"Rol 'patient' asignado correctamente al usuario.": "No se pudo asignar el rol 'patient' al usuario.";
 
             Patient saved = patientRepository.save(patientMapper.toEntity(patientCreateDTO));
 
