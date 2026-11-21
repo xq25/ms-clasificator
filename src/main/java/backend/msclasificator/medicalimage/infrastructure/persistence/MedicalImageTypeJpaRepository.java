@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface MedicalImageTypeRepository extends JpaRepository<MedicalImageType, Integer> {
+public interface MedicalImageTypeJpaRepository extends JpaRepository<MedicalImageType, Integer> {
 
 	MedicalImageType findByName(String name);
 

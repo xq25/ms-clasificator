@@ -1,0 +1,71 @@
+package backend.msclasificator.medicalimage.infrastructure.persistence;
+
+import backend.msclasificator.medicalimage.application.port.out.MedicalImageTypeRepository;
+import backend.msclasificator.medicalimage.domain.MedicalImageType;
+import backend.msclasificator.shared.application.PageQuery;
+import backend.msclasificator.shared.application.PageResult;
+import backend.msclasificator.shared.infrastructure.persistence.PageMapper;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+
+@Component
+class MedicalImageTypePersistenceAdapter implements MedicalImageTypeRepository {
+
+    private final MedicalImageTypeJpaRepository jpa;
+
+    MedicalImageTypePersistenceAdapter(MedicalImageTypeJpaRepository jpa) {
+        this.jpa = jpa;
+    }
+
+    @Override
+    public PageResult<MedicalImageType> findAll(PageQuery query) {
+        return PageMapper.toResult(jpa.findAll(PageMapper.toPageable(query)));
+    }
+
+    @Override
+    public PageResult<MedicalImageType> searchByName(String query, PageQuery pageQuery) {
+        return PageMapper.toResult(jpa.findByNameContainingIgnoreCase(query, PageMapper.toPageable(pageQuery)));
+    }
+
+    @Override
+    public Optional<MedicalImageType> findById(Integer id) {
+        return jpa.findById(id);
+    }
+
+    @Override
+    public List<MedicalImageType> findByEvaluationAreaId(Integer evaluationAreaId) {
+        return jpa.findByEvaluationAreaId(evaluationAreaId);
+    }
+
+    @Override
+    public boolean existsById(Integer id) {
+        return jpa.existsById(id);
+    }
+
+    @Override
+    public boolean existsByName(String name) {
+        return jpa.existsByName(name);
+    }
+
+    @Override
+    public boolean existsByEvaluationAreaId(Integer evaluationAreaId) {
+        return jpa.existsByEvaluationAreaId(evaluationAreaId);
+    }
+
+    @Override
+    public long count() {
+        return jpa.countAll();
+    }
+
+    @Override
+    public MedicalImageType save(MedicalImageType medicalImageType) {
+        return jpa.save(medicalImageType);
+    }
+
+    @Override
+    public void delete(MedicalImageType medicalImageType) {
+        jpa.delete(medicalImageType);
+    }
+}

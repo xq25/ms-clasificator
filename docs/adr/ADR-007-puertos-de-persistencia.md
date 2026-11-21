@@ -42,10 +42,13 @@ Por eso cambiar el motor de persistencia obligaba a tocar la lógica de negocio.
 |---------|--------|
 | `dataset` | Migrado |
 | `diagnosiscatalog` | Migrado |
-| `medicalimage`, `clinicalrecord`, `doctor`, `patient`, `classification` | Pendiente |
+| `medicalimage` (persistencia) | Migrado — el puerto de storage se ajusta en la fase 3 |
+| `clinicalrecord`, `doctor`, `patient`, `classification` | Pendiente |
+
+`PageResult.isEmpty()` replica `Page.isEmpty()` de Spring (la página actual no tiene contenido).
 
 Incumplimientos conocidos:
-- `dataset/application` todavía importa `MedicalImageTypeRepository` (de `medicalimage`). Se resuelve al migrar ese feature.
+- `dataset` ya no depende de la infraestructura de ningún otro feature.
 - `diagnosiscatalog/application` todavía importa `ClassificationDiagnosisRepository` (de `classification`). Se resuelve al migrar ese feature.
 
 ## Alternativas consideradas

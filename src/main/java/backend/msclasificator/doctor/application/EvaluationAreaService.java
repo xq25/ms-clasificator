@@ -11,7 +11,7 @@ import org.springframework.data.domain.Page;
 import backend.msclasificator.doctor.api.mapper.EvaluationAreaMapper;
 import backend.msclasificator.doctor.domain.EvaluationArea;
 import backend.msclasificator.doctor.infrastructure.persistence.EvaluationAreaRepository;
-import backend.msclasificator.medicalimage.infrastructure.persistence.MedicalImageTypeRepository;
+import backend.msclasificator.medicalimage.application.port.out.MedicalImageTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
