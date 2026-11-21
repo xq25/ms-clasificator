@@ -13,7 +13,7 @@ import backend.msclasificator.clinicalrecord.domain.ClinicalRecord;
 import backend.msclasificator.patient.domain.Patient;
 import backend.msclasificator.clinicalrecord.infrastructure.persistence.ClinicalRecordRepository;
 import backend.msclasificator.patient.infrastructure.persistence.PatientRepository;
-import backend.msclasificator.medicalimage.infrastructure.persistence.MedicalImageRepository;
+import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;

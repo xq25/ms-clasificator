@@ -6,15 +6,15 @@ import backend.msclasificator.medicalimage.api.dto.MedicalImageSummaryDTO;
 import backend.msclasificator.shared.api.PageRequestDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
-import org.springframework.data.domain.Page;
+import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.medicalimage.api.mapper.MedicalImageMapper;
 import backend.msclasificator.clinicalrecord.domain.ClinicalRecord;
 import backend.msclasificator.medicalimage.domain.MedicalImageType;
 import backend.msclasificator.medicalimage.domain.MedicalImage;
 import backend.msclasificator.clinicalrecord.infrastructure.persistence.ClinicalRecordRepository;
 import backend.msclasificator.classification.infrastructure.persistence.ImageClassificationRepository;
-import backend.msclasificator.medicalimage.infrastructure.persistence.MedicalImageTypeRepository;
-import backend.msclasificator.medicalimage.infrastructure.persistence.MedicalImageRepository;
+import backend.msclasificator.medicalimage.application.port.out.MedicalImageTypeRepository;
+import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
 import backend.msclasificator.medicalimage.application.port.out.ImageStorageService;
 import backend.msclasificator.medicalimage.application.exception.ImageStorageException;
 import backend.msclasificator.medicalimage.application.exception.InvalidImageTypeException;
@@ -99,17 +99,17 @@ public class MedicalImageService {
     // LECTURAS
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<MedicalImageSummaryDTO>> findAll(PageRequestDTO pageRequest) {
-        Page<MedicalImageSummaryDTO> page = medicalImgRepository.findAll(pageRequest.toPageable())
+        PageResult<MedicalImageSummaryDTO> page = medicalImgRepository.findAll(pageRequest.toPageQuery())
                 .map(medicalImgMapper::toSummaryDTO);
 
         return ApiResponse.success(
                 PagedResponse.<MedicalImageSummaryDTO>builder()
-                        .content(page.getContent())
-                        .page(page.getNumber())
-                        .size(page.getSize())
-                        .totalElements(page.getTotalElements())
-                        .totalPages(page.getTotalPages())
-                        .last(page.isLast())
+                        .content(page.content())
+                        .page(page.page())
+                        .size(page.size())
+                        .totalElements(page.totalElements())
+                        .totalPages(page.totalPages())
+                        .last(page.last())
                         .build(),
                 "Imágenes médicas obtenidas exitosamente"
         );
@@ -117,7 +117,7 @@ public class MedicalImageService {
 
     @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
-        return ApiResponse.success(medicalImgRepository.countAll(), "Total de imágenes médicas");
+        return ApiResponse.success(medicalImgRepository.count(), "Total de imágenes médicas");
     }
 
     @Transactional(readOnly = true)
@@ -139,18 +139,18 @@ public class MedicalImageService {
                 return ApiResponse.error("No se encontró el tipo de imagen médica con ID: " + medicalImageTypeId);
             }
 
-            Page<MedicalImageResponseDTO> page = medicalImgRepository
-                    .findByMedicalImageTypeId(medicalImageTypeId, pageRequest.toPageable())
+            PageResult<MedicalImageResponseDTO> page = medicalImgRepository
+                    .findByMedicalImageTypeId(medicalImageTypeId, pageRequest.toPageQuery())
                     .map(medicalImgMapper::toResponseDTO);
 
             return ApiResponse.success(
                     PagedResponse.<MedicalImageResponseDTO>builder()
-                            .content(page.getContent())
-                            .page(page.getNumber())
-                            .size(page.getSize())
-                            .totalElements(page.getTotalElements())
-                            .totalPages(page.getTotalPages())
-                            .last(page.isLast())
+                            .content(page.content())
+                            .page(page.page())
+                            .size(page.size())
+                            .totalElements(page.totalElements())
+                            .totalPages(page.totalPages())
+                            .last(page.last())
                             .build(),
                     "Imágenes médicas obtenidas exitosamente"
             );
@@ -166,18 +166,18 @@ public class MedicalImageService {
                 return ApiResponse.error("No se encontró el registro clínico con ID: " + clinicalRecordId);
             }
 
-            Page<MedicalImageSummaryDTO> page = medicalImgRepository
-                    .findByClinicalRecordId(clinicalRecordId, pageRequest.toPageable())
+            PageResult<MedicalImageSummaryDTO> page = medicalImgRepository
+                    .findByClinicalRecordId(clinicalRecordId, pageRequest.toPageQuery())
                     .map(medicalImgMapper::toSummaryDTO);
 
             return ApiResponse.success(
                     PagedResponse.<MedicalImageSummaryDTO>builder()
-                            .content(page.getContent())
-                            .page(page.getNumber())
-                            .size(page.getSize())
-                            .totalElements(page.getTotalElements())
-                            .totalPages(page.getTotalPages())
-                            .last(page.isLast())
+                            .content(page.content())
+                            .page(page.page())
+                            .size(page.size())
+                            .totalElements(page.totalElements())
+                            .totalPages(page.totalPages())
+                            .last(page.last())
                             .build(),
                     page.isEmpty()
                             ? "No se encontraron imágenes médicas para este clinical record"

@@ -36,8 +36,7 @@ import backend.msclasificator.doctor.infrastructure.persistence.DoctorRepository
 import backend.msclasificator.doctor.infrastructure.persistence.EvaluationAreaRepository;
 import backend.msclasificator.classification.infrastructure.persistence.ImageClassificationRepository;
 import backend.msclasificator.classification.infrastructure.persistence.ClassificationDiagnosisRepository;
-import backend.msclasificator.medicalimage.infrastructure.persistence.MedicalImageTypeRepository;
-import backend.msclasificator.medicalimage.infrastructure.persistence.MedicalImageRepository;
+import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
 import backend.msclasificator.clinicalrecord.infrastructure.persistence.PatientDatumRepository;
 import backend.msclasificator.patient.infrastructure.persistence.PatientRepository;
 import backend.msclasificator.clinicalrecord.infrastructure.persistence.PrimitiveDatumRepository;

@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-public interface MedicalImageRepository extends JpaRepository<MedicalImage, Integer> {
+public interface MedicalImageJpaRepository extends JpaRepository<MedicalImage, Integer> {
 
     List<MedicalImage> findByMedicalImageTypeId(Integer medicalImageTypeId);
     Page<MedicalImage> findByMedicalImageTypeId(Integer medicalImageTypeId, Pageable pageable);

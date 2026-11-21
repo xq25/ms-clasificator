@@ -15,7 +15,7 @@ import backend.msclasificator.medicalimage.domain.MedicalImageType;
 import backend.msclasificator.dataset.application.port.out.DatasetCategoryRepository;
 import backend.msclasificator.dataset.application.port.out.DatasetRepository;
 import backend.msclasificator.diagnosiscatalog.application.port.out.MedicalDiagnosticRepository;
-import backend.msclasificator.medicalimage.infrastructure.persistence.MedicalImageTypeRepository;
+import backend.msclasificator.medicalimage.application.port.out.MedicalImageTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
