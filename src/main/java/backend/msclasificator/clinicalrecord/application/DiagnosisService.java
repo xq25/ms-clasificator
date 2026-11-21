@@ -6,13 +6,13 @@ import backend.msclasificator.clinicalrecord.api.dto.DiagnosisSummaryDTO;
 import backend.msclasificator.shared.api.PageRequestDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
-import org.springframework.data.domain.Page;
+import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.clinicalrecord.api.mapper.DiagnosisMapper;
 import backend.msclasificator.clinicalrecord.domain.ClinicalRecord;
 import backend.msclasificator.clinicalrecord.domain.Diagnosis;
 import backend.msclasificator.diagnosiscatalog.domain.MedicalDiagnostic;
-import backend.msclasificator.clinicalrecord.infrastructure.persistence.ClinicalRecordRepository;
-import backend.msclasificator.clinicalrecord.infrastructure.persistence.DiagnosisRepository;
+import backend.msclasificator.clinicalrecord.application.port.out.ClinicalRecordRepository;
+import backend.msclasificator.clinicalrecord.application.port.out.DiagnosisRepository;
 import backend.msclasificator.diagnosiscatalog.application.port.out.MedicalDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -38,17 +38,17 @@ public class DiagnosisService {
 
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<DiagnosisSummaryDTO>> findAll(PageRequestDTO pageRequest) {
-        Page<DiagnosisSummaryDTO> page = diagnosisRepository.findAll(pageRequest.toPageable())
+        PageResult<DiagnosisSummaryDTO> page = diagnosisRepository.findAll(pageRequest.toPageQuery())
                 .map(diagnosisMapper::toSummaryDTO);
 
         return ApiResponse.success(
                 PagedResponse.<DiagnosisSummaryDTO>builder()
-                        .content(page.getContent())
-                        .page(page.getNumber())
-                        .size(page.getSize())
-                        .totalElements(page.getTotalElements())
-                        .totalPages(page.getTotalPages())
-                        .last(page.isLast())
+                        .content(page.content())
+                        .page(page.page())
+                        .size(page.size())
+                        .totalElements(page.totalElements())
+                        .totalPages(page.totalPages())
+                        .last(page.last())
                         .build(),
                 "Diagnosticos obtenidos exitosamente"
         );
@@ -56,7 +56,7 @@ public class DiagnosisService {
 
     @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
-        return ApiResponse.success(diagnosisRepository.countAll(), "Total de diagnósticos");
+        return ApiResponse.success(diagnosisRepository.count(), "Total de diagnósticos");
     }
 
     @Transactional(readOnly = true)
@@ -79,18 +79,18 @@ public class DiagnosisService {
             return ApiResponse.error("Clinical Record no encontrado con ID: " + clinicalRecordId);
         }
 
-        Page<DiagnosisSummaryDTO> page = diagnosisRepository
-                .findByClinicalRecordId(clinicalRecordId, pageRequest.toPageable())
+        PageResult<DiagnosisSummaryDTO> page = diagnosisRepository
+                .findByClinicalRecordId(clinicalRecordId, pageRequest.toPageQuery())
                 .map(diagnosisMapper::toSummaryDTO);
 
         return ApiResponse.success(
                 PagedResponse.<DiagnosisSummaryDTO>builder()
-                        .content(page.getContent())
-                        .page(page.getNumber())
-                        .size(page.getSize())
-                        .totalElements(page.getTotalElements())
-                        .totalPages(page.getTotalPages())
-                        .last(page.isLast())
+                        .content(page.content())
+                        .page(page.page())
+                        .size(page.size())
+                        .totalElements(page.totalElements())
+                        .totalPages(page.totalPages())
+                        .last(page.last())
                         .build(),
                 page.isEmpty()
                         ? "No se encontraron Diagnosis para el Clinical Record ID: " + clinicalRecordId

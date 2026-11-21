@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface PatientDatumRepository extends JpaRepository<PatientDatum, Integer> {
+public interface PatientDatumJpaRepository extends JpaRepository<PatientDatum, Integer> {
     List<PatientDatum> findByClinicalRecordId(Integer clinicalRecordId);
 
     List<PatientDatum> findByPrimitiveDatumId(Integer primitiveDatumId);
