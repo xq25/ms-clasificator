@@ -38,7 +38,6 @@ import backend.msclasificator.classification.infrastructure.persistence.ImageCla
 import backend.msclasificator.classification.infrastructure.persistence.ClassificationDiagnosisRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
 import backend.msclasificator.clinicalrecord.infrastructure.persistence.PatientDatumRepository;
-import backend.msclasificator.patient.infrastructure.persistence.PatientRepository;
 import backend.msclasificator.clinicalrecord.infrastructure.persistence.PrimitiveDatumRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

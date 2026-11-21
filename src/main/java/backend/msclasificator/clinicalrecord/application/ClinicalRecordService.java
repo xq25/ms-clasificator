@@ -12,7 +12,7 @@ import backend.msclasificator.clinicalrecord.api.mapper.ClinicalRecordMapper;
 import backend.msclasificator.clinicalrecord.domain.ClinicalRecord;
 import backend.msclasificator.patient.domain.Patient;
 import backend.msclasificator.clinicalrecord.infrastructure.persistence.ClinicalRecordRepository;
-import backend.msclasificator.patient.infrastructure.persistence.PatientRepository;
+import backend.msclasificator.patient.application.port.out.PatientRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;

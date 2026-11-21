@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
 
-public interface PatientRepository extends JpaRepository<Patient, Integer> {
+public interface PatientJpaRepository extends JpaRepository<Patient, Integer> {
     Optional<Patient> findByDocument(String document);
     Optional<Patient> findByUserId(String userId);
 

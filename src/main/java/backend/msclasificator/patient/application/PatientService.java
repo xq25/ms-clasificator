@@ -9,12 +9,12 @@ import backend.msclasificator.patient.api.dto.PatientSummaryDTO;
 import backend.msclasificator.patient.api.dto.PatientUpdateDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
-import org.springframework.data.domain.Page;
+import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.patient.api.mapper.PatientMapper;
 import backend.msclasificator.patient.domain.Patient;
 import backend.msclasificator.identity.domain.UserInfo;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
-import backend.msclasificator.patient.infrastructure.persistence.PatientRepository;
+import backend.msclasificator.patient.application.port.out.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -43,17 +43,17 @@ public class    PatientService {
      */
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<PatientSummaryDTO>> findAll(PageRequestDTO pageRequest) {
-        Page<PatientSummaryDTO> page = patientRepository.findAll(pageRequest.toPageable())
+        PageResult<PatientSummaryDTO> page = patientRepository.findAll(pageRequest.toPageQuery())
                 .map(patientMapper::toSummaryDTO);
 
         return ApiResponse.success(
                 PagedResponse.<PatientSummaryDTO>builder()
-                        .content(page.getContent())
-                        .page(page.getNumber())
-                        .size(page.getSize())
-                        .totalElements(page.getTotalElements())
-                        .totalPages(page.getTotalPages())
-                        .last(page.isLast())
+                        .content(page.content())
+                        .page(page.page())
+                        .size(page.size())
+                        .totalElements(page.totalElements())
+                        .totalPages(page.totalPages())
+                        .last(page.last())
                         .build(),
                 "Pacientes encontrados exitosamente"
         );
@@ -62,18 +62,18 @@ public class    PatientService {
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<PatientSummaryDTO>> searchByDocument(String query, PageRequestDTO pageRequest) {
         try {
-            Page<PatientSummaryDTO> page = patientRepository
-                    .findByDocumentContainingIgnoreCase(query, pageRequest.toPageable())
+            PageResult<PatientSummaryDTO> page = patientRepository
+                    .searchByDocument(query, pageRequest.toPageQuery())
                     .map(patientMapper::toSummaryDTO);
 
             return ApiResponse.success(
                     PagedResponse.<PatientSummaryDTO>builder()
-                            .content(page.getContent())
-                            .page(page.getNumber())
-                            .size(page.getSize())
-                            .totalElements(page.getTotalElements())
-                            .totalPages(page.getTotalPages())
-                            .last(page.isLast())
+                            .content(page.content())
+                            .page(page.page())
+                            .size(page.size())
+                            .totalElements(page.totalElements())
+                            .totalPages(page.totalPages())
+                            .last(page.last())
                             .build(),
                     "Resultados de búsqueda por documento"
             );
@@ -84,7 +84,7 @@ public class    PatientService {
 
     @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
-        return ApiResponse.success(patientRepository.countAll(), "Total de pacientes");
+        return ApiResponse.success(patientRepository.count(), "Total de pacientes");
     }
 
     /**

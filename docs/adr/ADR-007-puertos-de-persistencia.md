@@ -43,7 +43,8 @@ Por eso cambiar el motor de persistencia obligaba a tocar la lógica de negocio.
 | `dataset` | Migrado |
 | `diagnosiscatalog` | Migrado |
 | `medicalimage` (persistencia) | Migrado — el puerto de storage se ajusta en la fase 3 |
-| `clinicalrecord`, `doctor`, `patient`, `classification` | Pendiente |
+| `patient` | Migrado |
+| `clinicalrecord`, `doctor`, `classification` | Pendiente |
 
 `PageResult.isEmpty()` replica `Page.isEmpty()` de Spring (la página actual no tiene contenido).
 
