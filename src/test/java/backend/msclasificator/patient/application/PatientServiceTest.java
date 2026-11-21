@@ -255,12 +255,12 @@ class PatientServiceTest {
         }
 
         @Test
-        @DisplayName("userId inexistente en ms-security: error (sin espacio antes del id)")
+        @DisplayName("userId inexistente en ms-security: error")
         void usuarioInexistente() {
             when(patientRepository.findByDocument("CC12345678")).thenReturn(Optional.empty());
             when(securityService.existUserById(USER_ID)).thenReturn(false);
 
-            assertThat(service.create(dto).getMessage()).isEqualTo("No existe un usuario con iduser-123");
+            assertThat(service.create(dto).getMessage()).isEqualTo("No existe un usuario con el userId: user-123. No se puede crear el paciente sin un usuario asociado.");
             verify(patientRepository, never()).save(any());
         }
 
@@ -299,8 +299,8 @@ class PatientServiceTest {
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO: si falla la asignación de rol, el mensaje menciona 'doctor'")
-        void falloRolMensajeIncorrecto() {
+        @DisplayName("si falla la asignación de rol: crea el paciente e informa que no se asignó el rol 'patient'")
+        void falloRolInformado() {
             when(patientRepository.findByDocument("CC12345678")).thenReturn(Optional.empty());
             when(securityService.existUserById(USER_ID)).thenReturn(true);
             when(patientRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
@@ -313,7 +313,7 @@ class PatientServiceTest {
 
             assertThat(response.isSuccess()).isTrue();
             assertThat(response.getMessage())
-                    .isEqualTo("Paciente creado exitosamente. No se pudo asignar el rol 'doctor' al usuario.");
+                    .isEqualTo("Paciente creado exitosamente. No se pudo asignar el rol 'patient' al usuario.");
         }
     }
 
