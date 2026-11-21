@@ -101,7 +101,7 @@ Se ejecuta al arrancar. Es idempotente (`INSERT IGNORE`). Carga:
 - Respuesta estándar: `ApiResponse<T>` con `success`, `data` y `message`.
 - Paginación: `PageRequestDTO.toPageQuery()` → puerto devuelve `PageResult<T>` → `PagedResponse<T>` (ADR-007).
 - Mappers manuales (sin MapStruct): un Mapper por entidad en `<feature>/api/mapper/`.
-- Persistencia (ADR-007): puerto `XRepository` en `application/port/out/`, Spring Data `XJpaRepository` + `XPersistenceAdapter` en `infrastructure/persistence/`. Migrado: `dataset`, `diagnosiscatalog`, `medicalimage`, `patient`. Resto de features aún inyecta Spring Data directamente.
+- Persistencia (ADR-007): puerto `XRepository` en `application/port/out/`, Spring Data `XJpaRepository` + `XPersistenceAdapter` en `infrastructure/persistence/`. Migrado: `dataset`, `diagnosiscatalog`, `medicalimage`, `patient`, `doctor`. Resto de features aún inyecta Spring Data directamente.
 - No hay tests unitarios implementados aún.
 - Proceso: **explicar + ejemplificar ANTES de aplicar cambios**; solo implementar con autorización explícita.
 
@@ -120,7 +120,7 @@ src/main/java/backend/msclasificator/
 └── platform/                  config/ (CORS, Web, HttpClient) y security/ (SecurityInterceptor)
 ```
 Regla de dependencia: `api → application → domain`; `infrastructure` implementa puertos de `application`.
-Estado: fase 1 completada (paquetes y nombres). Fase 2 en curso: `dataset`, `diagnosiscatalog`, `medicalimage` y `patient` migrados a puertos (ADR-007); el resto de features pendiente.
+Estado: fase 1 completada (paquetes y nombres). Fase 2 en curso: `dataset`, `diagnosiscatalog`, `medicalimage`, `patient` y `doctor` migrados a puertos (ADR-007); el resto de features pendiente.
 
 ---
 

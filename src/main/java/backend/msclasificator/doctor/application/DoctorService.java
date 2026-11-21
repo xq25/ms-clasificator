@@ -9,11 +9,11 @@ import backend.msclasificator.doctor.api.dto.DoctorUpdateDTO;
 import backend.msclasificator.shared.api.PageRequestDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
-import org.springframework.data.domain.Page;
+import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.doctor.api.mapper.DoctorMapper;
 import backend.msclasificator.doctor.domain.Doctor;
 import backend.msclasificator.identity.domain.UserInfo;
-import backend.msclasificator.doctor.infrastructure.persistence.DoctorRepository;
+import backend.msclasificator.doctor.application.port.out.DoctorRepository;
 import backend.msclasificator.classification.infrastructure.persistence.ImageClassificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -44,17 +44,17 @@ public class DoctorService {
      */
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<DoctorSummaryDTO>> findAll(PageRequestDTO pageRequest) {
-        Page<DoctorSummaryDTO> page = doctorRepository.findAll(pageRequest.toPageable())
+        PageResult<DoctorSummaryDTO> page = doctorRepository.findAll(pageRequest.toPageQuery())
                 .map(doctorMapper::toSummaryDTO);
 
         return ApiResponse.success(
                 PagedResponse.<DoctorSummaryDTO>builder()
-                        .content(page.getContent())
-                        .page(page.getNumber())
-                        .size(page.getSize())
-                        .totalElements(page.getTotalElements())
-                        .totalPages(page.getTotalPages())
-                        .last(page.isLast())
+                        .content(page.content())
+                        .page(page.page())
+                        .size(page.size())
+                        .totalElements(page.totalElements())
+                        .totalPages(page.totalPages())
+                        .last(page.last())
                         .build(),
                 "Doctores encontrados exitosamente"
         );
@@ -63,18 +63,18 @@ public class DoctorService {
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<DoctorSummaryDTO>> searchByCode(String query, PageRequestDTO pageRequest) {
         try {
-            Page<DoctorSummaryDTO> page = doctorRepository
-                    .findByCodeContainingIgnoreCase(query, pageRequest.toPageable())
+            PageResult<DoctorSummaryDTO> page = doctorRepository
+                    .searchByCode(query, pageRequest.toPageQuery())
                     .map(doctorMapper::toSummaryDTO);
 
             return ApiResponse.success(
                     PagedResponse.<DoctorSummaryDTO>builder()
-                            .content(page.getContent())
-                            .page(page.getNumber())
-                            .size(page.getSize())
-                            .totalElements(page.getTotalElements())
-                            .totalPages(page.getTotalPages())
-                            .last(page.isLast())
+                            .content(page.content())
+                            .page(page.page())
+                            .size(page.size())
+                            .totalElements(page.totalElements())
+                            .totalPages(page.totalPages())
+                            .last(page.last())
                             .build(),
                     "Resultados de búsqueda por código"
             );
@@ -85,7 +85,7 @@ public class DoctorService {
 
     @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
-        return ApiResponse.success(doctorRepository.countAll(), "Total de doctores");
+        return ApiResponse.success(doctorRepository.count(), "Total de doctores");
     }
 
     /**
