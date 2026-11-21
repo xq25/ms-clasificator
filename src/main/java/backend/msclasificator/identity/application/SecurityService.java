@@ -1,11 +1,13 @@
 package backend.msclasificator.identity.application;
 
 import backend.msclasificator.shared.api.ApiResponse;
+import backend.msclasificator.identity.application.exception.SecurityServiceException;
 import backend.msclasificator.identity.domain.UserInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -174,22 +176,24 @@ public class SecurityService {
 
     }
 
-    public UserInfo getUserInfo(String userId){
-        // Obtenemos el nombre del usuario
-        String username = this.getUserNameById(userId);
-        if (username == null){
-            return null;
+    // Nunca devuelve null: si ms-security falla o responde incompleto lanza SecurityServiceException (→ 503, ADR-009)
+    public UserInfo getUserInfo(String userId) {
+        String mensaje = "No se pudo obtener la información del usuario (nombre y email) desde ms-security";
+        String username;
+        String email;
+        try {
+            username = this.getUserNameById(userId);
+            email = username == null ? null : this.getUserEmailById(userId);
+        } catch (RestClientException ex) {
+            throw new SecurityServiceException(mensaje, ex);
+        }
+        if (username == null || email == null) {
+            throw new SecurityServiceException(mensaje);
         }
 
-        String email = this.getUserEmailById(userId);
-        if(email == null){
-            return null;
-        }
-
-        UserInfo userInfo =  new UserInfo();
+        UserInfo userInfo = new UserInfo();
         userInfo.setName(username);
         userInfo.setEmail(email);
-
         return userInfo;
     }
 }

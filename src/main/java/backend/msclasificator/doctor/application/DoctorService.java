@@ -12,7 +12,6 @@ import backend.msclasificator.shared.api.PagedResponse;
 import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.doctor.api.mapper.DoctorMapper;
 import backend.msclasificator.doctor.domain.Doctor;
-import backend.msclasificator.identity.domain.UserInfo;
 import backend.msclasificator.doctor.application.port.out.DoctorRepository;
 import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,10 +100,8 @@ public class DoctorService {
                     .map(doctorMapper::toResponseDTO)
                     .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + id));
 
-            UserInfo userInfo = securityServices.getUserInfo(doctor.getUserId());
-            if(userInfo != null){
-                doctor.setUserInfo(userInfo);
-            }
+            // Si ms-security falla lanza SecurityServiceException, que GlobalExceptionHandler traduce a 503
+            doctor.setUserInfo(securityServices.getUserInfo(doctor.getUserId()));
 
             return ApiResponse.success(doctor, "Doctor encontrado exitosamente");
         } catch (IllegalArgumentException ex) {
@@ -124,10 +121,8 @@ public class DoctorService {
                     .map(doctorMapper::toResponseDTO)
                     .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con código: " + code));
 
-            UserInfo userInfo = securityServices.getUserInfo(doctor.getUserId());
-            if(userInfo != null){
-                doctor.setUserInfo(userInfo);
-            }
+            // Si ms-security falla lanza SecurityServiceException, que GlobalExceptionHandler traduce a 503
+            doctor.setUserInfo(securityServices.getUserInfo(doctor.getUserId()));
 
             return ApiResponse.success(doctor, "Doctor encontrado exitosamente");
         } catch (IllegalArgumentException ex) {
@@ -142,10 +137,8 @@ public class DoctorService {
                     .map(doctorMapper::toResponseDTO)
                     .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con userId: " + userId));
 
-            UserInfo userInfo = securityServices.getUserInfo(doctor.getUserId());
-            if(userInfo != null){
-                doctor.setUserInfo(userInfo);
-            }
+            // Si ms-security falla lanza SecurityServiceException, que GlobalExceptionHandler traduce a 503
+            doctor.setUserInfo(securityServices.getUserInfo(doctor.getUserId()));
 
             return ApiResponse.success(doctor, "Doctor encontrado exitosamente");
         } catch (IllegalArgumentException ex) {

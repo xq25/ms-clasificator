@@ -101,8 +101,9 @@ Se ejecuta al arrancar. Es idempotente (`INSERT IGNORE`). Carga:
 - Respuesta estándar: `ApiResponse<T>` con `success`, `data` y `message`.
 - Paginación: `PageRequestDTO.toPageQuery()` → puerto devuelve `PageResult<T>` → `PagedResponse<T>` (ADR-007).
 - Mappers manuales (sin MapStruct): un Mapper por entidad en `<feature>/api/mapper/`.
-- Tests (ADR-008): unitarios de servicios con JUnit 5 + Mockito (sin Spring ni BD), de **caracterización** (fijan el comportamiento actual; bugs marcados `BUG CONOCIDO`). En `src/test/java/.../<feature>/application/<Servicio>Test.java`. Ejecutar: `mvnw test -Dtest='*ServiceTest' -Dsurefire.failIfNoSpecifiedTests=false`. Cubierto: `dataset`. `contextLoads` requiere MySQL + MinIO.
+- Tests (ADR-008): unitarios de servicios con JUnit 5 + Mockito (sin Spring ni BD), de **caracterización** (fijan el comportamiento actual; bugs marcados `BUG CONOCIDO`). En `src/test/java/.../<feature>/application/<Servicio>Test.java`. Ejecutar: `mvnw test -Dtest='*ServiceTest' -Dsurefire.failIfNoSpecifiedTests=false`. Cubierto: `dataset`, `PatientService`, `SecurityService.getUserInfo` y las búsquedas de `DoctorService`. `contextLoads` requiere MySQL + MinIO.
 - Bugs detectados y pendientes de decisión: [`docs/bugs-conocidos.md`](docs/bugs-conocidos.md). No se corrigen dentro de refactors.
+- Servicios externos (ADR-009): el cliente del servicio externo lanza una excepción propia del feature (p. ej. `SecurityServiceException`) ante fallo o respuesta incompleta; nunca devuelve `null`. El `GlobalExceptionHandler` la traduce a **503**. Los servicios no la capturan; si tienen `catch (Exception)` deben relanzarla antes.
 - Persistencia (ADR-007): puerto `XRepository` en `application/port/out/`, Spring Data `XJpaRepository` + `XPersistenceAdapter` en `infrastructure/persistence/`. Todos los features migrados. Los métodos del puerto usan el vocabulario de dominio actual; el adaptador traduce a las consultas derivadas JPA (que conservan nombres de campo viejos, ADR-003).
 - Proceso: **explicar + ejemplificar ANTES de aplicar cambios**; solo implementar con autorización explícita.
 

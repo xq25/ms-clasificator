@@ -1,6 +1,7 @@
 package backend.msclasificator.patient.application;
 
 import backend.msclasificator.identity.application.SecurityService;
+import backend.msclasificator.identity.application.exception.SecurityServiceException;
 import backend.msclasificator.identity.domain.UserInfo;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
 import backend.msclasificator.patient.api.dto.PatientCreateDTO;
@@ -24,13 +25,13 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.client.ResourceAccessException;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.inOrder;
@@ -132,30 +133,14 @@ class PatientServiceTest {
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO: ms-security no devuelve userInfo → éxito sin userInfo y sin aviso")
-        void sinUserInfoSinAviso() {
+        @DisplayName("ms-security falla: propaga SecurityServiceException (el handler responde 503)")
+        void msSecurityFallaPropaga() {
             when(patientRepository.findById(1)).thenReturn(Optional.of(patient));
             when(patientMapper.toResponseDTO(patient)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenReturn(null);
+            when(securityService.getUserInfo(USER_ID)).thenThrow(new SecurityServiceException("sin datos"));
 
-            ApiResponse<PatientResponseDTO> response = service.findById(1);
-
-            assertThat(response.isSuccess()).isTrue();
-            assertThat(response.getMessage()).isEqualTo("Paciente encontrado exitosamente");
-            assertThat(response.getData().getUserInfo()).isNull();
-        }
-
-        @Test
-        @DisplayName("ms-security inaccesible (excepción): error")
-        void msSecurityInaccesible() {
-            when(patientRepository.findById(1)).thenReturn(Optional.of(patient));
-            when(patientMapper.toResponseDTO(patient)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenThrow(new ResourceAccessException("Connection refused"));
-
-            ApiResponse<PatientResponseDTO> response = service.findById(1);
-
-            assertThat(response.isSuccess()).isFalse();
-            assertThat(response.getMessage()).isEqualTo("Error al buscar paciente: Connection refused");
+            assertThatThrownBy(() -> service.findById(1))
+                    .isInstanceOf(SecurityServiceException.class);
         }
     }
 
@@ -187,17 +172,14 @@ class PatientServiceTest {
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO: ms-security no devuelve userInfo → éxito sin userInfo y sin aviso")
-        void sinUserInfoSinAviso() {
+        @DisplayName("ms-security falla: propaga SecurityServiceException (no la convierte el catch genérico)")
+        void msSecurityFallaPropaga() {
             when(patientRepository.findByDocument("CC12345678")).thenReturn(Optional.of(patient));
             when(patientMapper.toResponseDTO(patient)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenReturn(null);
+            when(securityService.getUserInfo(USER_ID)).thenThrow(new SecurityServiceException("sin datos"));
 
-            ApiResponse<PatientResponseDTO> response = service.findByDocument("CC12345678");
-
-            assertThat(response.isSuccess()).isTrue();
-            assertThat(response.getMessage()).isEqualTo("Pacientes encontrados exitosamente");
-            assertThat(response.getData().getUserInfo()).isNull();
+            assertThatThrownBy(() -> service.findByDocument("CC12345678"))
+                    .isInstanceOf(SecurityServiceException.class);
         }
     }
 
@@ -214,28 +196,27 @@ class PatientServiceTest {
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO: ms-security no devuelve userInfo → éxito sin userInfo y sin aviso")
-        void sinUserInfoSinAviso() {
+        @DisplayName("con userInfo: éxito con nombre y email")
+        void conUserInfo() {
             when(patientRepository.findByUserId(USER_ID)).thenReturn(Optional.of(patient));
             when(patientMapper.toResponseDTO(patient)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenReturn(null);
+            when(securityService.getUserInfo(USER_ID)).thenReturn(userInfo);
 
             ApiResponse<PatientResponseDTO> response = service.findByUserId(USER_ID);
 
             assertThat(response.isSuccess()).isTrue();
-            assertThat(response.getMessage()).isEqualTo("Paciente encontrado exitosamente");
-            assertThat(response.getData().getUserInfo()).isNull();
+            assertThat(response.getData().getUserInfo()).isSameAs(userInfo);
         }
 
         @Test
-        @DisplayName("ms-security inaccesible (excepción): error")
-        void msSecurityInaccesible() {
+        @DisplayName("ms-security falla: propaga SecurityServiceException")
+        void msSecurityFallaPropaga() {
             when(patientRepository.findByUserId(USER_ID)).thenReturn(Optional.of(patient));
             when(patientMapper.toResponseDTO(patient)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenThrow(new ResourceAccessException("Connection refused"));
+            when(securityService.getUserInfo(USER_ID)).thenThrow(new SecurityServiceException("sin datos"));
 
-            assertThat(service.findByUserId(USER_ID).getMessage())
-                    .isEqualTo("Error al buscar paciente por userId: Connection refused");
+            assertThatThrownBy(() -> service.findByUserId(USER_ID))
+                    .isInstanceOf(SecurityServiceException.class);
         }
     }
 
