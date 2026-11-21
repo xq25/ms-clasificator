@@ -41,10 +41,12 @@ Por eso cambiar el motor de persistencia obligaba a tocar la lógica de negocio.
 | Feature | Estado |
 |---------|--------|
 | `dataset` | Migrado |
-| `diagnosiscatalog`, `medicalimage`, `clinicalrecord`, `doctor`, `patient`, `classification` | Pendiente |
+| `diagnosiscatalog` | Migrado |
+| `medicalimage`, `clinicalrecord`, `doctor`, `patient`, `classification` | Pendiente |
 
-Incumplimientos conocidos tras migrar `dataset`:
-- `dataset/application` todavía importa `MedicalDiagnosticRepository` (de `diagnosiscatalog`) y `MedicalImageTypeRepository` (de `medicalimage`). Se resuelven al migrar esos features.
+Incumplimientos conocidos:
+- `dataset/application` todavía importa `MedicalImageTypeRepository` (de `medicalimage`). Se resuelve al migrar ese feature.
+- `diagnosiscatalog/application` todavía importa `ClassificationDiagnosisRepository` (de `classification`). Se resuelve al migrar ese feature.
 
 ## Alternativas consideradas
 - **Puerto `XStore` y conservar `XRepository` para Spring Data.** Se descarta porque deja el nombre natural del dominio en manos de la infraestructura.

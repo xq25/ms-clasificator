@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface MedicalDiagnosticRepository extends JpaRepository<MedicalDiagnostic, Integer> {
+public interface MedicalDiagnosticJpaRepository extends JpaRepository<MedicalDiagnostic, Integer> {
     MedicalDiagnostic findByDiagnosticCode(String diagnosticCode);
     List<MedicalDiagnostic> findByParentDiagnosticId(Integer parentDiagnosticId);
     boolean existsByIdAndParentDiagnosticId(

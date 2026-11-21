@@ -13,7 +13,7 @@ import backend.msclasificator.classification.domain.ClassificationDiagnosis;
 import backend.msclasificator.diagnosiscatalog.domain.MedicalDiagnostic;
 import backend.msclasificator.classification.infrastructure.persistence.ImageClassificationRepository;
 import backend.msclasificator.classification.infrastructure.persistence.ClassificationDiagnosisRepository;
-import backend.msclasificator.diagnosiscatalog.infrastructure.persistence.MedicalDiagnosticRepository;
+import backend.msclasificator.diagnosiscatalog.application.port.out.MedicalDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -7,12 +7,12 @@ import backend.msclasificator.diagnosiscatalog.api.dto.MedicalDiagnosticUpdateDT
 import backend.msclasificator.shared.api.PageRequestDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
-import org.springframework.data.domain.Page;
+import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.diagnosiscatalog.api.mapper.MedicalDiagnosticMapper;
 import backend.msclasificator.diagnosiscatalog.domain.MedicalDiagnostic;
 import backend.msclasificator.dataset.application.port.out.CategoryDiagnosticRepository;
 import backend.msclasificator.classification.infrastructure.persistence.ClassificationDiagnosisRepository;
-import backend.msclasificator.diagnosiscatalog.infrastructure.persistence.MedicalDiagnosticRepository;
+import backend.msclasificator.diagnosiscatalog.application.port.out.MedicalDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -39,17 +39,17 @@ public class MedicalDiagnosticService {
 
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<MedicalDiagnosticResponseDTO>> findAll(PageRequestDTO pageRequest) {
-        Page<MedicalDiagnosticResponseDTO> page = medicalDiagnosticRepository.findAll(pageRequest.toPageable())
+        PageResult<MedicalDiagnosticResponseDTO> page = medicalDiagnosticRepository.findAll(pageRequest.toPageQuery())
                 .map(medicalDiagnosticMapper::toResponseDTO);
 
         return ApiResponse.success(
                 PagedResponse.<MedicalDiagnosticResponseDTO>builder()
-                        .content(page.getContent())
-                        .page(page.getNumber())
-                        .size(page.getSize())
-                        .totalElements(page.getTotalElements())
-                        .totalPages(page.getTotalPages())
-                        .last(page.isLast())
+                        .content(page.content())
+                        .page(page.page())
+                        .size(page.size())
+                        .totalElements(page.totalElements())
+                        .totalPages(page.totalPages())
+                        .last(page.last())
                         .build(),
                 "Diagnósticos médicos encontrados exitosamente"
         );
@@ -58,18 +58,18 @@ public class MedicalDiagnosticService {
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<MedicalDiagnosticSummaryDTO>> searchByName(String query, PageRequestDTO pageRequest) {
         try {
-            Page<MedicalDiagnosticSummaryDTO> page = medicalDiagnosticRepository
-                    .findByDiagnosticNameContainingIgnoreCase(query, pageRequest.toPageable())
+            PageResult<MedicalDiagnosticSummaryDTO> page = medicalDiagnosticRepository
+                    .searchByName(query, pageRequest.toPageQuery())
                     .map(medicalDiagnosticMapper::toSummaryDTO);
 
             return ApiResponse.success(
                     PagedResponse.<MedicalDiagnosticSummaryDTO>builder()
-                            .content(page.getContent())
-                            .page(page.getNumber())
-                            .size(page.getSize())
-                            .totalElements(page.getTotalElements())
-                            .totalPages(page.getTotalPages())
-                            .last(page.isLast())
+                            .content(page.content())
+                            .page(page.page())
+                            .size(page.size())
+                            .totalElements(page.totalElements())
+                            .totalPages(page.totalPages())
+                            .last(page.last())
                             .build(),
                     "Resultados de búsqueda por nombre"
             );
@@ -81,18 +81,18 @@ public class MedicalDiagnosticService {
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<MedicalDiagnosticSummaryDTO>> searchByCode(String query, PageRequestDTO pageRequest) {
         try {
-            Page<MedicalDiagnosticSummaryDTO> page = medicalDiagnosticRepository
-                    .findByDiagnosticCodeContainingIgnoreCase(query, pageRequest.toPageable())
+            PageResult<MedicalDiagnosticSummaryDTO> page = medicalDiagnosticRepository
+                    .searchByCode(query, pageRequest.toPageQuery())
                     .map(medicalDiagnosticMapper::toSummaryDTO);
 
             return ApiResponse.success(
                     PagedResponse.<MedicalDiagnosticSummaryDTO>builder()
-                            .content(page.getContent())
-                            .page(page.getNumber())
-                            .size(page.getSize())
-                            .totalElements(page.getTotalElements())
-                            .totalPages(page.getTotalPages())
-                            .last(page.isLast())
+                            .content(page.content())
+                            .page(page.page())
+                            .size(page.size())
+                            .totalElements(page.totalElements())
+                            .totalPages(page.totalPages())
+                            .last(page.last())
                             .build(),
                     "Resultados de búsqueda por código"
             );
@@ -103,7 +103,7 @@ public class MedicalDiagnosticService {
 
     @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
-        return ApiResponse.success(medicalDiagnosticRepository.countAll(), "Total de diagnósticos médicos");
+        return ApiResponse.success(medicalDiagnosticRepository.count(), "Total de diagnósticos médicos");
     }
 
     @Transactional(readOnly = true)
@@ -145,7 +145,7 @@ public class MedicalDiagnosticService {
             }
 
             // Validamos que el codigo sea unico
-            if (medicalDiagnosticRepository.findByDiagnosticCode(medicalDiagnosticCreateDTO.getDiagnosticCode()) != null) {
+            if (medicalDiagnosticRepository.findByDiagnosticCode(medicalDiagnosticCreateDTO.getDiagnosticCode()).isPresent()) {
                 return ApiResponse.error("Ya existe un diagnóstico con el código: " + medicalDiagnosticCreateDTO.getDiagnosticCode());
             }
 
@@ -179,7 +179,7 @@ public class MedicalDiagnosticService {
 
             // Validamos el codigo de diagnostico
             MedicalDiagnostic existingByCode = medicalDiagnosticRepository
-                    .findByDiagnosticCode(medicalDiagnosticUpdateDTO.getDiagnosticCode());
+                    .findByDiagnosticCode(medicalDiagnosticUpdateDTO.getDiagnosticCode()).orElse(null);
             if (existingByCode != null && !existingByCode.getId().equals(id)) {
                 throw new IllegalArgumentException("Ya existe un diagnóstico con el código: "
                         + medicalDiagnosticUpdateDTO.getDiagnosticCode());
