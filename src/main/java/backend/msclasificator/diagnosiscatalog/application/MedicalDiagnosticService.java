@@ -11,7 +11,7 @@ import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.diagnosiscatalog.api.mapper.MedicalDiagnosticMapper;
 import backend.msclasificator.diagnosiscatalog.domain.MedicalDiagnostic;
 import backend.msclasificator.dataset.application.port.out.CategoryDiagnosticRepository;
-import backend.msclasificator.classification.infrastructure.persistence.ClassificationDiagnosisRepository;
+import backend.msclasificator.classification.application.port.out.ClassificationDiagnosisRepository;
 import backend.msclasificator.diagnosiscatalog.application.port.out.MedicalDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;

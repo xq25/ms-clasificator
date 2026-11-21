@@ -6,7 +6,7 @@ import backend.msclasificator.classification.api.dto.ImageClassificationSummaryD
 import backend.msclasificator.shared.api.PageRequestDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
-import org.springframework.data.domain.Page;
+import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.classification.api.mapper.ImageClassificationMapper;
 import backend.msclasificator.clinicalrecord.domain.ClinicalRecord;
 import backend.msclasificator.dataset.domain.Dataset;
@@ -31,8 +31,7 @@ import backend.msclasificator.shared.domain.SystemDatum;
 import backend.msclasificator.identity.domain.UserInfo;
 import backend.msclasificator.doctor.application.port.out.DoctorAreaRepository;
 import backend.msclasificator.doctor.application.port.out.DoctorRepository;
-import backend.msclasificator.classification.infrastructure.persistence.ImageClassificationRepository;
-import backend.msclasificator.classification.infrastructure.persistence.ClassificationDiagnosisRepository;
+import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -61,17 +60,17 @@ public class ImageClassificationService {
 
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<ImageClassificationSummaryDTO>> findAll(PageRequestDTO pageRequest) {
-        Page<ImageClassificationSummaryDTO> page = imageDiagnosticRepository.findAll(pageRequest.toPageable())
+        PageResult<ImageClassificationSummaryDTO> page = imageDiagnosticRepository.findAll(pageRequest.toPageQuery())
                 .map(imageDiagnosticMapper::toSummaryDTO);
 
         return ApiResponse.success(
                 PagedResponse.<ImageClassificationSummaryDTO>builder()
-                        .content(page.getContent())
-                        .page(page.getNumber())
-                        .size(page.getSize())
-                        .totalElements(page.getTotalElements())
-                        .totalPages(page.getTotalPages())
-                        .last(page.isLast())
+                        .content(page.content())
+                        .page(page.page())
+                        .size(page.size())
+                        .totalElements(page.totalElements())
+                        .totalPages(page.totalPages())
+                        .last(page.last())
                         .build(),
                 "Diagnósticos de imagen obtenidos exitosamente"
         );
@@ -79,7 +78,7 @@ public class ImageClassificationService {
 
     @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
-        return ApiResponse.success(imageDiagnosticRepository.countAll(), "Total de diagnósticos de imagen");
+        return ApiResponse.success(imageDiagnosticRepository.count(), "Total de diagnósticos de imagen");
     }
 
     @Transactional(readOnly = true)
@@ -99,18 +98,18 @@ public class ImageClassificationService {
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<ImageClassificationSummaryDTO>> findByDoctorId(Integer doctorId, PageRequestDTO pageRequest) {
         try {
-            Page<ImageClassificationSummaryDTO> page = imageDiagnosticRepository
-                    .findByDoctorId(doctorId, pageRequest.toPageable())
+            PageResult<ImageClassificationSummaryDTO> page = imageDiagnosticRepository
+                    .findByDoctorId(doctorId, pageRequest.toPageQuery())
                     .map(imageDiagnosticMapper::toSummaryDTO);
 
             return ApiResponse.success(
                     PagedResponse.<ImageClassificationSummaryDTO>builder()
-                            .content(page.getContent())
-                            .page(page.getNumber())
-                            .size(page.getSize())
-                            .totalElements(page.getTotalElements())
-                            .totalPages(page.getTotalPages())
-                            .last(page.isLast())
+                            .content(page.content())
+                            .page(page.page())
+                            .size(page.size())
+                            .totalElements(page.totalElements())
+                            .totalPages(page.totalPages())
+                            .last(page.last())
                             .build(),
                     page.isEmpty()
                             ? "No se encontraron diagnósticos de imagen para el doctor con ID: " + doctorId
@@ -124,18 +123,18 @@ public class ImageClassificationService {
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<ImageClassificationSummaryDTO>> findByMedicalImgId(Integer medicalImgId, PageRequestDTO pageRequest) {
         try {
-            Page<ImageClassificationSummaryDTO> page = imageDiagnosticRepository
-                    .findByMedicalImgId(medicalImgId, pageRequest.toPageable())
+            PageResult<ImageClassificationSummaryDTO> page = imageDiagnosticRepository
+                    .findByMedicalImageId(medicalImgId, pageRequest.toPageQuery())
                     .map(imageDiagnosticMapper::toSummaryDTO);
 
             return ApiResponse.success(
                     PagedResponse.<ImageClassificationSummaryDTO>builder()
-                            .content(page.getContent())
-                            .page(page.getNumber())
-                            .size(page.getSize())
-                            .totalElements(page.getTotalElements())
-                            .totalPages(page.getTotalPages())
-                            .last(page.isLast())
+                            .content(page.content())
+                            .page(page.page())
+                            .size(page.size())
+                            .totalElements(page.totalElements())
+                            .totalPages(page.totalPages())
+                            .last(page.last())
                             .build(),
                     page.isEmpty()
                             ? "No se encontraron diagnósticos de imagen para la imagen médica con ID: " + medicalImgId
@@ -206,6 +205,6 @@ public class ImageClassificationService {
 
     // Validacion si existe un diagnostico previo de este doctor a esta imagen.
     private boolean validateSameImgDiagnostic(Integer doctorId, Integer imgId) {
-        return imageDiagnosticRepository.findByDoctorIdAndMedicalImgId(doctorId, imgId) != null;
+        return imageDiagnosticRepository.findByDoctorIdAndMedicalImageId(doctorId, imgId).isPresent();
     }
 }

@@ -14,7 +14,7 @@ import backend.msclasificator.doctor.api.mapper.DoctorMapper;
 import backend.msclasificator.doctor.domain.Doctor;
 import backend.msclasificator.identity.domain.UserInfo;
 import backend.msclasificator.doctor.application.port.out.DoctorRepository;
-import backend.msclasificator.classification.infrastructure.persistence.ImageClassificationRepository;
+import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;

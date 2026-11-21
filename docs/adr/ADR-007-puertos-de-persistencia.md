@@ -46,13 +46,16 @@ Por eso cambiar el motor de persistencia obligaba a tocar la lógica de negocio.
 | `patient` | Migrado |
 | `doctor` | Migrado — expone también `findDoctorsNotAssignedToEvaluationArea` y `findEvaluationAreasNotAssignedToDoctor` (sin consumidor aún, por decisión del responsable) |
 | `clinicalrecord` | Migrado |
-| `classification` | Pendiente |
+| `classification` | Migrado — el puerto usa el vocabulario actual (`MedicalImage`, `ImageClassification`); el adaptador traduce a las consultas derivadas JPA, que conservan los nombres de campo (`medicalImg`, `imageDiagnostic`) según ADR-003 |
 
 `PageResult.isEmpty()` replica `Page.isEmpty()` de Spring (la página actual no tiene contenido).
 
-Incumplimientos conocidos:
-- `dataset` ya no depende de la infraestructura de ningún otro feature.
-- `diagnosiscatalog/application` todavía importa `ClassificationDiagnosisRepository` (de `classification`). Se resuelve al migrar ese feature.
+**Fase 2 completa (2026-11-21).** Ninguna capa `application` importa `infrastructure` ni `org.springframework.data`. No quedan incumplimientos conocidos de persistencia.
+
+Pendientes que no son de persistencia (fase 3):
+- `PageRequestDTO.toPageable()` ya no tiene consumidores; se elimina.
+- `identity/application/SecurityService` usa `RestTemplate` y `org.springframework.http` → puerto hacia ms-security.
+- `medicalimage/application` (`MedicalImageService`, puerto `ImageStorageService`) usa `MultipartFile` → revisar el puerto de storage.
 
 ## Alternativas consideradas
 - **Puerto `XStore` y conservar `XRepository` para Spring Data.** Se descarta porque deja el nombre natural del dominio en manos de la infraestructura.

@@ -12,7 +12,7 @@ import backend.msclasificator.clinicalrecord.domain.ClinicalRecord;
 import backend.msclasificator.medicalimage.domain.MedicalImageType;
 import backend.msclasificator.medicalimage.domain.MedicalImage;
 import backend.msclasificator.clinicalrecord.application.port.out.ClinicalRecordRepository;
-import backend.msclasificator.classification.infrastructure.persistence.ImageClassificationRepository;
+import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageTypeRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
 import backend.msclasificator.medicalimage.application.port.out.ImageStorageService;
@@ -215,7 +215,7 @@ public class MedicalImageService {
                     .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + id));
 
             // Validamos que la imagen no tenga diagnosticos asociados
-            if(imageDiagnosticRepository.existsByMedicalImgId(id)) {
+            if(imageDiagnosticRepository.existsByMedicalImageId(id)) {
                 return ApiResponse.error("No se puede eliminar: la imagen tiene diagnósticos asignados");
             }
 
