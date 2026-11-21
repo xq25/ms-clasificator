@@ -14,6 +14,7 @@ Registro de las decisiones de arquitectura del proyecto. Cada decisión vive en 
 | [006](ADR-006-integracion-via-pull-request.md) | Integración de actividades vía Pull Request | Aceptado | Gobierno |
 | [007](ADR-007-puertos-de-persistencia.md) | Puertos de persistencia y paginación propia | Aceptado | Persistencia |
 | [008](ADR-008-estrategia-de-pruebas.md) | Estrategia de pruebas | Aceptado | Calidad |
+| [009](ADR-009-errores-de-servicios-externos.md) | Manejo de errores de servicios externos | Aceptado | Arquitectura |
 
 ## Plantilla
 

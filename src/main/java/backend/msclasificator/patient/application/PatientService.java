@@ -12,7 +12,7 @@ import backend.msclasificator.shared.api.PagedResponse;
 import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.patient.api.mapper.PatientMapper;
 import backend.msclasificator.patient.domain.Patient;
-import backend.msclasificator.identity.domain.UserInfo;
+import backend.msclasificator.identity.application.exception.SecurityServiceException;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
 import backend.msclasificator.patient.application.port.out.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,17 +99,14 @@ public class    PatientService {
             PatientResponseDTO patient = patientRepository.findById(id).map(patientMapper::toResponseDTO)
                     .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado con ID: " + id));
 
-            // Obtenemos la informacion del usuario
-            UserInfo userInfo = securityServices.getUserInfo(patient.getUserId());
-            if(userInfo != null){
-                patient.setUserInfo(userInfo);
-            } else {
-                ApiResponse.error("No se pudo obtener la informacion del usuario para el userId: " + patient.getUserId());
-            }
+            // Si ms-security falla lanza SecurityServiceException, que GlobalExceptionHandler traduce a 503
+            patient.setUserInfo(securityServices.getUserInfo(patient.getUserId()));
 
             return ApiResponse.success(patient, "Paciente encontrado exitosamente");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
+        } catch (SecurityServiceException ex) {
+            throw ex;
         } catch (Exception ex) {
             return ApiResponse.error("Error al buscar paciente: " + ex.getMessage());
         }
@@ -122,15 +119,12 @@ public class    PatientService {
                     .map(patientMapper::toResponseDTO)
                     .orElseThrow(() -> new IllegalArgumentException("No se encontro paciente con el documento: " + document));
 
-            // Obtenemos la informacion del usuario
-            UserInfo userInfo = securityServices.getUserInfo(patient.getUserId());
-            if(userInfo != null){
-                patient.setUserInfo(userInfo);
-            } else {
-                ApiResponse.error("No se pudo obtener la informacion del usuario para el userId: " + patient.getUserId());
-            }
+            // Si ms-security falla lanza SecurityServiceException, que GlobalExceptionHandler traduce a 503
+            patient.setUserInfo(securityServices.getUserInfo(patient.getUserId()));
 
             return ApiResponse.success(patient, "Pacientes encontrados exitosamente");
+        } catch (SecurityServiceException ex) {
+            throw ex;
         } catch (Exception ex) {
             return ApiResponse.error("Error al buscar pacientes por documento: " + ex.getMessage());
         }
@@ -143,18 +137,14 @@ public class    PatientService {
                     .map(patientMapper::toResponseDTO)
                     .orElseThrow(() -> new IllegalArgumentException("No se encontro paciente con el userId: " + userId));
 
-            // Obtenemos la informacion del usuario
-            UserInfo userInfo = securityServices.getUserInfo(patient.getUserId());
-            if(userInfo != null){
-                patient.setUserInfo(userInfo);
-            } else {
-                ApiResponse.error("No se pudo obtener la informacion del usuario para el userId: " + patient.getUserId());
-            }
+            // Si ms-security falla lanza SecurityServiceException, que GlobalExceptionHandler traduce a 503
+            patient.setUserInfo(securityServices.getUserInfo(patient.getUserId()));
 
             return ApiResponse.success(patient, "Paciente encontrado exitosamente");
         } catch (IllegalArgumentException ex){
             return ApiResponse.error(ex.getMessage());
-
+        } catch (SecurityServiceException ex) {
+            throw ex;
         } catch (Exception ex) {
             return ApiResponse.error("Error al buscar paciente por userId: " + ex.getMessage());
         }

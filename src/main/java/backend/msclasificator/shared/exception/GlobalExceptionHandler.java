@@ -1,5 +1,6 @@
 package backend.msclasificator.shared.exception;
 
+import backend.msclasificator.identity.application.exception.SecurityServiceException;
 import backend.msclasificator.medicalimage.application.exception.ImageStorageException;
 import backend.msclasificator.medicalimage.application.exception.InvalidImageTypeException;
 
@@ -28,6 +29,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleImageStorage(ImageStorageException ex) {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(ApiResponse.error("Error en almacenamiento (" + ex.getProvider() + "): " + ex.getMessage()));
+    }
+
+    @ExceptionHandler(SecurityServiceException.class)
+    public ResponseEntity<ApiResponse<Void>> handleSecurityService(SecurityServiceException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(InvalidImageTypeException.class)
