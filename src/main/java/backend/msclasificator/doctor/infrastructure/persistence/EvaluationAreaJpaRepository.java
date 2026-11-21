@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface EvaluationAreaRepository extends JpaRepository<EvaluationArea, Integer> {
+public interface EvaluationAreaJpaRepository extends JpaRepository<EvaluationArea, Integer> {
     EvaluationArea findByName(String name);
     EvaluationArea findByCodeArea(String codeArea);
 

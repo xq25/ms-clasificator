@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface DoctorRepository extends JpaRepository<Doctor, Integer> {
+public interface DoctorJpaRepository extends JpaRepository<Doctor, Integer> {
     Optional<Doctor> findByCode(String code);
     Optional<Doctor> findByUserId(String userId);
 
