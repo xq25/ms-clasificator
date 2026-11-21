@@ -6,10 +6,10 @@ import backend.msclasificator.clinicalrecord.api.dto.PrimitiveDatumResponseDTO;
 import backend.msclasificator.clinicalrecord.api.dto.PrimitiveDatumUpdateDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
-import org.springframework.data.domain.Page;
+import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.clinicalrecord.api.mapper.PrimitiveDatumMapper;
 import backend.msclasificator.clinicalrecord.domain.PrimitiveDatum;
-import backend.msclasificator.clinicalrecord.infrastructure.persistence.PrimitiveDatumRepository;
+import backend.msclasificator.clinicalrecord.application.port.out.PrimitiveDatumRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -28,17 +28,17 @@ public class PrimitiveDatumService {
 	@Transactional(readOnly = true)
 	public ApiResponse<PagedResponse<PrimitiveDatumResponseDTO>> findAll(PageRequestDTO pageRequest) {
 		try {
-			Page<PrimitiveDatumResponseDTO> page = primitiveDatumRepository.findAll(pageRequest.toPageable())
+			PageResult<PrimitiveDatumResponseDTO> page = primitiveDatumRepository.findAll(pageRequest.toPageQuery())
 					.map(primitiveDatumMapper::toResponseDTO);
 
 			return ApiResponse.success(
 					PagedResponse.<PrimitiveDatumResponseDTO>builder()
-							.content(page.getContent())
-							.page(page.getNumber())
-							.size(page.getSize())
-							.totalElements(page.getTotalElements())
-							.totalPages(page.getTotalPages())
-							.last(page.isLast())
+							.content(page.content())
+							.page(page.page())
+							.size(page.size())
+							.totalElements(page.totalElements())
+							.totalPages(page.totalPages())
+							.last(page.last())
 							.build(),
 					"Datos primitivos obtenidos exitosamente"
 			);
@@ -49,7 +49,7 @@ public class PrimitiveDatumService {
 
 	@Transactional(readOnly = true)
 	public ApiResponse<Long> count() {
-		return ApiResponse.success(primitiveDatumRepository.countAll(), "Total de datos primitivos");
+		return ApiResponse.success(primitiveDatumRepository.count(), "Total de datos primitivos");
 	}
 
 	@Transactional(readOnly = true)
@@ -73,7 +73,7 @@ public class PrimitiveDatumService {
 			}
 
 			// Validamos que no exista otro dato con este mismo nombre
-			PrimitiveDatum existing = primitiveDatumRepository.findByNameIgnoreCase(dto.getName());
+			PrimitiveDatum existing = primitiveDatumRepository.findByNameIgnoreCase(dto.getName()).orElse(null);
 			if (existing != null) {
 				return ApiResponse.error("Ya existe un dato primitivo con el nombre: " + dto.getName());
 			}
@@ -99,7 +99,7 @@ public class PrimitiveDatumService {
 					.orElseThrow(() -> new IllegalArgumentException("Dato primitivo no encontrado con ID: " + id));
 
 			// Validamos que no tenga el mismo nombre que otro dato primitivo
-			PrimitiveDatum existing = primitiveDatumRepository.findByNameIgnoreCase(dto.getName());
+			PrimitiveDatum existing = primitiveDatumRepository.findByNameIgnoreCase(dto.getName()).orElse(null);
 			if (existing != null && !existing.getId().equals(id)) {
 				return ApiResponse.error("Ya existe un dato primitivo con el nombre: " + dto.getName());
 			}

@@ -11,7 +11,7 @@ import backend.msclasificator.medicalimage.api.mapper.MedicalImageMapper;
 import backend.msclasificator.clinicalrecord.domain.ClinicalRecord;
 import backend.msclasificator.medicalimage.domain.MedicalImageType;
 import backend.msclasificator.medicalimage.domain.MedicalImage;
-import backend.msclasificator.clinicalrecord.infrastructure.persistence.ClinicalRecordRepository;
+import backend.msclasificator.clinicalrecord.application.port.out.ClinicalRecordRepository;
 import backend.msclasificator.classification.infrastructure.persistence.ImageClassificationRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageTypeRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;

@@ -7,11 +7,11 @@ import backend.msclasificator.clinicalrecord.api.dto.ClinicalRecordUpdateDTO;
 import backend.msclasificator.shared.api.PageRequestDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
-import org.springframework.data.domain.Page;
+import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.clinicalrecord.api.mapper.ClinicalRecordMapper;
 import backend.msclasificator.clinicalrecord.domain.ClinicalRecord;
 import backend.msclasificator.patient.domain.Patient;
-import backend.msclasificator.clinicalrecord.infrastructure.persistence.ClinicalRecordRepository;
+import backend.msclasificator.clinicalrecord.application.port.out.ClinicalRecordRepository;
 import backend.msclasificator.patient.application.port.out.PatientRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,17 +38,17 @@ public class ClinicalRecordService {
 
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<ClinicalRecordSummaryDTO>> findAll(PageRequestDTO pageRequest) {
-        Page<ClinicalRecordSummaryDTO> page = clinicalRecordRepository.findAll(pageRequest.toPageable())
+        PageResult<ClinicalRecordSummaryDTO> page = clinicalRecordRepository.findAll(pageRequest.toPageQuery())
                 .map(clinicalRecordMapper::toSummaryDTO);
 
         return ApiResponse.success(
                 PagedResponse.<ClinicalRecordSummaryDTO>builder()
-                        .content(page.getContent())
-                        .page(page.getNumber())
-                        .size(page.getSize())
-                        .totalElements(page.getTotalElements())
-                        .totalPages(page.getTotalPages())
-                        .last(page.isLast())
+                        .content(page.content())
+                        .page(page.page())
+                        .size(page.size())
+                        .totalElements(page.totalElements())
+                        .totalPages(page.totalPages())
+                        .last(page.last())
                         .build(),
                 "Registros médicos obtenidos exitosamente"
         );
@@ -56,7 +56,7 @@ public class ClinicalRecordService {
 
     @Transactional(readOnly = true)
     public ApiResponse<Long> count() {
-        return ApiResponse.success(clinicalRecordRepository.countAll(), "Total de registros médicos");
+        return ApiResponse.success(clinicalRecordRepository.count(), "Total de registros médicos");
     }
 
     // No cargamos toda la informacion
@@ -81,18 +81,18 @@ public class ClinicalRecordService {
                 return ApiResponse.error("Paciente no encontrado con ID: " + patientId);
             }
 
-            Page<ClinicalRecordSummaryDTO> page = clinicalRecordRepository
-                    .findByPatientId(patientId, pageRequest.toPageable())
+            PageResult<ClinicalRecordSummaryDTO> page = clinicalRecordRepository
+                    .findByPatientId(patientId, pageRequest.toPageQuery())
                     .map(clinicalRecordMapper::toSummaryDTO);
 
             return ApiResponse.success(
                     PagedResponse.<ClinicalRecordSummaryDTO>builder()
-                            .content(page.getContent())
-                            .page(page.getNumber())
-                            .size(page.getSize())
-                            .totalElements(page.getTotalElements())
-                            .totalPages(page.getTotalPages())
-                            .last(page.isLast())
+                            .content(page.content())
+                            .page(page.page())
+                            .size(page.size())
+                            .totalElements(page.totalElements())
+                            .totalPages(page.totalPages())
+                            .last(page.last())
                             .build(),
                     "Registros médicos obtenidos exitosamente"
             );

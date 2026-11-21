@@ -7,14 +7,14 @@ import backend.msclasificator.clinicalrecord.api.dto.PatientDatumSummaryDTO;
 import backend.msclasificator.clinicalrecord.api.dto.PatientDatumUpdateDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
-import org.springframework.data.domain.Page;
+import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.clinicalrecord.api.mapper.PatientDatumMapper;
 import backend.msclasificator.clinicalrecord.domain.ClinicalRecord;
 import backend.msclasificator.clinicalrecord.domain.PatientDatum;
 import backend.msclasificator.clinicalrecord.domain.PrimitiveDatum;
-import backend.msclasificator.clinicalrecord.infrastructure.persistence.ClinicalRecordRepository;
-import backend.msclasificator.clinicalrecord.infrastructure.persistence.PatientDatumRepository;
-import backend.msclasificator.clinicalrecord.infrastructure.persistence.PrimitiveDatumRepository;
+import backend.msclasificator.clinicalrecord.application.port.out.ClinicalRecordRepository;
+import backend.msclasificator.clinicalrecord.application.port.out.PatientDatumRepository;
+import backend.msclasificator.clinicalrecord.application.port.out.PrimitiveDatumRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -39,17 +39,17 @@ public class PatientDatumService {
 
 	@Transactional(readOnly = true)
 	public ApiResponse<PagedResponse<PatientDatumSummaryDTO>> findAll(PageRequestDTO pageRequest) {
-		Page<PatientDatumSummaryDTO> page = patientDatumRepository.findAll(pageRequest.toPageable())
+		PageResult<PatientDatumSummaryDTO> page = patientDatumRepository.findAll(pageRequest.toPageQuery())
 				.map(patientDatumMapper::toSummaryDTO);
 
 		return ApiResponse.success(
 				PagedResponse.<PatientDatumSummaryDTO>builder()
-						.content(page.getContent())
-						.page(page.getNumber())
-						.size(page.getSize())
-						.totalElements(page.getTotalElements())
-						.totalPages(page.getTotalPages())
-						.last(page.isLast())
+						.content(page.content())
+						.page(page.page())
+						.size(page.size())
+						.totalElements(page.totalElements())
+						.totalPages(page.totalPages())
+						.last(page.last())
 						.build(),
 				"Patient Datum obtenidos exitosamente"
 		);
@@ -57,7 +57,7 @@ public class PatientDatumService {
 
 	@Transactional(readOnly = true)
 	public ApiResponse<Long> count() {
-		return ApiResponse.success(patientDatumRepository.countAll(), "Total de Patient Datum");
+		return ApiResponse.success(patientDatumRepository.count(), "Total de Patient Datum");
 	}
 
 	@Transactional(readOnly = true)

@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface ClinicalRecordRepository extends JpaRepository<ClinicalRecord, Integer> {
+public interface ClinicalRecordJpaRepository extends JpaRepository<ClinicalRecord, Integer> {
     List<ClinicalRecord> findByPatientId(Integer patientId);
     Page<ClinicalRecord> findByPatientId(Integer patientId, Pageable pageable);
 
