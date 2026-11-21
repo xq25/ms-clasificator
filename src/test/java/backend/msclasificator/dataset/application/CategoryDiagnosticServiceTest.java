@@ -167,12 +167,11 @@ class CategoryDiagnosticServiceTest {
         }
 
         @Test
-        @DisplayName("válido: asocia categoría y diagnóstico, y guarda")
+        @DisplayName("hijo directo de la raíz: asocia categoría y diagnóstico, y guarda")
         void valido() {
             CategoryDiagnostic nuevo = new CategoryDiagnostic();
             when(datasetCategoryRepository.findById(100)).thenReturn(Optional.of(categoria));
             when(medicalDiagnosticRepository.findById(160)).thenReturn(Optional.of(subDiagnostico));
-            when(medicalDiagnosticRepository.existsByIdAndParentDiagnosticId(160, 31)).thenReturn(true);
             when(repository.existsByDatasetIdAndMedicalDiagnosticId(1, 160)).thenReturn(false);
             when(mapper.toEntity(dto)).thenReturn(nuevo);
             when(repository.save(nuevo)).thenReturn(nuevo);
@@ -187,25 +186,71 @@ class CategoryDiagnosticServiceTest {
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO: acepta un diagnóstico que NO es sub-diagnóstico del diagnóstico del dataset")
-        void aceptaDiagnosticoFueraDelArbol() {
-            MedicalDiagnostic ajeno = MedicalDiagnostic.builder().id(230).diagnosticCode("J45.0").build();
-            CategoryDiagnosticCreateDTO dtoAjeno = CategoryDiagnosticCreateDTO.builder()
-                    .datasetCategoryId(100).medicalDiagnosticId(230).build();
+        @DisplayName("nieto de la raíz (cualquier profundidad): se acepta")
+        void nietoAceptado() {
+            MedicalDiagnostic nieto = MedicalDiagnostic.builder().id(900).diagnosticCode("C34.10").parentDiagnostic(subDiagnostico).build();
+            CategoryDiagnosticCreateDTO dtoNieto = CategoryDiagnosticCreateDTO.builder()
+                    .datasetCategoryId(100).medicalDiagnosticId(900).build();
             CategoryDiagnostic nuevo = new CategoryDiagnostic();
             when(datasetCategoryRepository.findById(100)).thenReturn(Optional.of(categoria));
-            when(medicalDiagnosticRepository.findById(230)).thenReturn(Optional.of(ajeno));
-            // La consulta indica que J45.0 no cuelga de C34, pero isValidSubDiagnostic ignora el resultado
-            when(medicalDiagnosticRepository.existsByIdAndParentDiagnosticId(230, 31)).thenReturn(false);
-            when(repository.existsByDatasetIdAndMedicalDiagnosticId(1, 230)).thenReturn(false);
-            when(mapper.toEntity(dtoAjeno)).thenReturn(nuevo);
+            when(medicalDiagnosticRepository.findById(900)).thenReturn(Optional.of(nieto));
+            when(repository.existsByDatasetIdAndMedicalDiagnosticId(1, 900)).thenReturn(false);
+            when(mapper.toEntity(dtoNieto)).thenReturn(nuevo);
             when(repository.save(nuevo)).thenReturn(nuevo);
             when(mapper.toResponseDTO(nuevo)).thenReturn(responseDTO);
 
-            ApiResponse<CategoryDiagnosticResponseDTO> response = service.create(dtoAjeno);
+            ApiResponse<CategoryDiagnosticResponseDTO> response = service.create(dtoNieto);
 
             assertThat(response.isSuccess()).isTrue();
-            verify(repository).save(nuevo);
+            assertThat(nuevo.getMedicalDiagnostic()).isSameAs(nieto);
+        }
+
+        @Test
+        @DisplayName("diagnóstico fuera del árbol de la raíz: se rechaza y no guarda")
+        void fueraDelArbolRechazado() {
+            MedicalDiagnostic padreAjeno = MedicalDiagnostic.builder().id(57).diagnosticCode("J45").build();
+            MedicalDiagnostic ajeno = MedicalDiagnostic.builder().id(230).diagnosticCode("J45.0").parentDiagnostic(padreAjeno).build();
+            when(datasetCategoryRepository.findById(100)).thenReturn(Optional.of(categoria));
+            when(medicalDiagnosticRepository.findById(230)).thenReturn(Optional.of(ajeno));
+
+            ApiResponse<CategoryDiagnosticResponseDTO> response = service.create(CategoryDiagnosticCreateDTO.builder()
+                    .datasetCategoryId(100).medicalDiagnosticId(230).build());
+
+            assertThat(response.isSuccess()).isFalse();
+            assertThat(response.getMessage())
+                    .isEqualTo("El diagnóstico seleccionado no pertenece al árbol de clasificación definido por el Dataset");
+            verify(repository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("la propia raíz del dataset: se rechaza (solo sub-diagnósticos)")
+        void raizRechazada() {
+            when(datasetCategoryRepository.findById(100)).thenReturn(Optional.of(categoria));
+            when(medicalDiagnosticRepository.findById(31)).thenReturn(Optional.of(raiz));
+
+            ApiResponse<CategoryDiagnosticResponseDTO> response = service.create(CategoryDiagnosticCreateDTO.builder()
+                    .datasetCategoryId(100).medicalDiagnosticId(31).build());
+
+            assertThat(response.isSuccess()).isFalse();
+            assertThat(response.getMessage())
+                    .isEqualTo("El diagnóstico seleccionado no pertenece al árbol de clasificación definido por el Dataset");
+            verify(repository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("ciclo en parent_diagnostic_id que no pasa por la raíz: termina y rechaza")
+        void cicloRechazado() {
+            MedicalDiagnostic a = MedicalDiagnostic.builder().id(700).diagnosticCode("X1").build();
+            MedicalDiagnostic b = MedicalDiagnostic.builder().id(701).diagnosticCode("X2").parentDiagnostic(a).build();
+            a.setParentDiagnostic(b);
+            when(datasetCategoryRepository.findById(100)).thenReturn(Optional.of(categoria));
+            when(medicalDiagnosticRepository.findById(700)).thenReturn(Optional.of(a));
+
+            ApiResponse<CategoryDiagnosticResponseDTO> response = service.create(CategoryDiagnosticCreateDTO.builder()
+                    .datasetCategoryId(100).medicalDiagnosticId(700).build());
+
+            assertThat(response.isSuccess()).isFalse();
+            verify(repository, never()).save(any());
         }
     }
 

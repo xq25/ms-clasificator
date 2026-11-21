@@ -170,6 +170,31 @@ Valor de un `PrimitiveDatum` para una historia clínica específica.
 
 ---
 
+## Reglas de negocio
+
+Reglas vigentes del feature `dataset`. Están verificadas por los tests de `src/test/java/.../dataset/application/`. Los comportamientos incorrectos aún no corregidos están en [bugs-conocidos.md](bugs-conocidos.md).
+
+### Dataset
+- Un `MedicalDiagnostic` solo puede tener un dataset, y un `MedicalImageType` solo puede estar en un dataset.
+- No se puede cambiar el diagnóstico de un dataset que ya tiene categorías.
+- Al eliminar un dataset se eliminan en cascada sus categorías y las asignaciones de diagnósticos.
+
+### DatasetCategory
+- `numValue` se asigna automáticamente y en secuencia: cantidad de categorías del dataset + 1.
+- Solo se puede cambiar el nombre.
+- Solo se puede eliminar la categoría con el `numValue` más alto, para que la secuencia no tenga huecos.
+
+### CategoryDiagnostic (asignación de sub-diagnósticos a una categoría)
+- **El diagnóstico debe descender, a cualquier profundidad, del diagnóstico raíz del dataset.** Ejemplo con raíz `I20`: `I20.1` es válido; un futuro `I20.11` también; `J45.0` no.
+- **La raíz del dataset no se puede asignar a una categoría.** Las categorías agrupan solo sub-diagnósticos.
+- Un mismo diagnóstico no puede estar en dos categorías del mismo dataset.
+
+### ClassificationDiagnosis (etiquetado por doctores)
+- Un diagnóstico no se puede asignar dos veces a la misma clasificación de imagen.
+- *Pendiente de definir:* si el diagnóstico debe pertenecer al árbol del dataset del tipo de imagen (bug #7).
+
+---
+
 ## Integración con ms-security
 
 | Acción | Endpoint | Autenticación |

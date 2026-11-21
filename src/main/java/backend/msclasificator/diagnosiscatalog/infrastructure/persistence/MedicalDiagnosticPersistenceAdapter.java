@@ -60,11 +60,6 @@ class MedicalDiagnosticPersistenceAdapter implements MedicalDiagnosticRepository
     }
 
     @Override
-    public boolean existsByIdAndParentDiagnosticId(Integer subDiagnosticId, Integer parentDiagnosticId) {
-        return jpa.existsByIdAndParentDiagnosticId(subDiagnosticId, parentDiagnosticId);
-    }
-
-    @Override
     public long count() {
         return jpa.countAll();
     }

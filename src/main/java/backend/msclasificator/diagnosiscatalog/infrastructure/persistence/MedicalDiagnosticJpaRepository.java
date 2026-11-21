@@ -11,10 +11,6 @@ import java.util.List;
 public interface MedicalDiagnosticJpaRepository extends JpaRepository<MedicalDiagnostic, Integer> {
     MedicalDiagnostic findByDiagnosticCode(String diagnosticCode);
     List<MedicalDiagnostic> findByParentDiagnosticId(Integer parentDiagnosticId);
-    boolean existsByIdAndParentDiagnosticId(
-            Integer subDiagnosticId,
-            Integer parentDiagnosticId
-    );
     boolean existsByParentDiagnosticId(Integer id);
 
     @Query("SELECT COUNT(m) FROM MedicalDiagnostic m")

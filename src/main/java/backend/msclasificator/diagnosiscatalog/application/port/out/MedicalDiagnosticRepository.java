@@ -27,8 +27,6 @@ public interface MedicalDiagnosticRepository {
 
     boolean existsByParentDiagnosticId(Integer parentDiagnosticId);
 
-    boolean existsByIdAndParentDiagnosticId(Integer subDiagnosticId, Integer parentDiagnosticId);
-
     long count();
 
     MedicalDiagnostic save(MedicalDiagnostic medicalDiagnostic);

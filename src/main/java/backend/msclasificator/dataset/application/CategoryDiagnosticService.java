@@ -18,7 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class CategoryDiagnosticService {
@@ -184,12 +186,17 @@ public class CategoryDiagnosticService {
         }
     }
 
-    /**
-     * Implementar según tu modelo de jerarquía de diagnósticos.
-     */
+    // Válido si el diagnóstico desciende (a cualquier profundidad) de la raíz del dataset; la raíz misma no es válida.
+    // El set de visitados evita un bucle infinito si hubiera un ciclo en parent_diagnostic_id.
     private boolean isValidSubDiagnostic(MedicalDiagnostic diagnostic, MedicalDiagnostic rootDiagnostic) {
-        medicalDiagnosticRepository.existsByIdAndParentDiagnosticId(diagnostic.getId(), rootDiagnostic.getId());
-
-        return true;
+        Set<Integer> visitados = new HashSet<>();
+        MedicalDiagnostic actual = diagnostic.getParentDiagnostic();
+        while (actual != null && visitados.add(actual.getId())) {
+            if (actual.getId().equals(rootDiagnostic.getId())) {
+                return true;
+            }
+            actual = actual.getParentDiagnostic();
+        }
+        return false;
     }
 }
