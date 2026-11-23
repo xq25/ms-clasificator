@@ -34,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -278,12 +279,21 @@ class PatientServiceTest {
         }
 
         @Test
-        @DisplayName("válido: asigna rol 'patient' ANTES de guardar y lo informa")
+        @DisplayName("ms-security falla al verificar el usuario: propaga SecurityServiceException (503) sin guardar")
+        void falloVerificacionUsuario() {
+            when(patientRepository.findByDocument("CC12345678")).thenReturn(Optional.empty());
+            when(securityService.existUserById(USER_ID)).thenThrow(new SecurityServiceException("caído"));
+
+            assertThatThrownBy(() -> service.create(dto)).isInstanceOf(SecurityServiceException.class);
+            verify(patientRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("válido: guarda y, como ÚLTIMO paso, asigna el rol 'patient'")
         void valido() {
             when(patientRepository.findByDocument("CC12345678")).thenReturn(Optional.empty());
             when(securityService.existUserById(USER_ID)).thenReturn(true);
             when(patientRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
-            when(securityService.assignDefaultRole(USER_ID, "patient")).thenReturn(true);
             when(patientMapper.toEntity(dto)).thenReturn(patient);
             when(patientRepository.save(patient)).thenReturn(patient);
             when(patientMapper.toSummaryDTO(patient)).thenReturn(summaryDTO);
@@ -293,27 +303,22 @@ class PatientServiceTest {
             assertThat(response.isSuccess()).isTrue();
             assertThat(response.getMessage())
                     .isEqualTo("Paciente creado exitosamente. Rol 'patient' asignado correctamente al usuario.");
-            InOrder orden = inOrder(securityService, patientRepository);
-            orden.verify(securityService).assignDefaultRole(USER_ID, "patient");
+            InOrder orden = inOrder(patientRepository, securityService);
             orden.verify(patientRepository).save(patient);
+            orden.verify(securityService).assignDefaultRole(USER_ID, "patient");
         }
 
         @Test
-        @DisplayName("si falla la asignación de rol: crea el paciente e informa que no se asignó el rol 'patient'")
-        void falloRolInformado() {
+        @DisplayName("si falla la asignación de rol: propaga SecurityServiceException para que @Transactional revierta el guardado")
+        void falloRolRevierte() {
             when(patientRepository.findByDocument("CC12345678")).thenReturn(Optional.empty());
             when(securityService.existUserById(USER_ID)).thenReturn(true);
             when(patientRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
-            when(securityService.assignDefaultRole(USER_ID, "patient")).thenReturn(false);
             when(patientMapper.toEntity(dto)).thenReturn(patient);
             when(patientRepository.save(patient)).thenReturn(patient);
-            when(patientMapper.toSummaryDTO(patient)).thenReturn(summaryDTO);
+            doThrow(new SecurityServiceException("rol no asignado")).when(securityService).assignDefaultRole(USER_ID, "patient");
 
-            ApiResponse<PatientSummaryDTO> response = service.create(dto);
-
-            assertThat(response.isSuccess()).isTrue();
-            assertThat(response.getMessage())
-                    .isEqualTo("Paciente creado exitosamente. No se pudo asignar el rol 'patient' al usuario.");
+            assertThatThrownBy(() -> service.create(dto)).isInstanceOf(SecurityServiceException.class);
         }
     }
 

@@ -4,6 +4,7 @@ import backend.msclasificator.doctor.api.dto.DoctorCreateDTO;
 import backend.msclasificator.doctor.api.dto.DoctorSummaryDTO;
 import backend.msclasificator.patient.api.dto.PatientCreateDTO;
 import backend.msclasificator.patient.api.dto.PatientSummaryDTO;
+import backend.msclasificator.identity.application.exception.SecurityServiceException;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.doctor.application.DoctorService;
 import backend.msclasificator.identity.application.InternalService;
@@ -43,16 +44,25 @@ public class InternalController {
         return this.internalService.existsDoctorInArea(doctorId, evaluationAreaId);
     }
 
+    // ms-security espera un boolean: si el alta falla por ms-security (ya revertida en el servicio),
+    // se responde false en lugar del 503 del GlobalExceptionHandler.
     @PostMapping("register/doctor")
     public boolean registerDoctor(@RequestBody DoctorCreateDTO doctorBaseDTO){
-        ApiResponse<DoctorSummaryDTO> registerResponse =  this.doctorService.create(doctorBaseDTO);
-        return registerResponse.isSuccess();
+        try {
+            ApiResponse<DoctorSummaryDTO> registerResponse = this.doctorService.create(doctorBaseDTO);
+            return registerResponse.isSuccess();
+        } catch (SecurityServiceException ex) {
+            return false;
+        }
     }
 
     @PostMapping("register/patient")
     public boolean registerPatient(@RequestBody PatientCreateDTO patientCreateDTO){
-        ApiResponse<PatientSummaryDTO> registerResponse = this.patientService.create(patientCreateDTO);
-
-        return registerResponse.isSuccess();
+        try {
+            ApiResponse<PatientSummaryDTO> registerResponse = this.patientService.create(patientCreateDTO);
+            return registerResponse.isSuccess();
+        } catch (SecurityServiceException ex) {
+            return false;
+        }
     }
 }

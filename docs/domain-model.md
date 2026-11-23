@@ -196,6 +196,11 @@ Reglas vigentes del feature `dataset`. Están verificadas por los tests de `src/
 - **Soft delete con historial (ADR-011):** quitar un diagnóstico de una categoría lo retira (`deleted_at`). `created_at` y `deleted_at` definen su vigencia en la categoría.
 - Un `MedicalDiagnostic` que alguna vez definió una categoría no se puede borrar del catálogo.
 
+### Alta de Patient y Doctor
+- El `userId` debe existir en ms-security. Si ms-security responde que no existe (o 404), el alta da error. Si ms-security falla, responde **503** (ADR-009).
+- **Todo o nada:** se valida, se guarda y, como último paso, se asigna el rol por defecto (`patient`/`doctor`) en ms-security. Si la asignación falla, se revierte el guardado y no queda ningún registro sin rol.
+- Los endpoints internos `/api/public/internal/register/*`, que invoca ms-security, responden `true`/`false` y nunca 503.
+
 ### ImageClassification (un doctor desliza una imagen hacia una categoría)
 - **Solo se pueden clasificar imágenes cuyo tipo tiene un dataset configurado.**
 - El tipo de imagen debe tener un área de evaluación, y el doctor debe pertenecer a esa área.

@@ -1,6 +1,6 @@
 # ADR-009: Manejo de errores de servicios externos
 
-- **Estado:** Aceptado
+- **Estado:** Aceptado — aplicado también a `existUserById` y `assignDefaultRole` (bug #9, ver `bugs-conocidos.md`)
 - **Fecha:** 2026-11-21
 - **Área:** Arquitectura
 
