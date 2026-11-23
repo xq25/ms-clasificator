@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -33,37 +34,23 @@ public class SecurityService {
     }
 
     // EXIST USER BY ID
+    // true/false según ms-security (404 = no existe). Si ms-security falla o responde algo inválido
+    // lanza SecurityServiceException (503, ADR-009) para no confundir la caída con "el usuario no existe".
     public boolean existUserById(String userId) {
-
         try {
-
-            String url =
-                    securityUrl +
-                            "/getway/security/api/" +
-                            userId +
-                            "/exist";
-
+            String url = securityUrl + "/getway/security/api/" + userId + "/exist";
             ResponseEntity<ApiResponse> response =
-                    restTemplate.exchange(
-                            url,
-                            HttpMethod.GET,
-                            buildRequestEntity(),
-                            ApiResponse.class
-                    );
+                    restTemplate.exchange(url, HttpMethod.GET, buildRequestEntity(), ApiResponse.class);
 
-            if (response.getBody() != null) {
-
-                Object data = response.getBody().getData();
-
-                if (data instanceof Boolean) {
-                    return (Boolean) data;
-                }
+            Object data = response.getBody() != null ? response.getBody().getData() : null;
+            if (data instanceof Boolean exists) {
+                return exists;
             }
-
+            throw new SecurityServiceException("Respuesta inválida de ms-security al verificar el usuario");
+        } catch (HttpClientErrorException.NotFound ex) {
             return false;
-
-        } catch (Exception ex) {
-            return false;
+        } catch (RestClientException ex) {
+            throw new SecurityServiceException("No se pudo verificar el usuario en ms-security", ex);
         }
     }
 
@@ -106,31 +93,22 @@ public class SecurityService {
      * Por eso solo enviamos el key o name del role que queremos asignar, y el getway se encarga de resolverlo y asignarlo,
      * si es que es un role permitido.
      */
-    public boolean assignDefaultRole(String userId, String defaultRoleKey) {
-
+    // Lanza SecurityServiceException si ms-security no confirma la asignación (ADR-009):
+    // el alta que la invoca es transaccional y hace rollback (bug #9).
+    public void assignDefaultRole(String userId, String defaultRoleKey) {
         try {
-
-            String url =
-                    securityUrl +
-                            "/getway/security/api/" +
-                            userId +
-                            "/assign-role/" +
-                            defaultRoleKey;
-
+            String url = securityUrl + "/getway/security/api/" + userId + "/assign-role/" + defaultRoleKey;
             ResponseEntity<ApiResponse> response =
-                    restTemplate.exchange(
-                            url,
-                            HttpMethod.POST,
-                            buildRequestEntity(),
-                            ApiResponse.class
-                    );
+                    restTemplate.exchange(url, HttpMethod.POST, buildRequestEntity(), ApiResponse.class);
 
-            return response.getStatusCode().is2xxSuccessful()
+            boolean asignado = response.getStatusCode().is2xxSuccessful()
                     && response.getBody() != null
                     && response.getBody().isSuccess();
-
-        } catch (Exception ex) {
-            return false;
+            if (!asignado) {
+                throw new SecurityServiceException("ms-security no asignó el rol '" + defaultRoleKey + "' al usuario");
+            }
+        } catch (RestClientException ex) {
+            throw new SecurityServiceException("No se pudo asignar el rol '" + defaultRoleKey + "' en ms-security", ex);
         }
     }
 

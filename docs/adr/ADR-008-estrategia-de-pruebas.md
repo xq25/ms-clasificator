@@ -26,7 +26,7 @@ Los puertos de persistencia (ADR-007) permiten probar los servicios de aplicaci�
 ### 3. Convenciones
 - Ubicación: `src/test/java/backend/msclasificator/<feature>/application/<Servicio>Test.java`.
 - Un `@Nested` por método público del servicio y un `@DisplayName` en español que describe el caso.
-- Ejecución de los tests unitarios: `mvnw test -Dtest='*ServiceTest' -Dsurefire.failIfNoSpecifiedTests=false`.
+- Ejecución de los tests unitarios: `mvnw test -Dtest='*ServiceTest,*ControllerTest' -Dsurefire.failIfNoSpecifiedTests=false`.
 
 ### 4. Ramas
 - Se añade el prefijo `test/` a la tabla de [ADR-005](ADR-005-estrategia-de-ramas.md) para actividades que solo agregan o modifican tests. Ejemplo: `test/servicios-dataset`.

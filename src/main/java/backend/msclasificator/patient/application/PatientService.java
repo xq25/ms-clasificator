@@ -155,6 +155,9 @@ public class    PatientService {
      * @param patientCreateDTO DTO con datos de entrada
      * @return ApiResponse<Patient> con el resultado de la operación
      */
+    // Todo o nada (bug #9): se guarda y, como último paso, se asigna el rol en ms-security.
+    // Si la asignación falla, SecurityServiceException hace rollback del guardado (503, ADR-009).
+    @Transactional
     public ApiResponse<PatientSummaryDTO> create(PatientCreateDTO patientCreateDTO) {
         try {
             if (patientCreateDTO == null) {
@@ -181,14 +184,15 @@ public class    PatientService {
                 return ApiResponse.error("Ya existe un paciente con el userId: " + patientCreateDTO.getUserId() + ". El userId debe ser único.");
             }
 
-            // Asignamos el rol por defecto a este paciente
-            boolean assingRole = this.securityServices.assignDefaultRole(patientCreateDTO.getUserId(), "patient");
-            String roleInfo = assingRole?"Rol 'patient' asignado correctamente al usuario.": "No se pudo asignar el rol 'patient' al usuario.";
-
             Patient saved = patientRepository.save(patientMapper.toEntity(patientCreateDTO));
 
-            return ApiResponse.success(patientMapper.toSummaryDTO(saved), "Paciente creado exitosamente. " + roleInfo);
+            // Último paso: si falla, lanza SecurityServiceException y se revierte el guardado
+            this.securityServices.assignDefaultRole(patientCreateDTO.getUserId(), "patient");
 
+            return ApiResponse.success(patientMapper.toSummaryDTO(saved), "Paciente creado exitosamente. Rol 'patient' asignado correctamente al usuario.");
+
+        } catch (SecurityServiceException ex) {
+            throw ex;
         } catch (Exception ex) {
             return ApiResponse.error("Error al crear paciente: " + ex.getMessage());
         }

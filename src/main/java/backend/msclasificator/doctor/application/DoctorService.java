@@ -151,6 +151,9 @@ public class DoctorService {
      * @param doctorCreateDTO DTO con datos de entrada
      * @return ApiResponse<Doctor> con el resultado de la operación
      */
+    // Todo o nada (bug #9): se guarda y, como último paso, se asigna el rol en ms-security.
+    // Si la asignación falla, SecurityServiceException hace rollback del guardado (503, ADR-009).
+    @Transactional
     public ApiResponse<DoctorSummaryDTO> create(DoctorCreateDTO doctorCreateDTO) {
         if (doctorCreateDTO == null) {
             return ApiResponse.error("El DTO no puede ser nulo");
@@ -171,15 +174,12 @@ public class DoctorService {
             return ApiResponse.error("Ya existe un doctor asociado al userId: " + doctorCreateDTO.getUserId() + ". Un usuario solo puede estar asociado a un doctor.");
         }
 
-        // Asignamos el rol a este usuario para que pueda acceder a los endpoints de doctor
-        boolean roleAssing = this.securityServices.assignDefaultRole(doctorCreateDTO.getUserId(), "doctor");
-        String roleInfo = roleAssing ? "Rol 'doctor' asignado correctamente al usuario." : "No se pudo asignar el rol 'doctor' al usuario.";
+        Doctor saved = doctorRepository.save(doctorMapper.toEntity(doctorCreateDTO));
 
-        Doctor doctor = doctorMapper.toEntity(doctorCreateDTO);
+        // Último paso: si falla, lanza SecurityServiceException y se revierte el guardado
+        this.securityServices.assignDefaultRole(doctorCreateDTO.getUserId(), "doctor");
 
-        // Si se asigna o no el rol por defecto, igual generamos el usuario y mosstramos la info pertinente
-        return ApiResponse.success(doctorMapper.toSummaryDTO(doctorRepository.save(doctor)), "Doctor creado exitosamente. " + roleInfo);
-
+        return ApiResponse.success(doctorMapper.toSummaryDTO(saved), "Doctor creado exitosamente. Rol 'doctor' asignado correctamente al usuario.");
     }
 
     /**
