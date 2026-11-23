@@ -53,7 +53,7 @@ Por eso cambiar el motor de persistencia obligaba a tocar la lógica de negocio.
 **Fase 2 completa (2026-11-21).** Ninguna capa `application` importa `infrastructure` ni `org.springframework.data`. No quedan incumplimientos conocidos de persistencia.
 
 Pendientes que no son de persistencia (fase 3):
-- `PageRequestDTO.toPageable()` ya no tiene consumidores; se elimina.
+- ~~`PageRequestDTO.toPageable()` ya no tiene consumidores; se elimina.~~ Eliminado en la fase 3 (`refactor/fase-3-paginacion`): `shared/api` ya no depende de Spring Data.
 - `identity/application/SecurityService` usa `RestTemplate` y `org.springframework.http` → puerto hacia ms-security.
 - `medicalimage/application` (`MedicalImageService`, puerto `ImageStorageService`) usa `MultipartFile` → revisar el puerto de storage.
 

@@ -127,7 +127,7 @@ src/main/java/backend/msclasificator/
 └── platform/                  config/ (CORS, Web, HttpClient) y security/ (SecurityInterceptor)
 ```
 Regla de dependencia: `api → application → domain`; `infrastructure` implementa puertos de `application`.
-Estado: fase 1 completada (paquetes y nombres). Fase 2 completada: todos los features usan puertos de persistencia; ninguna capa `application` importa `infrastructure` ni Spring Data (ADR-007). Fase 3 pendiente: eliminar `PageRequestDTO.toPageable()`, puerto hacia ms-security (`SecurityService` usa `RestTemplate`) y revisar el puerto de storage (`MultipartFile`).
+Estado: fase 1 completada (paquetes y nombres). Fase 2 completada: todos los features usan puertos de persistencia; ninguna capa `application` importa `infrastructure` ni Spring Data (ADR-007). Fase 3 en curso: `PageRequestDTO.toPageable()` eliminado; pendiente puerto hacia ms-security (`SecurityService` usa `RestTemplate`) y revisar el puerto de storage (`MultipartFile`).
 
 ---
 
