@@ -136,33 +136,40 @@ public class ClassificationDiagnosisService {
                 return ApiResponse.error("Este diagnóstico ya fue asignado a la imagen");
             }
 
-            // El diagnóstico debe estar en una categoría del dataset del tipo de imagen,
-            // y todos los diagnósticos de la clasificación deben ser de esa misma categoría.
-            Integer medicalImageTypeId = imageDiagnostic.getMedicalImg().getMedicalImageType().getId();
-            Dataset dataset = datasetRepository.findByMedicalImageTypeId(medicalImageTypeId).orElse(null);
-            if (dataset == null) {
-                return ApiResponse.error("El tipo de imagen médica no tiene un dataset configurado");
-            }
-
-            DatasetCategory categoria = categoriaEnDataset(dataset, medicalDiagnostic.getId());
-            if (categoria == null) {
-                return ApiResponse.error("El diagnóstico no pertenece a ninguna categoría del dataset '" + dataset.getName() + "'");
-            }
-
-            // Detalle opcional (ADR-010): solo sub-diagnósticos de la categoría elegida al deslizar
             DatasetCategory categoriaClasificacion = imageDiagnostic.getDatasetCategory();
-            if (categoriaClasificacion != null && !categoriaClasificacion.getId().equals(categoria.getId())) {
-                return ApiResponse.error("El diagnóstico no pertenece a la categoría '" + categoriaClasificacion.getName() + "' de la clasificación");
-            }
-
-            for (ClassificationDiagnosis existente : repository.findByImageClassificationId(imageDiagnostic.getId())) {
-                DatasetCategory categoriaExistente = categoriaEnDataset(dataset, existente.getMedicalDiagnostic().getId());
-                if (categoriaExistente == null) {
-                    return ApiResponse.error("La imagen tiene diagnósticos que no pertenecen a ninguna categoría del dataset; no se pueden agregar más");
+            if (categoriaClasificacion != null) {
+                // Detalle opcional: el diagnóstico debe estar en la definición de la categoría vigente
+                // cuando el doctor deslizó la imagen (ADR-010, ADR-011)
+                boolean enDefinicion = categoryDiagnosticRepository
+                        .findDefinitionAt(categoriaClasificacion.getId(), imageDiagnostic.getDiagnosticDate()).stream()
+                        .anyMatch(cd -> cd.getMedicalDiagnostic().getId().equals(medicalDiagnostic.getId()));
+                if (!enDefinicion) {
+                    return ApiResponse.error("El diagnóstico no pertenece a la categoría '" + categoriaClasificacion.getName() + "' de la clasificación");
                 }
-                if (!categoriaExistente.getId().equals(categoria.getId())) {
-                    return ApiResponse.error("La imagen ya está clasificada en la categoría '" + categoriaExistente.getName()
-                            + "'; todos sus diagnósticos deben ser de la misma categoría");
+            } else {
+                // Clasificaciones previas a ADR-010 (sin categoría): reglas del bug #7.
+                // El diagnóstico debe estar en una categoría del dataset del tipo de imagen,
+                // y todos los diagnósticos de la clasificación deben ser de esa misma categoría.
+                Integer medicalImageTypeId = imageDiagnostic.getMedicalImg().getMedicalImageType().getId();
+                Dataset dataset = datasetRepository.findByMedicalImageTypeId(medicalImageTypeId).orElse(null);
+                if (dataset == null) {
+                    return ApiResponse.error("El tipo de imagen médica no tiene un dataset configurado");
+                }
+
+                DatasetCategory categoria = categoriaEnDataset(dataset, medicalDiagnostic.getId());
+                if (categoria == null) {
+                    return ApiResponse.error("El diagnóstico no pertenece a ninguna categoría del dataset '" + dataset.getName() + "'");
+                }
+
+                for (ClassificationDiagnosis existente : repository.findByImageClassificationId(imageDiagnostic.getId())) {
+                    DatasetCategory categoriaExistente = categoriaEnDataset(dataset, existente.getMedicalDiagnostic().getId());
+                    if (categoriaExistente == null) {
+                        return ApiResponse.error("La imagen tiene diagnósticos que no pertenecen a ninguna categoría del dataset; no se pueden agregar más");
+                    }
+                    if (!categoriaExistente.getId().equals(categoria.getId())) {
+                        return ApiResponse.error("La imagen ya está clasificada en la categoría '" + categoriaExistente.getName()
+                                + "'; todos sus diagnósticos deben ser de la misma categoría");
+                    }
                 }
             }
 

@@ -1,6 +1,5 @@
 package backend.msclasificator.dataset.application;
 
-import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import backend.msclasificator.dataset.api.dto.DatasetCategoryCreateDTO;
 import backend.msclasificator.dataset.api.dto.DatasetCategoryResponseDTO;
 import backend.msclasificator.dataset.api.dto.DatasetCategorySummaryDTO;
@@ -40,7 +39,6 @@ class DatasetCategoryServiceTest {
     @Mock private DatasetCategoryRepository datasetCategoryRepository;
     @Mock private DatasetCategoryMapper datasetCategoryMapper;
     @Mock private DatasetRepository datasetRepository;
-    @Mock private ImageClassificationRepository imageClassificationRepository;
 
     @InjectMocks private DatasetCategoryService service;
 
@@ -174,12 +172,13 @@ class DatasetCategoryServiceTest {
         }
 
         @Test
-        @DisplayName("válido: numValue = cantidad de categorías existentes + 1 y se asocia al dataset")
+        @DisplayName("válido: numValue = categorías del dataset (incluidas las retiradas) + 1; nunca se reutiliza")
         void asignaSiguienteNumValue() {
             DatasetCategory nueva = DatasetCategory.builder().name("Patológico").build();
             when(datasetRepository.findById(1)).thenReturn(Optional.of(dataset));
             when(datasetCategoryMapper.toEntity(dto)).thenReturn(nueva);
-            when(datasetCategoryRepository.findByDatasetId(1)).thenReturn(List.of(categoria(10, 1), categoria(11, 2)));
+            // 2 activas + 1 retirada
+            when(datasetCategoryRepository.countByDatasetIdIncludingRetired(1)).thenReturn(3L);
             when(datasetCategoryRepository.save(nueva)).thenReturn(nueva);
             when(datasetCategoryMapper.toResponseDTO(nueva)).thenReturn(responseDTO);
 
@@ -187,7 +186,7 @@ class DatasetCategoryServiceTest {
 
             assertThat(response.isSuccess()).isTrue();
             assertThat(response.getMessage()).isEqualTo("Categoria de dataset creado exitosamente");
-            assertThat(nueva.getNumValue()).isEqualTo(3);
+            assertThat(nueva.getNumValue()).isEqualTo(4);
             assertThat(nueva.getDataset()).isSameAs(dataset);
         }
     }
@@ -244,46 +243,19 @@ class DatasetCategoryServiceTest {
         }
 
         @Test
-        @DisplayName("con imágenes clasificadas: rechaza y no borra (aunque sea la última)")
-        void conClasificaciones() {
-            DatasetCategory ultima = categoria(11, 2);
-            when(datasetCategoryRepository.findById(11)).thenReturn(Optional.of(ultima));
-            when(imageClassificationRepository.existsByDatasetCategoryId(11)).thenReturn(true);
-
-            ApiResponse<Void> response = service.delete(11);
-
-            assertThat(response.isSuccess()).isFalse();
-            assertThat(response.getMessage()).isEqualTo("No se puede eliminar la categoría: tiene imágenes clasificadas");
-            verify(datasetCategoryRepository, never()).delete(any());
-        }
-
-        @Test
-        @DisplayName("no es la última (numValue menor al máximo): rechaza y no borra")
-        void noEsLaUltima() {
+        @DisplayName("cualquier categoría (no solo la última): se retira con soft delete")
+        void retiraCualquiera() {
             DatasetCategory primera = categoria(10, 1);
             when(datasetCategoryRepository.findById(10)).thenReturn(Optional.of(primera));
-            when(datasetCategoryRepository.findByDatasetId(1)).thenReturn(List.of(primera, categoria(11, 2)));
 
             ApiResponse<Void> response = service.delete(10);
 
-            assertThat(response.isSuccess()).isFalse();
-            assertThat(response.getMessage())
-                    .isEqualTo("Solo se puede eliminar la ultima categoria generada de un Dataset, por coherencia secuencia de los numValues");
-            verify(datasetCategoryRepository, never()).delete(any());
-        }
-
-        @Test
-        @DisplayName("es la última: la borra")
-        void esLaUltima() {
-            DatasetCategory ultima = categoria(11, 2);
-            when(datasetCategoryRepository.findById(11)).thenReturn(Optional.of(ultima));
-            when(datasetCategoryRepository.findByDatasetId(1)).thenReturn(List.of(categoria(10, 1), ultima));
-
-            ApiResponse<Void> response = service.delete(11);
-
             assertThat(response.isSuccess()).isTrue();
             assertThat(response.getMessage()).isEqualTo("Categoria de dataset eliminada exitosamente");
-            verify(datasetCategoryRepository).delete(ultima);
+            assertThat(primera.getActive()).isFalse();
+            assertThat(primera.getDeletedAt()).isNotNull();
+            assertThat(primera.getNumValue()).isEqualTo(1);
+            verify(datasetCategoryRepository).save(primera);
         }
     }
 }

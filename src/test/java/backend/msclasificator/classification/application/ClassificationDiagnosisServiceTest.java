@@ -26,6 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,6 +48,8 @@ class ClassificationDiagnosisServiceTest {
 
     @InjectMocks private ClassificationDiagnosisService service;
 
+    private static final LocalDateTime DESLIZADA = LocalDateTime.of(2026, 3, 1, 10, 0);
+
     // Dataset "Arritmias" (raíz I20) para el tipo Electrocardiograma (id 1), con categorías Negativo y Positivo
     private Dataset dataset;
     private DatasetCategory negativo;
@@ -60,7 +63,7 @@ class ClassificationDiagnosisServiceTest {
     void setUp() {
         MedicalImageType ecg = MedicalImageType.builder().id(1).name("Electrocardiograma").build();
         MedicalImage imagen = MedicalImage.builder().id(50).medicalImageType(ecg).build();
-        clasificacion = ImageClassification.builder().id(5).medicalImg(imagen).build();
+        clasificacion = ImageClassification.builder().id(5).medicalImg(imagen).diagnosticDate(DESLIZADA).build();
         dataset = Dataset.builder().id(9).name("Arritmias").build();
         negativo = DatasetCategory.builder().id(30).name("Negativo").build();
         positivo = DatasetCategory.builder().id(31).name("Positivo").build();
@@ -198,8 +201,8 @@ class ClassificationDiagnosisServiceTest {
         void detalleFueraDeLaCategoriaDeLaClasificacion() {
             clasificacion.setDatasetCategory(negativo);
             stubBase(i204);
-            when(datasetRepository.findByMedicalImageTypeId(1)).thenReturn(Optional.of(dataset));
-            categoria(i204, positivo);
+            when(categoryDiagnosticRepository.findDefinitionAt(30, DESLIZADA))
+                    .thenReturn(List.of(CategoryDiagnostic.builder().medicalDiagnostic(i203).build()));
 
             assertThat(service.create(dto(301)).getMessage())
                     .isEqualTo("El diagnóstico no pertenece a la categoría 'Negativo' de la clasificación");
@@ -212,14 +215,30 @@ class ClassificationDiagnosisServiceTest {
             clasificacion.setDatasetCategory(negativo);
             ClassificationDiagnosis nuevo = new ClassificationDiagnosis();
             stubBase(i203);
-            when(datasetRepository.findByMedicalImageTypeId(1)).thenReturn(Optional.of(dataset));
-            categoria(i203, negativo);
-            when(repository.findByImageClassificationId(5)).thenReturn(List.of());
+            when(categoryDiagnosticRepository.findDefinitionAt(30, DESLIZADA))
+                    .thenReturn(List.of(CategoryDiagnostic.builder().medicalDiagnostic(i203).build()));
             when(mapper.toEntity(dto(300))).thenReturn(nuevo);
             when(repository.save(nuevo)).thenReturn(nuevo);
             when(mapper.toResponseDTO(nuevo)).thenReturn(new ClassificationDiagnosisResponseDTO());
 
             assertThat(service.create(dto(300)).isSuccess()).isTrue();
+        }
+
+        @Test
+        @DisplayName("clasificación con categoría: un diagnóstico retirado de la categoría DESPUÉS de deslizar sigue siendo válido")
+        void detalleConDefinicionHistorica() {
+            // La definición vigente al deslizar incluía I20.4; hoy ya no (se valida contra la fecha de la clasificación)
+            clasificacion.setDatasetCategory(positivo);
+            ClassificationDiagnosis nuevo = new ClassificationDiagnosis();
+            stubBase(i204);
+            when(categoryDiagnosticRepository.findDefinitionAt(31, DESLIZADA))
+                    .thenReturn(List.of(CategoryDiagnostic.builder().medicalDiagnostic(i204).build()));
+            when(mapper.toEntity(dto(301))).thenReturn(nuevo);
+            when(repository.save(nuevo)).thenReturn(nuevo);
+            when(mapper.toResponseDTO(nuevo)).thenReturn(new ClassificationDiagnosisResponseDTO());
+
+            assertThat(service.create(dto(301)).isSuccess()).isTrue();
+            verify(datasetRepository, never()).findByMedicalImageTypeId(any());
         }
 
         @Test

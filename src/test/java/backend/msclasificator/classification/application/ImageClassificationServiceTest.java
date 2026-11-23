@@ -31,11 +31,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -176,7 +178,7 @@ class ImageClassificationServiceTest {
             when(mapper.toEntity(dto)).thenReturn(nueva);
             when(imageClassificationRepository.save(nueva)).thenReturn(nueva);
             when(mapper.toResponseDTO(nueva)).thenReturn(new ImageClassificationResponseDTO());
-            when(categoryDiagnosticRepository.findByDatasetCategoryId(31))
+            when(categoryDiagnosticRepository.findDefinitionAt(eq(31), any(LocalDateTime.class)))
                     .thenReturn(List.of(CategoryDiagnostic.builder().medicalDiagnostic(i204).build()));
             when(medicalDiagnosticMapper.toSummaryDTO(i204)).thenReturn(i204Dto);
 
@@ -207,7 +209,7 @@ class ImageClassificationServiceTest {
 
             assertThat(response.isSuccess()).isTrue();
             assertThat(response.getData().getDiagnostics()).isNull();
-            verify(categoryDiagnosticRepository, never()).findByDatasetCategoryId(any());
+            verify(categoryDiagnosticRepository, never()).findDefinitionAt(any(), any());
         }
     }
 }

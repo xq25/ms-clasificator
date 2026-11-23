@@ -1,7 +1,10 @@
 -- =============================================================
+-- DATOS DE CATÁLOGO — ms-clasificator (ADR-011)
+-- Se ejecuta DESPUÉS de 01-schema.sql (orden alfabético en docker-entrypoint-initdb.d).
+-- Local: mysql -u root -p --default-character-set=utf8mb4 db-clasificator < docker/init/02-data.sql
+-- Usa INSERT IGNORE para ser idempotente si se vuelve a ejecutar.
+--
 -- SCRIPT DE INICIALIZACIÓN — Diagnósticos Médicos CIE-10
--- Se ejecuta automáticamente al arrancar Spring Boot.
--- Usa INSERT IGNORE para ser idempotente en reinicios.
 -- Orden: primero los padres (sin parent), luego los hijos.
 -- =============================================================
 

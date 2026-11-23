@@ -7,6 +7,7 @@ import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.shared.infrastructure.persistence.PageMapper;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,27 +22,27 @@ class CategoryDiagnosticPersistenceAdapter implements CategoryDiagnosticReposito
 
     @Override
     public PageResult<CategoryDiagnostic> findAll(PageQuery query) {
-        return PageMapper.toResult(jpa.findAll(PageMapper.toPageable(query)));
+        return PageMapper.toResult(jpa.findAllByActiveTrue(PageMapper.toPageable(query)));
     }
 
     @Override
     public Optional<CategoryDiagnostic> findById(Integer id) {
-        return jpa.findById(id);
+        return jpa.findByIdAndActiveTrue(id);
     }
 
     @Override
     public List<CategoryDiagnostic> findByDatasetCategoryId(Integer datasetCategoryId) {
-        return jpa.findByDatasetCategoryId(datasetCategoryId);
+        return jpa.findByDatasetCategoryIdAndActiveTrue(datasetCategoryId);
     }
 
     @Override
     public boolean existsByDatasetIdAndMedicalDiagnosticId(Integer datasetId, Integer medicalDiagnosticId) {
-        return jpa.existsByDatasetCategoryDatasetIdAndMedicalDiagnosticId(datasetId, medicalDiagnosticId);
+        return jpa.existsByDatasetCategoryDatasetIdAndMedicalDiagnosticIdAndActiveTrueAndDatasetCategoryActiveTrue(datasetId, medicalDiagnosticId);
     }
 
     @Override
     public Optional<CategoryDiagnostic> findByDatasetIdAndMedicalDiagnosticId(Integer datasetId, Integer medicalDiagnosticId) {
-        return jpa.findByDatasetCategoryDatasetIdAndMedicalDiagnosticId(datasetId, medicalDiagnosticId);
+        return jpa.findByDatasetCategoryDatasetIdAndMedicalDiagnosticIdAndActiveTrueAndDatasetCategoryActiveTrue(datasetId, medicalDiagnosticId);
     }
 
     @Override
@@ -50,17 +51,17 @@ class CategoryDiagnosticPersistenceAdapter implements CategoryDiagnosticReposito
     }
 
     @Override
+    public List<CategoryDiagnostic> findDefinitionAt(Integer datasetCategoryId, LocalDateTime at) {
+        return jpa.findDefinitionAt(datasetCategoryId, at);
+    }
+
+    @Override
     public long count() {
-        return jpa.countAll();
+        return jpa.countByActiveTrue();
     }
 
     @Override
     public CategoryDiagnostic save(CategoryDiagnostic categoryDiagnostic) {
         return jpa.save(categoryDiagnostic);
-    }
-
-    @Override
-    public void delete(CategoryDiagnostic categoryDiagnostic) {
-        jpa.delete(categoryDiagnostic);
     }
 }

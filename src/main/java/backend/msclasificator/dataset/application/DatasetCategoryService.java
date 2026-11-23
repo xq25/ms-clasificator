@@ -13,7 +13,6 @@ import backend.msclasificator.dataset.domain.Dataset;
 import backend.msclasificator.dataset.domain.DatasetCategory;
 import backend.msclasificator.dataset.application.port.out.DatasetCategoryRepository;
 import backend.msclasificator.dataset.application.port.out.DatasetRepository;
-import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,9 +31,6 @@ public class DatasetCategoryService {
 
     @Autowired
     private DatasetRepository datasetRepository;
-
-    @Autowired
-    private ImageClassificationRepository imageClassificationRepository;
 
     /**
      * Obtener todos las categorias (general)
@@ -128,7 +124,8 @@ public class DatasetCategoryService {
             datasetCategory.setDataset(dataset);
 
             // Validar el numero de categorias que tiene el dataset para asignarle el siguiente en secuencia.
-            int nextNumValue = datasetCategoryRepository.findByDatasetId(dataset.getId()).size() + 1;
+            // Cuenta también las retiradas: un numValue nunca se reutiliza (ADR-011)
+            int nextNumValue = (int) datasetCategoryRepository.countByDatasetIdIncludingRetired(dataset.getId()) + 1;
             datasetCategory.setNumValue(nextNumValue);
 
             return ApiResponse.success(datasetCategoryMappers.toResponseDTO(datasetCategoryRepository.save(datasetCategory)), "Categoria de dataset creado exitosamente");
@@ -163,24 +160,15 @@ public class DatasetCategoryService {
      * @param id ID del estado a eliminar
      * @return ApiResponse con el resultado de la operación
      */
+    @Transactional
     public ApiResponse<Void> delete(Integer id) {
         try {
             DatasetCategory datasetCategory = datasetCategoryRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Categoria de dataset no encontrada con ID: " + id));
 
-            // Las clasificaciones de los doctores referencian la categoría: no se pierden (ADR-010)
-            if (imageClassificationRepository.existsByDatasetCategoryId(id)) {
-                return ApiResponse.error("No se puede eliminar la categoría: tiene imágenes clasificadas");
-            }
-
-            // Solo se puede eliminar la ultima categoria generada de un Dataset, por coherencia secuencia de los numValues
-                List<DatasetCategory> datasetCategories = datasetCategoryRepository.findByDatasetId(datasetCategory.getDataset().getId());
-                int maxNumValue = datasetCategories.stream().mapToInt(DatasetCategory::getNumValue).max().orElse(0);
-                if (datasetCategory.getNumValue() != maxNumValue) {
-                    return ApiResponse.error("Solo se puede eliminar la ultima categoria generada de un Dataset, por coherencia secuencia de los numValues");
-                }
-
-            datasetCategoryRepository.delete(datasetCategory);
+            // Soft delete (ADR-011): cualquier categoría se puede retirar; su numValue no se reutiliza
+            datasetCategory.retire();
+            datasetCategoryRepository.save(datasetCategory);
             return ApiResponse.success("Categoria de dataset eliminada exitosamente");
 
         } catch (IllegalArgumentException ex) {

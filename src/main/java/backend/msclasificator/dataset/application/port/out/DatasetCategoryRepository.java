@@ -7,6 +7,7 @@ import backend.msclasificator.shared.application.PageResult;
 import java.util.List;
 import java.util.Optional;
 
+// Las lecturas consideran solo categorías activas, salvo los métodos "IncludingRetired" (ADR-011).
 public interface DatasetCategoryRepository {
 
     PageResult<DatasetCategory> findAll(PageQuery query);
@@ -19,7 +20,11 @@ public interface DatasetCategoryRepository {
 
     long count();
 
-    DatasetCategory save(DatasetCategory datasetCategory);
+    // Cuenta también las retiradas: el siguiente numValue nunca reutiliza el de una clase retirada
+    long countByDatasetIdIncludingRetired(Integer datasetId);
 
-    void delete(DatasetCategory datasetCategory);
+    // Incluye retiradas: sus clasificaciones históricas siguen dependiendo del diagnóstico del dataset
+    boolean existsByDatasetIdIncludingRetired(Integer datasetId);
+
+    DatasetCategory save(DatasetCategory datasetCategory);
 }

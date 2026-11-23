@@ -4,9 +4,11 @@ import backend.msclasificator.dataset.domain.CategoryDiagnostic;
 import backend.msclasificator.shared.application.PageQuery;
 import backend.msclasificator.shared.application.PageResult;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+// Las lecturas consideran solo asignaciones activas de categorías activas, salvo las indicadas (ADR-011).
 public interface CategoryDiagnosticRepository {
 
     PageResult<CategoryDiagnostic> findAll(PageQuery query);
@@ -17,14 +19,16 @@ public interface CategoryDiagnosticRepository {
 
     boolean existsByDatasetIdAndMedicalDiagnosticId(Integer datasetId, Integer medicalDiagnosticId);
 
-    // Categoría del dataset a la que está asignado el diagnóstico (a lo sumo una por dataset)
+    // Categoría activa del dataset a la que está asignado el diagnóstico (a lo sumo una)
     Optional<CategoryDiagnostic> findByDatasetIdAndMedicalDiagnosticId(Integer datasetId, Integer medicalDiagnosticId);
 
+    // Incluye retiradas: un diagnóstico que alguna vez definió una categoría no se puede borrar del catálogo
     boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);
+
+    // Definición de la categoría vigente en un instante: asignaciones creadas antes y no retiradas hasta entonces
+    List<CategoryDiagnostic> findDefinitionAt(Integer datasetCategoryId, LocalDateTime at);
 
     long count();
 
     CategoryDiagnostic save(CategoryDiagnostic categoryDiagnostic);
-
-    void delete(CategoryDiagnostic categoryDiagnostic);
 }

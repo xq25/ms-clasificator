@@ -179,31 +179,33 @@ Reglas vigentes del feature `dataset`. Están verificadas por los tests de `src/
 ### Dataset
 - El nombre del dataset es único.
 - Un `MedicalDiagnostic` solo puede tener un dataset, y un `MedicalImageType` solo puede estar en un dataset. Al actualizar, estas validaciones excluyen al propio dataset.
-- Si el dataset ya tiene categorías, **no se puede cambiar su diagnóstico**, porque las categorías dependen de su árbol. El nombre y el tipo de imagen sí se pueden cambiar.
-- Al eliminar un dataset se eliminan en cascada sus categorías y las asignaciones de diagnósticos.
-- **No se puede eliminar un dataset con imágenes clasificadas en sus categorías** (ADR-010; lo reemplazará el soft delete).
+- Si el dataset ya tiene categorías (activas o retiradas), **no se puede cambiar su diagnóstico**, porque las categorías y sus clasificaciones dependen de su árbol. El nombre y el tipo de imagen sí se pueden cambiar.
+- **Soft delete (ADR-011):** eliminar un dataset lo **retira** (`active=false`, `deleted_at`) junto con sus categorías activas. Las clasificaciones históricas no se tocan.
+- La unicidad (nombre, tipo de imagen, diagnóstico) se valida **solo entre datasets activos**: se puede crear un dataset nuevo para el tipo de imagen de uno retirado.
+- El cambio de diagnóstico se bloquea si el dataset tiene categorías, **incluidas las retiradas**.
 
 ### DatasetCategory
-- `numValue` se asigna automáticamente y en secuencia: cantidad de categorías del dataset + 1.
+- `numValue` se asigna automáticamente: categorías del dataset **incluidas las retiradas** + 1. **Nunca se reutiliza**, así que una clase de entrenamiento no cambia de significado.
 - Solo se puede cambiar el nombre.
-- Solo se puede eliminar la categoría con el `numValue` más alto, para que la secuencia no tenga huecos.
-- **No se puede eliminar una categoría con imágenes clasificadas** (ADR-010; lo reemplazará el soft delete).
+- **Soft delete (ADR-011):** cualquier categoría se puede retirar. Las activas pueden tener huecos en `numValue`.
 
 ### CategoryDiagnostic (asignación de sub-diagnósticos a una categoría)
 - **El diagnóstico debe descender, a cualquier profundidad, del diagnóstico raíz del dataset.** Ejemplo con raíz `I20`: `I20.1` es válido; un futuro `I20.11` también; `J45.0` no.
 - **La raíz del dataset no se puede asignar a una categoría.** Las categorías agrupan solo sub-diagnósticos.
-- Un mismo diagnóstico no puede estar en dos categorías del mismo dataset.
+- Un mismo diagnóstico no puede estar en dos categorías **activas** del mismo dataset.
+- **Soft delete con historial (ADR-011):** quitar un diagnóstico de una categoría lo retira (`deleted_at`). `created_at` y `deleted_at` definen su vigencia en la categoría.
+- Un `MedicalDiagnostic` que alguna vez definió una categoría no se puede borrar del catálogo.
 
 ### ImageClassification (un doctor desliza una imagen hacia una categoría)
 - **Solo se pueden clasificar imágenes cuyo tipo tiene un dataset configurado.**
 - El tipo de imagen debe tener un área de evaluación, y el doctor debe pertenecer a esa área.
-- **La categoría es obligatoria y debe pertenecer al dataset del tipo de imagen.**
+- **La categoría es obligatoria, debe estar activa y debe pertenecer al dataset activo del tipo de imagen.**
 - Un doctor solo puede clasificar una vez la misma imagen.
-- Los diagnósticos de la clasificación **se derivan de su categoría**. Si después se añade un diagnóstico a la categoría, las clasificaciones existentes lo incluyen.
+- Los diagnósticos de la clasificación son la **definición de su categoría en la fecha del deslizamiento** (ADR-011). Lo que se añada o se retire después no cambia las clasificaciones previas.
 - Las clasificaciones creadas antes de esta regla no tienen categoría (`null`).
 
 ### ClassificationDiagnosis (detalle opcional de sub-diagnósticos)
-- No forma parte del deslizamiento. Si la clasificación tiene categoría, **solo acepta diagnósticos de esa categoría**.
+- No forma parte del deslizamiento. Si la clasificación tiene categoría, **solo acepta diagnósticos de la definición de esa categoría en la fecha del deslizamiento**.
 - Para clasificaciones previas sin categoría:
 - **Solo son válidos los diagnósticos asignados a alguna categoría del dataset del tipo de imagen.** Así, toda etiqueta se traduce a una clase (`numValue`) del dataset.
 - **Una clasificación puede tener varios diagnósticos, pero todos de la misma categoría.** La imagen queda en una sola clase y el doctor puede precisar varios sub-diagnósticos de esa clase.

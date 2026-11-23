@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -34,5 +35,26 @@ public class DatasetCategory {
     @JsonIgnore
     @OneToMany(mappedBy = "datasetCategory", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CategoryDiagnostic> diagnosticCategoryDatasets;
+
+    // Soft delete (ADR-011): `active` para filtrar y validar; `deletedAt` registra cuándo se retiró.
+    // Solo cambian juntos, a través de retire().
+    @Builder.Default
+    @Column(name = "active", nullable = false)
+    private Boolean active = true;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    public void retire() {
+        this.active = false;
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    @PrePersist
+    void prePersist() {
+        if (active == null) {
+            active = true;
+        }
+    }
 }
 

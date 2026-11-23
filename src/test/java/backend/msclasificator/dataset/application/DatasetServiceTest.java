@@ -1,6 +1,5 @@
 package backend.msclasificator.dataset.application;
 
-import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import backend.msclasificator.dataset.api.dto.DatasetCreateDTO;
 import backend.msclasificator.dataset.api.dto.DatasetResponseDTO;
 import backend.msclasificator.dataset.api.dto.DatasetUpdateDTO;
@@ -45,7 +44,6 @@ class DatasetServiceTest {
     @Mock private MedicalDiagnosticRepository medicalDiagnosticRepository;
     @Mock private MedicalImageTypeRepository medicalImageTypeRepository;
     @Mock private DatasetCategoryRepository datasetCategoryRepository;
-    @Mock private ImageClassificationRepository imageClassificationRepository;
 
     @InjectMocks private DatasetService service;
 
@@ -374,7 +372,7 @@ class DatasetServiceTest {
             assertThat(guardado.getName()).isEqualTo("Nombre nuevo");
             assertThat(guardado.getMedicalDiagnostic()).isSameAs(diagnostic);
             assertThat(guardado.getMedicalImageType()).isSameAs(imageType);
-            verify(datasetCategoryRepository, never()).findByDatasetId(any());
+            verify(datasetCategoryRepository, never()).existsByDatasetIdIncludingRetired(any());
         }
 
         @Test
@@ -415,10 +413,10 @@ class DatasetServiceTest {
         }
 
         @Test
-        @DisplayName("cambia el diagnóstico con categorías existentes: error y no guarda")
+        @DisplayName("cambia el diagnóstico con categorías (activas o retiradas): error y no guarda")
         void cambiaDiagnosticoConCategorias() {
             stubEntidades(otroDiagnostic, imageType);
-            when(datasetCategoryRepository.findByDatasetId(1)).thenReturn(List.of(new DatasetCategory()));
+            when(datasetCategoryRepository.existsByDatasetIdIncludingRetired(1)).thenReturn(true);
 
             ApiResponse<DatasetResponseDTO> response = service.update(1, dto("Rx tórax", 20, 5));
 
@@ -431,7 +429,7 @@ class DatasetServiceTest {
         @DisplayName("cambia el diagnóstico sin categorías: acepta")
         void cambiaDiagnosticoSinCategorias() {
             stubEntidades(otroDiagnostic, imageType);
-            when(datasetCategoryRepository.findByDatasetId(1)).thenReturn(List.of());
+            when(datasetCategoryRepository.existsByDatasetIdIncludingRetired(1)).thenReturn(false);
             stubGuardado();
 
             ApiResponse<DatasetResponseDTO> response = service.update(1, dto("Rx tórax", 20, 5));
@@ -450,7 +448,7 @@ class DatasetServiceTest {
 
             assertThat(response.isSuccess()).isTrue();
             assertThat(capturarGuardado().getMedicalImageType()).isSameAs(otroTipo);
-            verify(datasetCategoryRepository, never()).findByDatasetId(any());
+            verify(datasetCategoryRepository, never()).existsByDatasetIdIncludingRetired(any());
         }
     }
 
@@ -459,39 +457,33 @@ class DatasetServiceTest {
     class Delete {
 
         @Test
-        @DisplayName("inexistente: error y no borra")
+        @DisplayName("inexistente (o ya retirado): error y no guarda")
         void inexistente() {
             when(datasetRepository.findById(1)).thenReturn(Optional.empty());
 
             ApiResponse<Void> response = service.delete(1);
 
             assertThat(response.getMessage()).isEqualTo("Dataset no encontrada con ID: 1");
-            verify(datasetRepository, never()).delete(any());
+            verify(datasetRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("con imágenes clasificadas en sus categorías: error y no borra")
-        void conClasificaciones() {
+        @DisplayName("existente: retira el dataset y sus categorías activas (soft delete)")
+        void retiraDatasetYCategorias() {
+            DatasetCategory categoria = DatasetCategory.builder().id(30).name("Negativo").numValue(1).dataset(dataset).build();
             when(datasetRepository.findById(1)).thenReturn(Optional.of(dataset));
-            when(imageClassificationRepository.existsByDatasetCategoryDatasetId(1)).thenReturn(true);
-
-            ApiResponse<Void> response = service.delete(1);
-
-            assertThat(response.isSuccess()).isFalse();
-            assertThat(response.getMessage()).isEqualTo("No se puede eliminar el dataset: tiene imágenes clasificadas en sus categorías");
-            verify(datasetRepository, never()).delete(any());
-        }
-
-        @Test
-        @DisplayName("existente sin clasificaciones: borra (las categorías caen por cascada)")
-        void existente() {
-            when(datasetRepository.findById(1)).thenReturn(Optional.of(dataset));
+            when(datasetCategoryRepository.findByDatasetId(1)).thenReturn(List.of(categoria));
 
             ApiResponse<Void> response = service.delete(1);
 
             assertThat(response.isSuccess()).isTrue();
             assertThat(response.getMessage()).isEqualTo("Dataset eliminada exitosamente (y sus categories asociados)");
-            verify(datasetRepository).delete(dataset);
+            assertThat(dataset.getActive()).isFalse();
+            assertThat(dataset.getDeletedAt()).isNotNull();
+            assertThat(categoria.getActive()).isFalse();
+            assertThat(categoria.getDeletedAt()).isNotNull();
+            verify(datasetCategoryRepository).save(categoria);
+            verify(datasetRepository).save(dataset);
         }
     }
 }

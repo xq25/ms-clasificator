@@ -15,7 +15,8 @@ Registro de las decisiones de arquitectura del proyecto. Cada decisión vive en 
 | [007](ADR-007-puertos-de-persistencia.md) | Puertos de persistencia y paginación propia | Aceptado | Persistencia |
 | [008](ADR-008-estrategia-de-pruebas.md) | Estrategia de pruebas | Aceptado | Calidad |
 | [009](ADR-009-errores-de-servicios-externos.md) | Manejo de errores de servicios externos | Aceptado | Arquitectura |
-| [010](ADR-010-clasificacion-por-categoria.md) | Clasificación de imágenes por categoría (deslizamiento) | Aceptado | Arquitectura / Persistencia |
+| [010](ADR-010-clasificacion-por-categoria.md) | Clasificación de imágenes por categoría (deslizamiento) | Aceptado (modificado por 011) | Arquitectura / Persistencia |
+| [011](ADR-011-soft-delete-y-esquema-versionado.md) | Soft delete de datasets y esquema de BD versionado | Aceptado | Persistencia / Infraestructura |
 
 ## Plantilla
 

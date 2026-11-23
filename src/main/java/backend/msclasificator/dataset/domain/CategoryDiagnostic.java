@@ -8,7 +8,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.logging.log4j.util.Lazy;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -32,4 +34,29 @@ public class CategoryDiagnostic {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private MedicalDiagnostic medicalDiagnostic;
 
+    // Inicio de vigencia en la definición de la categoría (ADR-011)
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    // Soft delete (ADR-011): `active` para filtrar y validar; `deletedAt` registra cuándo se retiró.
+    // Solo cambian juntos, a través de retire().
+    @Builder.Default
+    @Column(name = "active", nullable = false)
+    private Boolean active = true;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    public void retire() {
+        this.active = false;
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    @PrePersist
+    void prePersist() {
+        if (active == null) {
+            active = true;
+        }
+    }
 }

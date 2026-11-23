@@ -10,6 +10,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Entity
 @Builder
@@ -27,8 +29,9 @@ public class MedicalImageType {
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     private EvaluationArea evaluationArea;
 
-    // Lo colocamos solo por el cascade. Un dataset no puede existir si se borra el tipo de imagen que iba a clasificar
+    // Lo colocamos solo por el cascade. Un dataset no puede existir si se borra el tipo de imagen que iba a clasificar.
+    // Varios datasets por tipo (uno activo + retirados, ADR-011); la unicidad del activo la valida el servicio.
     @JsonIgnore
-    @OneToOne(mappedBy = "medicalImageType", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Dataset dataset;
+    @OneToMany(mappedBy = "medicalImageType", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Dataset> datasets;
 }
