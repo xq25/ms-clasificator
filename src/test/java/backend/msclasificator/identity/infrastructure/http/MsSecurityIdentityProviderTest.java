@@ -1,4 +1,4 @@
-package backend.msclasificator.identity.application;
+package backend.msclasificator.identity.infrastructure.http;
 
 import backend.msclasificator.identity.application.exception.SecurityServiceException;
 import backend.msclasificator.identity.domain.UserInfo;
@@ -29,13 +29,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class SecurityServiceTest {
+class MsSecurityIdentityProviderTest {
 
     private static final String MENSAJE = "No se pudo obtener la información del usuario (nombre y email) desde ms-security";
 
     @Mock private RestTemplate restTemplate;
 
-    @InjectMocks private SecurityService service;
+    @InjectMocks private MsSecurityIdentityProvider provider;
 
     private void respuestaNombre(String body) {
         when(restTemplate.exchange(contains("/get-name/u1"), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
@@ -57,7 +57,7 @@ class SecurityServiceTest {
             respuestaNombre("Ana");
             respuestaEmail("ana@example.com");
 
-            UserInfo info = service.getUserInfo("u1");
+            UserInfo info = provider.getUserInfo("u1");
 
             assertThat(info.getName()).isEqualTo("Ana");
             assertThat(info.getEmail()).isEqualTo("ana@example.com");
@@ -68,7 +68,7 @@ class SecurityServiceTest {
         void sinNombre() {
             respuestaNombre(null);
 
-            assertThatThrownBy(() -> service.getUserInfo("u1"))
+            assertThatThrownBy(() -> provider.getUserInfo("u1"))
                     .isInstanceOf(SecurityServiceException.class)
                     .hasMessage(MENSAJE);
             verify(restTemplate, never())
@@ -81,7 +81,7 @@ class SecurityServiceTest {
             respuestaNombre("Ana");
             respuestaEmail(null);
 
-            assertThatThrownBy(() -> service.getUserInfo("u1"))
+            assertThatThrownBy(() -> provider.getUserInfo("u1"))
                     .isInstanceOf(SecurityServiceException.class)
                     .hasMessage(MENSAJE);
         }
@@ -93,7 +93,7 @@ class SecurityServiceTest {
             when(restTemplate.exchange(contains("/get-name/u1"), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
                     .thenThrow(causa);
 
-            assertThatThrownBy(() -> service.getUserInfo("u1"))
+            assertThatThrownBy(() -> provider.getUserInfo("u1"))
                     .isInstanceOf(SecurityServiceException.class)
                     .hasMessage(MENSAJE)
                     .hasCause(causa);
@@ -106,14 +106,14 @@ class SecurityServiceTest {
             when(restTemplate.exchange(contains("/get-email/u1"), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
                     .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 
-            assertThatThrownBy(() -> service.getUserInfo("u1"))
+            assertThatThrownBy(() -> provider.getUserInfo("u1"))
                     .isInstanceOf(SecurityServiceException.class)
                     .hasMessage(MENSAJE);
         }
     }
 
     @Nested
-    @DisplayName("existUserById")
+    @DisplayName("existsUser")
     class ExistUserById {
 
         private void responde(ApiResponse<?> body) {
@@ -126,7 +126,7 @@ class SecurityServiceTest {
         void existe() {
             responde(ApiResponse.success(true, "ok"));
 
-            assertThat(service.existUserById("u1")).isTrue();
+            assertThat(provider.existsUser("u1")).isTrue();
         }
 
         @Test
@@ -134,7 +134,7 @@ class SecurityServiceTest {
         void noExiste() {
             responde(ApiResponse.success(false, "ok"));
 
-            assertThat(service.existUserById("u1")).isFalse();
+            assertThat(provider.existsUser("u1")).isFalse();
         }
 
         @Test
@@ -143,7 +143,7 @@ class SecurityServiceTest {
             when(restTemplate.exchange(contains("/u1/exist"), eq(HttpMethod.GET), any(HttpEntity.class), eq(ApiResponse.class)))
                     .thenThrow(HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not Found", null, null, null));
 
-            assertThat(service.existUserById("u1")).isFalse();
+            assertThat(provider.existsUser("u1")).isFalse();
         }
 
         @Test
@@ -152,7 +152,7 @@ class SecurityServiceTest {
             when(restTemplate.exchange(contains("/u1/exist"), eq(HttpMethod.GET), any(HttpEntity.class), eq(ApiResponse.class)))
                     .thenThrow(new ResourceAccessException("Connection refused"));
 
-            assertThatThrownBy(() -> service.existUserById("u1"))
+            assertThatThrownBy(() -> provider.existsUser("u1"))
                     .isInstanceOf(SecurityServiceException.class)
                     .hasMessage("No se pudo verificar el usuario en ms-security");
         }
@@ -162,7 +162,7 @@ class SecurityServiceTest {
         void respuestaInvalida() {
             responde(ApiResponse.success("texto", "ok"));
 
-            assertThatThrownBy(() -> service.existUserById("u1"))
+            assertThatThrownBy(() -> provider.existsUser("u1"))
                     .isInstanceOf(SecurityServiceException.class)
                     .hasMessage("Respuesta inválida de ms-security al verificar el usuario");
         }
@@ -178,7 +178,7 @@ class SecurityServiceTest {
             when(restTemplate.exchange(contains("/u1/assign-role/patient"), eq(HttpMethod.POST), any(HttpEntity.class), eq(ApiResponse.class)))
                     .thenReturn(ResponseEntity.ok(ApiResponse.success("ok")));
 
-            service.assignDefaultRole("u1", "patient");
+            provider.assignDefaultRole("u1", "patient");
         }
 
         @Test
@@ -187,7 +187,7 @@ class SecurityServiceTest {
             when(restTemplate.exchange(contains("/u1/assign-role/patient"), eq(HttpMethod.POST), any(HttpEntity.class), eq(ApiResponse.class)))
                     .thenReturn(ResponseEntity.ok(ApiResponse.error("rol inválido")));
 
-            assertThatThrownBy(() -> service.assignDefaultRole("u1", "patient"))
+            assertThatThrownBy(() -> provider.assignDefaultRole("u1", "patient"))
                     .isInstanceOf(SecurityServiceException.class)
                     .hasMessage("ms-security no asignó el rol 'patient' al usuario");
         }
@@ -198,7 +198,7 @@ class SecurityServiceTest {
             when(restTemplate.exchange(contains("/u1/assign-role/patient"), eq(HttpMethod.POST), any(HttpEntity.class), eq(ApiResponse.class)))
                     .thenThrow(new ResourceAccessException("Connection refused"));
 
-            assertThatThrownBy(() -> service.assignDefaultRole("u1", "patient"))
+            assertThatThrownBy(() -> provider.assignDefaultRole("u1", "patient"))
                     .isInstanceOf(SecurityServiceException.class)
                     .hasMessage("No se pudo asignar el rol 'patient' en ms-security");
         }

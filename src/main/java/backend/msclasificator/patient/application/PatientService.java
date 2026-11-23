@@ -1,6 +1,6 @@
 package backend.msclasificator.patient.application;
 
-import backend.msclasificator.identity.application.SecurityService;
+import backend.msclasificator.identity.application.port.out.IdentityProvider;
 
 import backend.msclasificator.shared.api.PageRequestDTO;
 import backend.msclasificator.patient.api.dto.PatientCreateDTO;
@@ -35,7 +35,7 @@ public class    PatientService {
     @Autowired
     private PatientMapper patientMapper;
 
-    @Autowired SecurityService securityServices;
+    @Autowired IdentityProvider identityProvider;
 
     /**
      * Obtener todos los pacientes
@@ -100,7 +100,7 @@ public class    PatientService {
                     .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado con ID: " + id));
 
             // Si ms-security falla lanza SecurityServiceException, que GlobalExceptionHandler traduce a 503
-            patient.setUserInfo(securityServices.getUserInfo(patient.getUserId()));
+            patient.setUserInfo(identityProvider.getUserInfo(patient.getUserId()));
 
             return ApiResponse.success(patient, "Paciente encontrado exitosamente");
         } catch (IllegalArgumentException ex) {
@@ -120,7 +120,7 @@ public class    PatientService {
                     .orElseThrow(() -> new IllegalArgumentException("No se encontro paciente con el documento: " + document));
 
             // Si ms-security falla lanza SecurityServiceException, que GlobalExceptionHandler traduce a 503
-            patient.setUserInfo(securityServices.getUserInfo(patient.getUserId()));
+            patient.setUserInfo(identityProvider.getUserInfo(patient.getUserId()));
 
             return ApiResponse.success(patient, "Pacientes encontrados exitosamente");
         } catch (SecurityServiceException ex) {
@@ -138,7 +138,7 @@ public class    PatientService {
                     .orElseThrow(() -> new IllegalArgumentException("No se encontro paciente con el userId: " + userId));
 
             // Si ms-security falla lanza SecurityServiceException, que GlobalExceptionHandler traduce a 503
-            patient.setUserInfo(securityServices.getUserInfo(patient.getUserId()));
+            patient.setUserInfo(identityProvider.getUserInfo(patient.getUserId()));
 
             return ApiResponse.success(patient, "Paciente encontrado exitosamente");
         } catch (IllegalArgumentException ex){
@@ -174,7 +174,7 @@ public class    PatientService {
             }
 
             // Validar que exista este user_id en ms-security
-            boolean exist = this.securityServices.existUserById(patientCreateDTO.getUserId());
+            boolean exist = this.identityProvider.existsUser(patientCreateDTO.getUserId());
             if(!exist){
                 return ApiResponse.error("No existe un usuario con el userId: " + patientCreateDTO.getUserId() + ". No se puede crear el paciente sin un usuario asociado.");
             }
@@ -187,7 +187,7 @@ public class    PatientService {
             Patient saved = patientRepository.save(patientMapper.toEntity(patientCreateDTO));
 
             // Último paso: si falla, lanza SecurityServiceException y se revierte el guardado
-            this.securityServices.assignDefaultRole(patientCreateDTO.getUserId(), "patient");
+            this.identityProvider.assignDefaultRole(patientCreateDTO.getUserId(), "patient");
 
             return ApiResponse.success(patientMapper.toSummaryDTO(saved), "Paciente creado exitosamente. Rol 'patient' asignado correctamente al usuario.");
 

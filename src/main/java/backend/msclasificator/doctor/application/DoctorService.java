@@ -1,6 +1,6 @@
 package backend.msclasificator.doctor.application;
 
-import backend.msclasificator.identity.application.SecurityService;
+import backend.msclasificator.identity.application.port.out.IdentityProvider;
 
 import backend.msclasificator.doctor.api.dto.DoctorCreateDTO;
 import backend.msclasificator.doctor.api.dto.DoctorResponseDTO;
@@ -35,7 +35,7 @@ public class DoctorService {
     private ImageClassificationRepository imageDiagnosticRepository;
 
     @Autowired
-    private SecurityService securityServices;
+    private IdentityProvider identityProvider;
 
     /**
      * Obtener todos los doctores
@@ -101,7 +101,7 @@ public class DoctorService {
                     .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + id));
 
             // Si ms-security falla lanza SecurityServiceException, que GlobalExceptionHandler traduce a 503
-            doctor.setUserInfo(securityServices.getUserInfo(doctor.getUserId()));
+            doctor.setUserInfo(identityProvider.getUserInfo(doctor.getUserId()));
 
             return ApiResponse.success(doctor, "Doctor encontrado exitosamente");
         } catch (IllegalArgumentException ex) {
@@ -122,7 +122,7 @@ public class DoctorService {
                     .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con código: " + code));
 
             // Si ms-security falla lanza SecurityServiceException, que GlobalExceptionHandler traduce a 503
-            doctor.setUserInfo(securityServices.getUserInfo(doctor.getUserId()));
+            doctor.setUserInfo(identityProvider.getUserInfo(doctor.getUserId()));
 
             return ApiResponse.success(doctor, "Doctor encontrado exitosamente");
         } catch (IllegalArgumentException ex) {
@@ -138,7 +138,7 @@ public class DoctorService {
                     .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con userId: " + userId));
 
             // Si ms-security falla lanza SecurityServiceException, que GlobalExceptionHandler traduce a 503
-            doctor.setUserInfo(securityServices.getUserInfo(doctor.getUserId()));
+            doctor.setUserInfo(identityProvider.getUserInfo(doctor.getUserId()));
 
             return ApiResponse.success(doctor, "Doctor encontrado exitosamente");
         } catch (IllegalArgumentException ex) {
@@ -165,7 +165,7 @@ public class DoctorService {
         }
 
         // Validar con ms-security que exista ese usuario
-        if(!securityServices.existUserById(doctorCreateDTO.getUserId())){
+        if(!identityProvider.existsUser(doctorCreateDTO.getUserId())){
             return ApiResponse.error("No existe un usuario con el userId: " + doctorCreateDTO.getUserId() + ". No se puede crear el doctor sin un usuario asociado.");
         }
 
@@ -177,7 +177,7 @@ public class DoctorService {
         Doctor saved = doctorRepository.save(doctorMapper.toEntity(doctorCreateDTO));
 
         // Último paso: si falla, lanza SecurityServiceException y se revierte el guardado
-        this.securityServices.assignDefaultRole(doctorCreateDTO.getUserId(), "doctor");
+        this.identityProvider.assignDefaultRole(doctorCreateDTO.getUserId(), "doctor");
 
         return ApiResponse.success(doctorMapper.toSummaryDTO(saved), "Doctor creado exitosamente. Rol 'doctor' asignado correctamente al usuario.");
     }

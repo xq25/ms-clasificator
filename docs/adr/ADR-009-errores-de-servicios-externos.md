@@ -35,4 +35,4 @@ Ya existía un precedente para el storage: `ImageStorageException` se traduce a 
 - El mismo fallo de ms-security produce siempre la misma respuesta (503 y el mismo mensaje) en todos los endpoints.
 - Agregar otro servicio externo implica: crear su excepción propia, lanzarla desde su cliente o adaptador, y registrar su traducción en el `GlobalExceptionHandler`.
 - Los demás métodos de `SecurityService` (`existUserById`, `assignDefaultRole`) todavía se tragan los errores y devuelven `false`. Alinearlos con esta decisión cambia el flujo de alta de pacientes y doctores, así que queda pendiente de decisión (ver bug #9 en `bugs-conocidos.md`).
-- En la fase 3, `SecurityService` pasará a ser un puerto (`IdentityProvider`) con su adaptador HTTP. La excepción y su traducción se mantienen.
+- Fase 3: `SecurityService` pasó a ser el puerto `IdentityProvider` con el adaptador HTTP `MsSecurityIdentityProvider` ([ADR-012](ADR-012-puertos-hacia-servicios-externos.md)). La excepción y su traducción se mantienen.

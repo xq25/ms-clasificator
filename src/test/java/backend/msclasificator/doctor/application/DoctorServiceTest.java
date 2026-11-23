@@ -7,7 +7,7 @@ import backend.msclasificator.doctor.api.dto.DoctorSummaryDTO;
 import backend.msclasificator.doctor.api.mapper.DoctorMapper;
 import backend.msclasificator.doctor.application.port.out.DoctorRepository;
 import backend.msclasificator.doctor.domain.Doctor;
-import backend.msclasificator.identity.application.SecurityService;
+import backend.msclasificator.identity.application.port.out.IdentityProvider;
 import backend.msclasificator.identity.application.exception.SecurityServiceException;
 import backend.msclasificator.identity.domain.UserInfo;
 import backend.msclasificator.shared.api.ApiResponse;
@@ -40,7 +40,7 @@ class DoctorServiceTest {
     @Mock private DoctorRepository doctorRepository;
     @Mock private DoctorMapper doctorMapper;
     @Mock private ImageClassificationRepository imageClassificationRepository;
-    @Mock private SecurityService securityService;
+    @Mock private IdentityProvider identityProvider;
 
     @InjectMocks private DoctorService service;
 
@@ -76,7 +76,7 @@ class DoctorServiceTest {
         void conUserInfo() {
             when(doctorRepository.findById(2)).thenReturn(Optional.of(doctor));
             when(doctorMapper.toResponseDTO(doctor)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenReturn(userInfo);
+            when(identityProvider.getUserInfo(USER_ID)).thenReturn(userInfo);
 
             ApiResponse<DoctorResponseDTO> response = service.findById(2);
 
@@ -90,7 +90,7 @@ class DoctorServiceTest {
         void msSecurityFallaPropaga() {
             when(doctorRepository.findById(2)).thenReturn(Optional.of(doctor));
             when(doctorMapper.toResponseDTO(doctor)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenThrow(new SecurityServiceException("sin datos"));
+            when(identityProvider.getUserInfo(USER_ID)).thenThrow(new SecurityServiceException("sin datos"));
 
             assertThatThrownBy(() -> service.findById(2)).isInstanceOf(SecurityServiceException.class);
         }
@@ -113,7 +113,7 @@ class DoctorServiceTest {
         void msSecurityFallaPropaga() {
             when(doctorRepository.findByCode("MED-01")).thenReturn(Optional.of(doctor));
             when(doctorMapper.toResponseDTO(doctor)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenThrow(new SecurityServiceException("sin datos"));
+            when(identityProvider.getUserInfo(USER_ID)).thenThrow(new SecurityServiceException("sin datos"));
 
             assertThatThrownBy(() -> service.findByCode("MED-01")).isInstanceOf(SecurityServiceException.class);
         }
@@ -128,7 +128,7 @@ class DoctorServiceTest {
         void conUserInfo() {
             when(doctorRepository.findByUserId(USER_ID)).thenReturn(Optional.of(doctor));
             when(doctorMapper.toResponseDTO(doctor)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenReturn(userInfo);
+            when(identityProvider.getUserInfo(USER_ID)).thenReturn(userInfo);
 
             assertThat(service.findByUserId(USER_ID).getData().getUserInfo()).isSameAs(userInfo);
         }
@@ -138,7 +138,7 @@ class DoctorServiceTest {
         void msSecurityFallaPropaga() {
             when(doctorRepository.findByUserId(USER_ID)).thenReturn(Optional.of(doctor));
             when(doctorMapper.toResponseDTO(doctor)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenThrow(new SecurityServiceException("sin datos"));
+            when(identityProvider.getUserInfo(USER_ID)).thenThrow(new SecurityServiceException("sin datos"));
 
             assertThatThrownBy(() -> service.findByUserId(USER_ID)).isInstanceOf(SecurityServiceException.class);
         }
@@ -152,7 +152,7 @@ class DoctorServiceTest {
 
         private void stubValidacionesOk() {
             when(doctorRepository.existsByCode("MED-01")).thenReturn(false);
-            when(securityService.existUserById(USER_ID)).thenReturn(true);
+            when(identityProvider.existsUser(USER_ID)).thenReturn(true);
             when(doctorRepository.existsByUserId(USER_ID)).thenReturn(false);
         }
 
@@ -160,19 +160,19 @@ class DoctorServiceTest {
         @DisplayName("usuario inexistente en ms-security: error sin guardar ni asignar rol")
         void usuarioInexistente() {
             when(doctorRepository.existsByCode("MED-01")).thenReturn(false);
-            when(securityService.existUserById(USER_ID)).thenReturn(false);
+            when(identityProvider.existsUser(USER_ID)).thenReturn(false);
 
             assertThat(service.create(dto).getMessage())
                     .isEqualTo("No existe un usuario con el userId: doc-1. No se puede crear el doctor sin un usuario asociado.");
             verify(doctorRepository, never()).save(any());
-            verify(securityService, never()).assignDefaultRole(anyString(), anyString());
+            verify(identityProvider, never()).assignDefaultRole(anyString(), anyString());
         }
 
         @Test
         @DisplayName("ms-security falla al verificar: propaga SecurityServiceException sin guardar")
         void falloVerificacion() {
             when(doctorRepository.existsByCode("MED-01")).thenReturn(false);
-            when(securityService.existUserById(USER_ID)).thenThrow(new SecurityServiceException("caído"));
+            when(identityProvider.existsUser(USER_ID)).thenThrow(new SecurityServiceException("caído"));
 
             assertThatThrownBy(() -> service.create(dto)).isInstanceOf(SecurityServiceException.class);
             verify(doctorRepository, never()).save(any());
@@ -190,9 +190,9 @@ class DoctorServiceTest {
 
             assertThat(response.isSuccess()).isTrue();
             assertThat(response.getMessage()).isEqualTo("Doctor creado exitosamente. Rol 'doctor' asignado correctamente al usuario.");
-            InOrder orden = inOrder(doctorRepository, securityService);
+            InOrder orden = inOrder(doctorRepository, identityProvider);
             orden.verify(doctorRepository).save(doctor);
-            orden.verify(securityService).assignDefaultRole(USER_ID, "doctor");
+            orden.verify(identityProvider).assignDefaultRole(USER_ID, "doctor");
         }
 
         @Test
@@ -201,7 +201,7 @@ class DoctorServiceTest {
             stubValidacionesOk();
             when(doctorMapper.toEntity(dto)).thenReturn(doctor);
             when(doctorRepository.save(doctor)).thenReturn(doctor);
-            doThrow(new SecurityServiceException("rol no asignado")).when(securityService).assignDefaultRole(USER_ID, "doctor");
+            doThrow(new SecurityServiceException("rol no asignado")).when(identityProvider).assignDefaultRole(USER_ID, "doctor");
 
             assertThatThrownBy(() -> service.create(dto)).isInstanceOf(SecurityServiceException.class);
         }

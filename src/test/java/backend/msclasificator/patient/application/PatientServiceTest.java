@@ -1,6 +1,6 @@
 package backend.msclasificator.patient.application;
 
-import backend.msclasificator.identity.application.SecurityService;
+import backend.msclasificator.identity.application.port.out.IdentityProvider;
 import backend.msclasificator.identity.application.exception.SecurityServiceException;
 import backend.msclasificator.identity.domain.UserInfo;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
@@ -46,7 +46,7 @@ class PatientServiceTest {
     @Mock private PatientRepository patientRepository;
     @Mock private MedicalImageRepository medicalImageRepository;
     @Mock private PatientMapper patientMapper;
-    @Mock private SecurityService securityService;
+    @Mock private IdentityProvider identityProvider;
 
     @InjectMocks private PatientService service;
 
@@ -124,7 +124,7 @@ class PatientServiceTest {
         void conUserInfo() {
             when(patientRepository.findById(1)).thenReturn(Optional.of(patient));
             when(patientMapper.toResponseDTO(patient)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenReturn(userInfo);
+            when(identityProvider.getUserInfo(USER_ID)).thenReturn(userInfo);
 
             ApiResponse<PatientResponseDTO> response = service.findById(1);
 
@@ -138,7 +138,7 @@ class PatientServiceTest {
         void msSecurityFallaPropaga() {
             when(patientRepository.findById(1)).thenReturn(Optional.of(patient));
             when(patientMapper.toResponseDTO(patient)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenThrow(new SecurityServiceException("sin datos"));
+            when(identityProvider.getUserInfo(USER_ID)).thenThrow(new SecurityServiceException("sin datos"));
 
             assertThatThrownBy(() -> service.findById(1))
                     .isInstanceOf(SecurityServiceException.class);
@@ -163,7 +163,7 @@ class PatientServiceTest {
         void conUserInfo() {
             when(patientRepository.findByDocument("CC12345678")).thenReturn(Optional.of(patient));
             when(patientMapper.toResponseDTO(patient)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenReturn(userInfo);
+            when(identityProvider.getUserInfo(USER_ID)).thenReturn(userInfo);
 
             ApiResponse<PatientResponseDTO> response = service.findByDocument("CC12345678");
 
@@ -177,7 +177,7 @@ class PatientServiceTest {
         void msSecurityFallaPropaga() {
             when(patientRepository.findByDocument("CC12345678")).thenReturn(Optional.of(patient));
             when(patientMapper.toResponseDTO(patient)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenThrow(new SecurityServiceException("sin datos"));
+            when(identityProvider.getUserInfo(USER_ID)).thenThrow(new SecurityServiceException("sin datos"));
 
             assertThatThrownBy(() -> service.findByDocument("CC12345678"))
                     .isInstanceOf(SecurityServiceException.class);
@@ -201,7 +201,7 @@ class PatientServiceTest {
         void conUserInfo() {
             when(patientRepository.findByUserId(USER_ID)).thenReturn(Optional.of(patient));
             when(patientMapper.toResponseDTO(patient)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenReturn(userInfo);
+            when(identityProvider.getUserInfo(USER_ID)).thenReturn(userInfo);
 
             ApiResponse<PatientResponseDTO> response = service.findByUserId(USER_ID);
 
@@ -214,7 +214,7 @@ class PatientServiceTest {
         void msSecurityFallaPropaga() {
             when(patientRepository.findByUserId(USER_ID)).thenReturn(Optional.of(patient));
             when(patientMapper.toResponseDTO(patient)).thenReturn(responseDTO);
-            when(securityService.getUserInfo(USER_ID)).thenThrow(new SecurityServiceException("sin datos"));
+            when(identityProvider.getUserInfo(USER_ID)).thenThrow(new SecurityServiceException("sin datos"));
 
             assertThatThrownBy(() -> service.findByUserId(USER_ID))
                     .isInstanceOf(SecurityServiceException.class);
@@ -240,7 +240,7 @@ class PatientServiceTest {
             when(patientRepository.findByDocument("CC12345678")).thenReturn(Optional.of(patient));
 
             assertThat(service.create(dto).getMessage()).isEqualTo("Ya existe un paciente con el documento: CC12345678");
-            verify(securityService, never()).existUserById(anyString());
+            verify(identityProvider, never()).existsUser(anyString());
             verify(patientRepository, never()).save(any());
         }
 
@@ -259,7 +259,7 @@ class PatientServiceTest {
         @DisplayName("userId inexistente en ms-security: error")
         void usuarioInexistente() {
             when(patientRepository.findByDocument("CC12345678")).thenReturn(Optional.empty());
-            when(securityService.existUserById(USER_ID)).thenReturn(false);
+            when(identityProvider.existsUser(USER_ID)).thenReturn(false);
 
             assertThat(service.create(dto).getMessage()).isEqualTo("No existe un usuario con el userId: user-123. No se puede crear el paciente sin un usuario asociado.");
             verify(patientRepository, never()).save(any());
@@ -269,12 +269,12 @@ class PatientServiceTest {
         @DisplayName("userId ya usado por otro paciente: error sin asignar rol")
         void userIdDuplicado() {
             when(patientRepository.findByDocument("CC12345678")).thenReturn(Optional.empty());
-            when(securityService.existUserById(USER_ID)).thenReturn(true);
+            when(identityProvider.existsUser(USER_ID)).thenReturn(true);
             when(patientRepository.findByUserId(USER_ID)).thenReturn(Optional.of(patient));
 
             assertThat(service.create(dto).getMessage())
                     .isEqualTo("Ya existe un paciente con el userId: user-123. El userId debe ser único.");
-            verify(securityService, never()).assignDefaultRole(anyString(), anyString());
+            verify(identityProvider, never()).assignDefaultRole(anyString(), anyString());
             verify(patientRepository, never()).save(any());
         }
 
@@ -282,7 +282,7 @@ class PatientServiceTest {
         @DisplayName("ms-security falla al verificar el usuario: propaga SecurityServiceException (503) sin guardar")
         void falloVerificacionUsuario() {
             when(patientRepository.findByDocument("CC12345678")).thenReturn(Optional.empty());
-            when(securityService.existUserById(USER_ID)).thenThrow(new SecurityServiceException("caído"));
+            when(identityProvider.existsUser(USER_ID)).thenThrow(new SecurityServiceException("caído"));
 
             assertThatThrownBy(() -> service.create(dto)).isInstanceOf(SecurityServiceException.class);
             verify(patientRepository, never()).save(any());
@@ -292,7 +292,7 @@ class PatientServiceTest {
         @DisplayName("válido: guarda y, como ÚLTIMO paso, asigna el rol 'patient'")
         void valido() {
             when(patientRepository.findByDocument("CC12345678")).thenReturn(Optional.empty());
-            when(securityService.existUserById(USER_ID)).thenReturn(true);
+            when(identityProvider.existsUser(USER_ID)).thenReturn(true);
             when(patientRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
             when(patientMapper.toEntity(dto)).thenReturn(patient);
             when(patientRepository.save(patient)).thenReturn(patient);
@@ -303,20 +303,20 @@ class PatientServiceTest {
             assertThat(response.isSuccess()).isTrue();
             assertThat(response.getMessage())
                     .isEqualTo("Paciente creado exitosamente. Rol 'patient' asignado correctamente al usuario.");
-            InOrder orden = inOrder(patientRepository, securityService);
+            InOrder orden = inOrder(patientRepository, identityProvider);
             orden.verify(patientRepository).save(patient);
-            orden.verify(securityService).assignDefaultRole(USER_ID, "patient");
+            orden.verify(identityProvider).assignDefaultRole(USER_ID, "patient");
         }
 
         @Test
         @DisplayName("si falla la asignación de rol: propaga SecurityServiceException para que @Transactional revierta el guardado")
         void falloRolRevierte() {
             when(patientRepository.findByDocument("CC12345678")).thenReturn(Optional.empty());
-            when(securityService.existUserById(USER_ID)).thenReturn(true);
+            when(identityProvider.existsUser(USER_ID)).thenReturn(true);
             when(patientRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
             when(patientMapper.toEntity(dto)).thenReturn(patient);
             when(patientRepository.save(patient)).thenReturn(patient);
-            doThrow(new SecurityServiceException("rol no asignado")).when(securityService).assignDefaultRole(USER_ID, "patient");
+            doThrow(new SecurityServiceException("rol no asignado")).when(identityProvider).assignDefaultRole(USER_ID, "patient");
 
             assertThatThrownBy(() -> service.create(dto)).isInstanceOf(SecurityServiceException.class);
         }
