@@ -7,6 +7,7 @@ import backend.msclasificator.shared.application.PageResult;
 import java.util.List;
 import java.util.Optional;
 
+// Todas las lecturas y validaciones consideran solo datasets activos (ADR-011). Retirar = retire() + save().
 public interface DatasetRepository {
 
     PageResult<Dataset> findAll(PageQuery query);
@@ -35,6 +36,4 @@ public interface DatasetRepository {
     long count();
 
     Dataset save(Dataset dataset);
-
-    void delete(Dataset dataset);
 }

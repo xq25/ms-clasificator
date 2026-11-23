@@ -14,7 +14,6 @@ import backend.msclasificator.dataset.domain.DatasetCategory;
 import backend.msclasificator.medicalimage.domain.MedicalImageType;
 import backend.msclasificator.dataset.application.port.out.DatasetCategoryRepository;
 import backend.msclasificator.dataset.application.port.out.DatasetRepository;
-import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import backend.msclasificator.diagnosiscatalog.application.port.out.MedicalDiagnosticRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,9 +39,6 @@ public class DatasetService {
 
     @Autowired
     private DatasetCategoryRepository datasetCategoryRepository;
-
-    @Autowired
-    private ImageClassificationRepository imageClassificationRepository;
 
     /**
      * Obtener todas las configuraciones UI
@@ -230,9 +226,9 @@ public class DatasetService {
             // Las categorías solo pueden contener sub-diagnósticos del diagnóstico del dataset,
             // por eso el diagnóstico no puede cambiar si ya hay categorías definidas.
             boolean cambiaDiagnostico = !dataset.getMedicalDiagnostic().getId().equals(datasetUpdateDTO.getMedicalDiagnosticId());
+            // Incluye categorías retiradas: sus clasificaciones históricas dependen del árbol de este diagnóstico (ADR-011)
             if (cambiaDiagnostico) {
-                List<DatasetCategory> datasetCategories = this.datasetCategoryRepository.findByDatasetId(id);
-                if (!datasetCategories.isEmpty()) {
+                if (datasetCategoryRepository.existsByDatasetIdIncludingRetired(id)) {
                     return ApiResponse.error("No se puede cambiar el diagnóstico médico de un Dataset que ya tiene categorías definidas para clasificación. Por favor, elimine primero las categorías asociadas a este Dataset antes");
                 }
             }
@@ -255,17 +251,19 @@ public class DatasetService {
      * @param id ID de la configuración a eliminar
      * @return ApiResponse con el resultado de la operación
      */
+    @Transactional
     public ApiResponse<Void> delete(Integer id) {
         try {
             Dataset dataset = datasetRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Dataset no encontrada con ID: " + id));
 
-            // Las clasificaciones de los doctores referencian sus categorías: no se pierden (ADR-010)
-            if (imageClassificationRepository.existsByDatasetCategoryDatasetId(id)) {
-                return ApiResponse.error("No se puede eliminar el dataset: tiene imágenes clasificadas en sus categorías");
+            // Soft delete (ADR-011): se retiran el dataset y sus categorías; las clasificaciones históricas no se tocan
+            for (DatasetCategory category : datasetCategoryRepository.findByDatasetId(id)) {
+                category.retire();
+                datasetCategoryRepository.save(category);
             }
-
-            datasetRepository.delete(dataset);
+            dataset.retire();
+            datasetRepository.save(dataset);
             return ApiResponse.success("Dataset eliminada exitosamente (y sus categories asociados)");
 
         } catch (IllegalArgumentException ex) {

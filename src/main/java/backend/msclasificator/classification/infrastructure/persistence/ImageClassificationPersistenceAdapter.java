@@ -60,16 +60,6 @@ class ImageClassificationPersistenceAdapter implements ImageClassificationReposi
     }
 
     @Override
-    public boolean existsByDatasetCategoryId(Integer datasetCategoryId) {
-        return jpa.existsByDatasetCategoryId(datasetCategoryId);
-    }
-
-    @Override
-    public boolean existsByDatasetCategoryDatasetId(Integer datasetId) {
-        return jpa.existsByDatasetCategoryDatasetId(datasetId);
-    }
-
-    @Override
     public long count() {
         return jpa.countAll();
     }

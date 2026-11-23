@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -23,7 +24,8 @@ public class Dataset {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "name", unique = true)
+    // Sin UNIQUE en BD: el nombre es único solo entre datasets activos (ADR-011)
+    @Column(name = "name", nullable = false)
     private String name;
 
     // Cargamos el diagnostico sobre el cual se genera el dataset de clasificacion.
@@ -32,8 +34,8 @@ public class Dataset {
     @JoinColumn(name = "medical_diagnostic_id", nullable = false)
     private MedicalDiagnostic medicalDiagnostic;
 
-    // Carga el tipo de imagen que se va a clasificar.
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    // Carga el tipo de imagen que se va a clasificar. ManyToOne: un tipo puede tener datasets retirados (ADR-011)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "medical_image_type_id", nullable = false)
     private MedicalImageType medicalImageType;
 
@@ -42,4 +44,24 @@ public class Dataset {
     @OneToMany(mappedBy = "dataset", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DatasetCategory> datasetCategories;
 
+    // Soft delete (ADR-011): `active` para filtrar y validar; `deletedAt` registra cuándo se retiró.
+    // Solo cambian juntos, a través de retire().
+    @Builder.Default
+    @Column(name = "active", nullable = false)
+    private Boolean active = true;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    public void retire() {
+        this.active = false;
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    @PrePersist
+    void prePersist() {
+        if (active == null) {
+            active = true;
+        }
+    }
 }

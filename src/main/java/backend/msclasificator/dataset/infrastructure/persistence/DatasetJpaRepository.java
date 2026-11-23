@@ -1,22 +1,36 @@
 package backend.msclasificator.dataset.infrastructure.persistence;
 
 import backend.msclasificator.dataset.domain.Dataset;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface DatasetJpaRepository extends JpaRepository<Dataset, Integer> {
-    List<Dataset> findByMedicalDiagnosticId(Integer medicalDiagnosticId); //pa buscar todas las configs asociadas a un diagnóstico
-    Optional<Dataset> findByMedicalImageTypeId(Integer medicalImageTypeId);
-    boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);  // pa validar antes de crear duplicados
-    boolean existsByMedicalImageTypeId(Integer medicalImageTypeId); // pa validar antes de crear duplicados
-    boolean existsByName(String name);
-    boolean existsByNameAndIdNot(String name, Integer id);
-    boolean existsByMedicalDiagnosticIdAndIdNot(Integer medicalDiagnosticId, Integer id);
-    boolean existsByMedicalImageTypeIdAndIdNot(Integer medicalImageTypeId, Integer id);
 
-    @Query("SELECT COUNT(d) FROM Dataset d")
-    long countAll();
+    Page<Dataset> findAllByActiveTrue(Pageable pageable);
+
+    Optional<Dataset> findByIdAndActiveTrue(Integer id);
+
+    List<Dataset> findByMedicalDiagnosticIdAndActiveTrue(Integer medicalDiagnosticId);
+
+    Optional<Dataset> findByMedicalImageTypeIdAndActiveTrue(Integer medicalImageTypeId);
+
+    boolean existsByIdAndActiveTrue(Integer id);
+
+    boolean existsByMedicalDiagnosticIdAndActiveTrue(Integer medicalDiagnosticId);
+
+    boolean existsByMedicalImageTypeIdAndActiveTrue(Integer medicalImageTypeId);
+
+    boolean existsByNameAndActiveTrue(String name);
+
+    boolean existsByNameAndIdNotAndActiveTrue(String name, Integer id);
+
+    boolean existsByMedicalDiagnosticIdAndIdNotAndActiveTrue(Integer medicalDiagnosticId, Integer id);
+
+    boolean existsByMedicalImageTypeIdAndIdNotAndActiveTrue(Integer medicalImageTypeId, Integer id);
+
+    long countByActiveTrue();
 }

@@ -176,7 +176,9 @@ public class CategoryDiagnosticService {
                             .orElseThrow(() -> new IllegalArgumentException(
                                     "CategoryDiagnostic no encontrado con ID: " + id));
 
-            repository.delete(entity);
+            // Soft delete (ADR-011): queda en el historial de la definición de la categoría
+            entity.retire();
+            repository.save(entity);
 
             return ApiResponse.success(
                     "CategoryDiagnostic eliminado exitosamente");

@@ -1,6 +1,6 @@
 # ADR-010: Clasificación de imágenes por categoría (deslizamiento)
 
-- **Estado:** Aceptado
+- **Estado:** Aceptado — modificado por [ADR-011](ADR-011-soft-delete-y-esquema-versionado.md) (definición de la categoría vigente al deslizar; el bloqueo de borrado se reemplaza por soft delete)
 - **Fecha:** 2026-11-23
 - **Área:** Arquitectura / Persistencia
 

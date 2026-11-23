@@ -55,19 +55,19 @@ Cada entidad sigue el patrón: `Model`, `CreateDTO`, `UpdateDTO`, `ResponseDTO`,
 - **MedicalImage** — imagen almacenada. Campos clave: `imageKey` (clave en storage), `provider` (minio/s3/r2), `contentType`, `fileSize`. **NO guarda URL** (se genera on-demand). Puede o no estar ligada a un **ClinicalRecord**.
 
 ### Clasificación por doctores ("Tinder médico", ADR-010)
-- **ImageClassification** — el doctor **desliza** una imagen hacia una **DatasetCategory** del dataset de su tipo (Doctor + MedicalImage único por par, + `datasetCategory`). Un deslizamiento = un `POST` atómico. Los diagnósticos CIE-10 se **derivan** de la categoría; la clase es su `numValue`.
-  - **ClassificationDiagnosis** — detalle opcional: sub-diagnósticos de la categoría elegida. Las clasificaciones previas a ADR-010 no tienen categoría.
-- No se pueden eliminar categorías/datasets con clasificaciones (temporal: lo reemplazará un soft delete, junto con un relanzamiento de la BD desde script nuevo).
+- **ImageClassification** — el doctor **desliza** una imagen hacia una **DatasetCategory** del dataset de su tipo (Doctor + MedicalImage único por par, + `datasetCategory`). Un deslizamiento = un `POST` atómico. Los diagnósticos CIE-10 son la **definición de la categoría vigente al deslizar** (ADR-011); la clase es su `numValue`.
+  - **ClassificationDiagnosis** — detalle opcional: sub-diagnósticos de esa definición de la categoría. Las clasificaciones previas a ADR-010 no tienen categoría.
+- **Soft delete (ADR-011):** `Dataset`, `DatasetCategory` y `CategoryDiagnostic` se **retiran** (`active=false` + `deleted_at`, solo vía `retire()`), nunca se borran. Los puertos leen solo activos salvo métodos `...IncludingRetired`/`findDefinitionAt`. Unicidad solo entre activos; `numValue` nunca se reutiliza. No usar `@SQLRestriction`.
 
 ### Datasets
-- **MedicalDiagnostic** — diagnóstico CIE-10, con jerarquía `parentDiagnostic` (self-referencing). Pre-cargados vía `data.sql`.
-- **Dataset** — configuración de clasificación. Vincula 1 **MedicalDiagnostic** (padre) con 1 **MedicalImageType**. Un tipo de imagen solo puede tener un dataset activo.
+- **MedicalDiagnostic** — diagnóstico CIE-10, con jerarquía `parentDiagnostic` (self-referencing). Pre-cargados vía `docker/init/02-data.sql`.
+- **Dataset** — configuración de clasificación. Vincula 1 **MedicalDiagnostic** (padre) con 1 **MedicalImageType**. Un tipo de imagen solo puede tener un dataset **activo** (puede tener retirados).
 - **DatasetCategory** — categoría dentro del dataset (ej. "Normal", "Patológico"). Tiene `numValue` para encoding.
   - Contiene muchos **CategoryDiagnostic** → asigna sub-diagnósticos CIE-10 a esta categoría.
 
 ### Áreas y datos primitivos
-- **EvaluationArea** — área hospitalaria (Cardiología, Neuroimagen, etc.). Pre-cargadas vía `data.sql`.
-- **PrimitiveDatum** (extiende `SystemDatum`) — definición de un dato clínico (nombre, tipo, unidad). Pre-cargados vía `data.sql` (35 datos: signos vitales, glucemia, perfil lipídico, etc.).
+- **EvaluationArea** — área hospitalaria (Cardiología, Neuroimagen, etc.). Pre-cargadas vía `docker/init/02-data.sql`.
+- **PrimitiveDatum** (extiende `SystemDatum`) — definición de un dato clínico (nombre, tipo, unidad). Pre-cargados vía `docker/init/02-data.sql` (35 datos: signos vitales, glucemia, perfil lipídico, etc.).
 - **PatientDatum** — valor concreto de un dato primitivo para un **ClinicalRecord**.
 
 ---
@@ -89,8 +89,12 @@ Archivo base: `application.properties`. Sobreescrituras: `application-dev.yml`, 
 
 ---
 
-## Inicialización de datos (`data.sql`)
-Se ejecuta al arrancar. Es idempotente (`INSERT IGNORE`). Carga:
+## Esquema e inicialización de la BD (ADR-011)
+- **Esquema versionado:** `docker/init/01-schema.sql` (generado desde las entidades y revisado). La app usa `spring.jpa.hibernate.ddl-auto=validate`: **si cambias una entidad, actualiza `01-schema.sql`** o la app no arranca.
+- **Datos:** `docker/init/02-data.sql` (catálogos, `INSERT IGNORE`).
+- Docker: MySQL los ejecuta en orden (`docker-entrypoint-initdb.d`) solo cuando el volumen está vacío. Local: ejecutarlos a mano en orden contra `db-clasificator`.
+
+Catálogos que carga `02-data.sql`:
 1. **MedicalDiagnostic** — 86 diagnósticos padre + ~206 hijos, siguiendo CIE-10 (capítulos I, II, IX, X, XI, XIII, XIV, XIX).
 2. **EvaluationArea** — 5 áreas (CARDIO, CARDINT, NEURO, PULMON, OFTALMO).
 3. **MedicalImageType** — 13 tipos de imagen.

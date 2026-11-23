@@ -264,11 +264,11 @@ class CategoryDiagnosticServiceTest {
             when(repository.findById(500)).thenReturn(Optional.empty());
 
             assertThat(service.delete(500).getMessage()).isEqualTo("CategoryDiagnostic no encontrado con ID: 500");
-            verify(repository, never()).delete(any());
+            verify(repository, never()).save(any());
         }
 
         @Test
-        @DisplayName("existente: borra")
+        @DisplayName("existente: la retira (soft delete) y queda en el historial de la definición")
         void existente() {
             CategoryDiagnostic cd = CategoryDiagnostic.builder().id(500).build();
             when(repository.findById(500)).thenReturn(Optional.of(cd));
@@ -277,7 +277,9 @@ class CategoryDiagnosticServiceTest {
 
             assertThat(response.isSuccess()).isTrue();
             assertThat(response.getMessage()).isEqualTo("CategoryDiagnostic eliminado exitosamente");
-            verify(repository).delete(cd);
+            assertThat(cd.getActive()).isFalse();
+            assertThat(cd.getDeletedAt()).isNotNull();
+            verify(repository).save(cd);
         }
     }
 }

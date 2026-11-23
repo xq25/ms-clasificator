@@ -222,12 +222,12 @@ public class ImageClassificationService {
         return imageDiagnosticRepository.findByDoctorIdAndMedicalImageId(doctorId, imgId).isPresent();
     }
 
-    // Los diagnósticos de la clasificación se derivan de su categoría (ADR-010)
+    // Diagnósticos derivados de la categoría según su definición vigente al deslizar (ADR-010, ADR-011)
     private ImageClassificationResponseDTO toResponse(ImageClassification imageClassification) {
         ImageClassificationResponseDTO response = imageDiagnosticMapper.toResponseDTO(imageClassification);
         if (imageClassification.getDatasetCategory() != null) {
             response.setDiagnostics(categoryDiagnosticRepository
-                    .findByDatasetCategoryId(imageClassification.getDatasetCategory().getId()).stream()
+                    .findDefinitionAt(imageClassification.getDatasetCategory().getId(), imageClassification.getDiagnosticDate()).stream()
                     .map(categoryDiagnostic -> medicalDiagnosticMapper.toSummaryDTO(categoryDiagnostic.getMedicalDiagnostic()))
                     .toList());
         }

@@ -21,36 +21,41 @@ class DatasetCategoryPersistenceAdapter implements DatasetCategoryRepository {
 
     @Override
     public PageResult<DatasetCategory> findAll(PageQuery query) {
-        return PageMapper.toResult(jpa.findAll(PageMapper.toPageable(query)));
+        return PageMapper.toResult(jpa.findAllByActiveTrue(PageMapper.toPageable(query)));
     }
 
     @Override
     public Optional<DatasetCategory> findById(Integer id) {
-        return jpa.findById(id);
+        return jpa.findByIdAndActiveTrue(id);
     }
 
     @Override
     public List<DatasetCategory> findByDatasetId(Integer datasetId) {
-        return jpa.findByDatasetId(datasetId);
+        return jpa.findByDatasetIdAndActiveTrue(datasetId);
     }
 
     @Override
     public boolean existsById(Integer id) {
-        return jpa.existsById(id);
+        return jpa.existsByIdAndActiveTrue(id);
     }
 
     @Override
     public long count() {
-        return jpa.countAll();
+        return jpa.countByActiveTrue();
+    }
+
+    @Override
+    public long countByDatasetIdIncludingRetired(Integer datasetId) {
+        return jpa.countByDatasetId(datasetId);
+    }
+
+    @Override
+    public boolean existsByDatasetIdIncludingRetired(Integer datasetId) {
+        return jpa.existsByDatasetId(datasetId);
     }
 
     @Override
     public DatasetCategory save(DatasetCategory datasetCategory) {
         return jpa.save(datasetCategory);
-    }
-
-    @Override
-    public void delete(DatasetCategory datasetCategory) {
-        jpa.delete(datasetCategory);
     }
 }

@@ -21,71 +21,66 @@ class DatasetPersistenceAdapter implements DatasetRepository {
 
     @Override
     public PageResult<Dataset> findAll(PageQuery query) {
-        return PageMapper.toResult(jpa.findAll(PageMapper.toPageable(query)));
+        return PageMapper.toResult(jpa.findAllByActiveTrue(PageMapper.toPageable(query)));
     }
 
     @Override
     public Optional<Dataset> findById(Integer id) {
-        return jpa.findById(id);
+        return jpa.findByIdAndActiveTrue(id);
     }
 
     @Override
     public List<Dataset> findByMedicalDiagnosticId(Integer medicalDiagnosticId) {
-        return jpa.findByMedicalDiagnosticId(medicalDiagnosticId);
+        return jpa.findByMedicalDiagnosticIdAndActiveTrue(medicalDiagnosticId);
     }
 
     @Override
     public Optional<Dataset> findByMedicalImageTypeId(Integer medicalImageTypeId) {
-        return jpa.findByMedicalImageTypeId(medicalImageTypeId);
+        return jpa.findByMedicalImageTypeIdAndActiveTrue(medicalImageTypeId);
     }
 
     @Override
     public boolean existsById(Integer id) {
-        return jpa.existsById(id);
+        return jpa.existsByIdAndActiveTrue(id);
     }
 
     @Override
     public boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId) {
-        return jpa.existsByMedicalDiagnosticId(medicalDiagnosticId);
+        return jpa.existsByMedicalDiagnosticIdAndActiveTrue(medicalDiagnosticId);
     }
 
     @Override
     public boolean existsByMedicalImageTypeId(Integer medicalImageTypeId) {
-        return jpa.existsByMedicalImageTypeId(medicalImageTypeId);
+        return jpa.existsByMedicalImageTypeIdAndActiveTrue(medicalImageTypeId);
     }
 
     @Override
     public boolean existsByName(String name) {
-        return jpa.existsByName(name);
+        return jpa.existsByNameAndActiveTrue(name);
     }
 
     @Override
     public boolean existsByNameAndIdNot(String name, Integer id) {
-        return jpa.existsByNameAndIdNot(name, id);
+        return jpa.existsByNameAndIdNotAndActiveTrue(name, id);
     }
 
     @Override
     public boolean existsByMedicalDiagnosticIdAndIdNot(Integer medicalDiagnosticId, Integer id) {
-        return jpa.existsByMedicalDiagnosticIdAndIdNot(medicalDiagnosticId, id);
+        return jpa.existsByMedicalDiagnosticIdAndIdNotAndActiveTrue(medicalDiagnosticId, id);
     }
 
     @Override
     public boolean existsByMedicalImageTypeIdAndIdNot(Integer medicalImageTypeId, Integer id) {
-        return jpa.existsByMedicalImageTypeIdAndIdNot(medicalImageTypeId, id);
+        return jpa.existsByMedicalImageTypeIdAndIdNotAndActiveTrue(medicalImageTypeId, id);
     }
 
     @Override
     public long count() {
-        return jpa.countAll();
+        return jpa.countByActiveTrue();
     }
 
     @Override
     public Dataset save(Dataset dataset) {
         return jpa.save(dataset);
-    }
-
-    @Override
-    public void delete(Dataset dataset) {
-        jpa.delete(dataset);
     }
 }

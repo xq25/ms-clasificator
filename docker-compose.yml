@@ -15,7 +15,7 @@ services:
       # Solo se ejecuta la primera vez que el volumen está vacío
       - ./docker/init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pjacob123"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pjacobo123"]
       interval: 10s
       timeout: 5s
       retries: 5
