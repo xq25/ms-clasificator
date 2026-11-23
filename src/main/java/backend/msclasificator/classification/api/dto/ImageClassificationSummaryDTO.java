@@ -17,5 +17,6 @@ public class ImageClassificationSummaryDTO {
     private Integer doctorId;
     private Integer medicalImageId;
     private LocalDateTime diagnosticDate;
+    private Integer datasetCategoryId;
 
 }

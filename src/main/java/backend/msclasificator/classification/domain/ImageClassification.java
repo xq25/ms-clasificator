@@ -1,5 +1,6 @@
 package backend.msclasificator.classification.domain;
 
+import backend.msclasificator.dataset.domain.DatasetCategory;
 import backend.msclasificator.doctor.domain.Doctor;
 import backend.msclasificator.medicalimage.domain.MedicalImage;
 
@@ -33,6 +34,12 @@ public class ImageClassification {
 
     @Column(name = "diagnostic_date", nullable = false)
     private LocalDateTime diagnosticDate;
+
+    // Categoría del dataset hacia la que el doctor deslizó la imagen (ADR-010).
+    // Nullable solo por las clasificaciones creadas antes de esta regla.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dataset_category_id")
+    private DatasetCategory datasetCategory;
 
     // Solo lo colocamos por el cascade
     @JsonIgnore

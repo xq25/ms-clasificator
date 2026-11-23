@@ -25,6 +25,10 @@ public interface ImageClassificationRepository {
 
     boolean existsByMedicalImageId(Integer medicalImageId);
 
+    boolean existsByDatasetCategoryId(Integer datasetCategoryId);
+
+    boolean existsByDatasetCategoryDatasetId(Integer datasetId);
+
     long count();
 
     ImageClassification save(ImageClassification imageClassification);

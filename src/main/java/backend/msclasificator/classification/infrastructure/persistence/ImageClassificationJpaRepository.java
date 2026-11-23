@@ -22,6 +22,10 @@ public interface ImageClassificationJpaRepository extends JpaRepository<ImageCla
 
     boolean existsByDoctorId(Integer doctorId);
 
+    boolean existsByDatasetCategoryId(Integer datasetCategoryId);
+
+    boolean existsByDatasetCategoryDatasetId(Integer datasetId);
+
     @Query("SELECT COUNT(i) FROM ImageClassification i")
     long countAll();
 }

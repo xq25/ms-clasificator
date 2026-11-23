@@ -194,6 +194,35 @@ class ClassificationDiagnosisServiceTest {
         }
 
         @Test
+        @DisplayName("clasificación con categoría: rechaza un diagnóstico de otra categoría")
+        void detalleFueraDeLaCategoriaDeLaClasificacion() {
+            clasificacion.setDatasetCategory(negativo);
+            stubBase(i204);
+            when(datasetRepository.findByMedicalImageTypeId(1)).thenReturn(Optional.of(dataset));
+            categoria(i204, positivo);
+
+            assertThat(service.create(dto(301)).getMessage())
+                    .isEqualTo("El diagnóstico no pertenece a la categoría 'Negativo' de la clasificación");
+            verify(repository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("clasificación con categoría: acepta un sub-diagnóstico de esa categoría como detalle")
+        void detalleDentroDeLaCategoriaDeLaClasificacion() {
+            clasificacion.setDatasetCategory(negativo);
+            ClassificationDiagnosis nuevo = new ClassificationDiagnosis();
+            stubBase(i203);
+            when(datasetRepository.findByMedicalImageTypeId(1)).thenReturn(Optional.of(dataset));
+            categoria(i203, negativo);
+            when(repository.findByImageClassificationId(5)).thenReturn(List.of());
+            when(mapper.toEntity(dto(300))).thenReturn(nuevo);
+            when(repository.save(nuevo)).thenReturn(nuevo);
+            when(mapper.toResponseDTO(nuevo)).thenReturn(new ClassificationDiagnosisResponseDTO());
+
+            assertThat(service.create(dto(300)).isSuccess()).isTrue();
+        }
+
+        @Test
         @DisplayName("ya tiene un diagnóstico sin categoría (dato previo a la regla): error y no guarda")
         void existenteSinCategoria() {
             stubBase(i203);

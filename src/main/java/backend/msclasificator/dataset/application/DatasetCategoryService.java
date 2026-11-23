@@ -13,6 +13,7 @@ import backend.msclasificator.dataset.domain.Dataset;
 import backend.msclasificator.dataset.domain.DatasetCategory;
 import backend.msclasificator.dataset.application.port.out.DatasetCategoryRepository;
 import backend.msclasificator.dataset.application.port.out.DatasetRepository;
+import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,9 @@ public class DatasetCategoryService {
 
     @Autowired
     private DatasetRepository datasetRepository;
+
+    @Autowired
+    private ImageClassificationRepository imageClassificationRepository;
 
     /**
      * Obtener todos las categorias (general)
@@ -163,6 +167,11 @@ public class DatasetCategoryService {
         try {
             DatasetCategory datasetCategory = datasetCategoryRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Categoria de dataset no encontrada con ID: " + id));
+
+            // Las clasificaciones de los doctores referencian la categoría: no se pierden (ADR-010)
+            if (imageClassificationRepository.existsByDatasetCategoryId(id)) {
+                return ApiResponse.error("No se puede eliminar la categoría: tiene imágenes clasificadas");
+            }
 
             // Solo se puede eliminar la ultima categoria generada de un Dataset, por coherencia secuencia de los numValues
                 List<DatasetCategory> datasetCategories = datasetCategoryRepository.findByDatasetId(datasetCategory.getDataset().getId());

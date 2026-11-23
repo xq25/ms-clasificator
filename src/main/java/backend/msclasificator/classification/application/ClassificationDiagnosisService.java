@@ -149,6 +149,12 @@ public class ClassificationDiagnosisService {
                 return ApiResponse.error("El diagnóstico no pertenece a ninguna categoría del dataset '" + dataset.getName() + "'");
             }
 
+            // Detalle opcional (ADR-010): solo sub-diagnósticos de la categoría elegida al deslizar
+            DatasetCategory categoriaClasificacion = imageDiagnostic.getDatasetCategory();
+            if (categoriaClasificacion != null && !categoriaClasificacion.getId().equals(categoria.getId())) {
+                return ApiResponse.error("El diagnóstico no pertenece a la categoría '" + categoriaClasificacion.getName() + "' de la clasificación");
+            }
+
             for (ClassificationDiagnosis existente : repository.findByImageClassificationId(imageDiagnostic.getId())) {
                 DatasetCategory categoriaExistente = categoriaEnDataset(dataset, existente.getMedicalDiagnostic().getId());
                 if (categoriaExistente == null) {

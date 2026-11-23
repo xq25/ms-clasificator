@@ -15,7 +15,12 @@ import backend.msclasificator.doctor.application.port.out.DoctorAreaRepository;
 import backend.msclasificator.doctor.application.port.out.DoctorRepository;
 import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
+import backend.msclasificator.dataset.application.port.out.CategoryDiagnosticRepository;
+import backend.msclasificator.dataset.application.port.out.DatasetCategoryRepository;
 import backend.msclasificator.dataset.application.port.out.DatasetRepository;
+import backend.msclasificator.dataset.domain.Dataset;
+import backend.msclasificator.dataset.domain.DatasetCategory;
+import backend.msclasificator.diagnosiscatalog.api.mapper.MedicalDiagnosticMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +49,15 @@ public class ImageClassificationService {
     @Autowired
     private DatasetRepository datasetRepository;
 
+    @Autowired
+    private DatasetCategoryRepository datasetCategoryRepository;
+
+    @Autowired
+    private CategoryDiagnosticRepository categoryDiagnosticRepository;
+
+    @Autowired
+    private MedicalDiagnosticMapper medicalDiagnosticMapper;
+
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<ImageClassificationSummaryDTO>> findAll(PageRequestDTO pageRequest) {
         PageResult<ImageClassificationSummaryDTO> page = imageDiagnosticRepository.findAll(pageRequest.toPageQuery())
@@ -71,7 +85,7 @@ public class ImageClassificationService {
     public ApiResponse<ImageClassificationResponseDTO> findById(Integer id) {
         try {
             ImageClassificationResponseDTO imageDiagnostic = imageDiagnosticRepository.findById(id)
-                    .map(imageDiagnosticMapper::toResponseDTO)
+                    .map(this::toResponse)
                     .orElseThrow(() -> new IllegalArgumentException("Diagnóstico de imagen no encontrado con ID: " + id));
 
             return ApiResponse.success(imageDiagnostic, "Diagnóstico de imagen encontrado exitosamente");
@@ -147,7 +161,8 @@ public class ImageClassificationService {
                     .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + imageDiagnosticCreateDTO.getMedicalImgId()));
 
             // Solo se clasifican imágenes cuyo tipo tiene un dataset configurado
-            if (!datasetRepository.existsByMedicalImageTypeId(medicalImg.getMedicalImageType().getId())) {
+            Dataset dataset = datasetRepository.findByMedicalImageTypeId(medicalImg.getMedicalImageType().getId()).orElse(null);
+            if (dataset == null) {
                 return ApiResponse.error("El tipo de imagen médica no tiene un dataset configurado; no se puede clasificar");
             }
 
@@ -163,6 +178,13 @@ public class ImageClassificationService {
                 return ApiResponse.error("El doctor no tiene autorización para diagnosticar ese tipo de imagen médica");
             }
 
+            // La categoría hacia la que se desliza la imagen debe pertenecer al dataset de su tipo (ADR-010)
+            DatasetCategory datasetCategory = datasetCategoryRepository.findById(imageDiagnosticCreateDTO.getDatasetCategoryId())
+                    .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada con ID: " + imageDiagnosticCreateDTO.getDatasetCategoryId()));
+            if (!datasetCategory.getDataset().getId().equals(dataset.getId())) {
+                return ApiResponse.error("La categoría no pertenece al dataset '" + dataset.getName() + "' del tipo de imagen");
+            }
+
             if (validateSameImgDiagnostic(imageDiagnosticCreateDTO.getDoctorId(), imageDiagnosticCreateDTO.getMedicalImgId())) {
                 throw new IllegalArgumentException("Ya existe un diagnóstico dado por ese doctor a esa imagen médica");
             }
@@ -171,10 +193,11 @@ public class ImageClassificationService {
             ImageClassification imageDiagnostic = imageDiagnosticMapper.toEntity(imageDiagnosticCreateDTO);
             imageDiagnostic.setDoctor(doctor);
             imageDiagnostic.setMedicalImg(medicalImg);
+            imageDiagnostic.setDatasetCategory(datasetCategory);
             //agregamos la fecha actual al crear el diagnostico
             imageDiagnostic.setDiagnosticDate(LocalDateTime.now());
 
-            return ApiResponse.success(imageDiagnosticMapper.toResponseDTO(imageDiagnosticRepository.save(imageDiagnostic)), "Diagnóstico de imagen creado exitosamente");
+            return ApiResponse.success(toResponse(imageDiagnosticRepository.save(imageDiagnostic)), "Diagnóstico de imagen creado exitosamente");
 
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
@@ -197,5 +220,17 @@ public class ImageClassificationService {
     // Validacion si existe un diagnostico previo de este doctor a esta imagen.
     private boolean validateSameImgDiagnostic(Integer doctorId, Integer imgId) {
         return imageDiagnosticRepository.findByDoctorIdAndMedicalImageId(doctorId, imgId).isPresent();
+    }
+
+    // Los diagnósticos de la clasificación se derivan de su categoría (ADR-010)
+    private ImageClassificationResponseDTO toResponse(ImageClassification imageClassification) {
+        ImageClassificationResponseDTO response = imageDiagnosticMapper.toResponseDTO(imageClassification);
+        if (imageClassification.getDatasetCategory() != null) {
+            response.setDiagnostics(categoryDiagnosticRepository
+                    .findByDatasetCategoryId(imageClassification.getDatasetCategory().getId()).stream()
+                    .map(categoryDiagnostic -> medicalDiagnosticMapper.toSummaryDTO(categoryDiagnostic.getMedicalDiagnostic()))
+                    .toList());
+        }
+        return response;
     }
 }
