@@ -8,6 +8,11 @@ Cada corrección se hace en su propia rama `fix/`. Si el bug tiene un test de ca
 
 | # | Ubicación | Problema | Impacto | Test |
 |---|-----------|----------|---------|------|
+| 12 | `ClinicalRecordService.update` | No valida que la fecha de visita no sea futura. `create` sí lo valida ("La fecha de la visita no puede ser superior a la fecha actual") | Una historia clínica puede quedar con una visita en el futuro editándola después de crearla | `ClinicalRecordServiceTest` › update › "BUG CONOCIDO #12" |
+| 13 | `PatientDatumService.update` | No valida el valor contra el tipo del dato primitivo (`PrimitiveType.validate`). `create` sí lo valida | Un dato `INTEGER` (p. ej. frecuencia cardíaca) puede quedar con un valor como `"setenta"`; los datos clínicos dejan de ser confiables | `PatientDatumServiceTest` › update › "BUG CONOCIDO #13" |
+| 14 | `PrimitiveDatumService.update` | Permite cambiar el `type` de un dato primitivo sin revisar los valores ya registrados de pacientes | Los valores existentes pueden quedar incompatibles con el tipo nuevo (p. ej. glucemia `DOUBLE` → `BOOLEAN`). Requiere decidir la regla: bloquear el cambio si hay valores, o validarlos | `PrimitiveDatumServiceTest` › update › "BUG CONOCIDO #14" |
+| 15 | `PrimitiveDatum.patientDatumList` (`cascade = ALL`, `orphanRemoval = true`) + `PrimitiveDatumService.delete` | Eliminar un dato primitivo elimina en cascada (JPA) todos los valores de pacientes de ese dato | Pérdida silenciosa de datos clínicos de historias clínicas. Requiere decidir la regla: bloquear el borrado si hay valores, o soft delete | — (comportamiento de JPA; no lo cubre un test unitario) |
+| 16 | `PatientDatumController.create` / `update` | Los `@RequestBody` no llevan `@Valid`, así que no se aplican las validaciones del DTO (`@NotNull` en `description`, `clinicalRecordId`, `primitiveDatumId`) | Se puede guardar un valor de paciente con `description` nula; un id nulo termina en error no controlado en lugar de 400 con mensaje | — (capa web) |
 
 ## Resueltos
 
