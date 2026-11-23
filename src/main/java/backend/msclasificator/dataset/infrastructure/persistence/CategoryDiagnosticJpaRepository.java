@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CategoryDiagnosticJpaRepository extends JpaRepository<CategoryDiagnostic, Integer> {
     List<CategoryDiagnostic> findByDatasetCategoryId(Integer datasetCategoryId);
@@ -12,6 +13,8 @@ public interface CategoryDiagnosticJpaRepository extends JpaRepository<CategoryD
     List<CategoryDiagnostic> findByMedicalDiagnosticId(Integer medicalDiagnosticId);
 
     boolean existsByDatasetCategoryDatasetIdAndMedicalDiagnosticId(Integer datasetId, Integer medicalDiagnosticId);
+
+    Optional<CategoryDiagnostic> findByDatasetCategoryDatasetIdAndMedicalDiagnosticId(Integer datasetId, Integer medicalDiagnosticId);
 
     boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);
 

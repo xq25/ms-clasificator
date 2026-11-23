@@ -4,6 +4,7 @@ import backend.msclasificator.classification.domain.ClassificationDiagnosis;
 import backend.msclasificator.shared.application.PageQuery;
 import backend.msclasificator.shared.application.PageResult;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ClassificationDiagnosisRepository {
@@ -13,6 +14,8 @@ public interface ClassificationDiagnosisRepository {
     PageResult<ClassificationDiagnosis> findByImageClassificationId(Integer imageClassificationId, PageQuery query);
 
     Optional<ClassificationDiagnosis> findById(Integer id);
+
+    List<ClassificationDiagnosis> findByImageClassificationId(Integer imageClassificationId);
 
     boolean existsByImageClassificationIdAndMedicalDiagnosticId(Integer imageClassificationId, Integer medicalDiagnosticId);
 

@@ -17,6 +17,9 @@ public interface CategoryDiagnosticRepository {
 
     boolean existsByDatasetIdAndMedicalDiagnosticId(Integer datasetId, Integer medicalDiagnosticId);
 
+    // Categoría del dataset a la que está asignado el diagnóstico (a lo sumo una por dataset)
+    Optional<CategoryDiagnostic> findByDatasetIdAndMedicalDiagnosticId(Integer datasetId, Integer medicalDiagnosticId);
+
     boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);
 
     long count();
