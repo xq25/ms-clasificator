@@ -7,6 +7,7 @@ import backend.msclasificator.shared.api.PageRequestDTO;
 import backend.msclasificator.shared.api.ApiResponse;
 import backend.msclasificator.shared.api.PagedResponse;
 import backend.msclasificator.medicalimage.application.MedicalImageService;
+import backend.msclasificator.medicalimage.application.port.out.ImageFile;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -50,7 +53,15 @@ public class MedicalImageController {
                 .clinicalRecordId(clinicalRecordId)  // ← agregar
                 .build();
 
-        ApiResponse<MedicalImageResponseDTO> response = medicalImageService.uploadImage(file, dto);
+        // MultipartFile no sale de la capa web: se convierte en ImageFile (ADR-012).
+        // El controlador abre el stream y lo cierra al terminar la petición.
+        ApiResponse<MedicalImageResponseDTO> response;
+        try (InputStream content = file.getInputStream()) {
+            ImageFile imageFile = new ImageFile(file.getOriginalFilename(), file.getContentType(), file.getSize(), content);
+            response = medicalImageService.uploadImage(imageFile, dto);
+        } catch (IOException ex) {
+            response = ApiResponse.error("No se pudo leer el archivo de imagen: " + ex.getMessage());
+        }
 
         return response.isSuccess()
                 ? ResponseEntity.status(HttpStatus.CREATED).body(response)

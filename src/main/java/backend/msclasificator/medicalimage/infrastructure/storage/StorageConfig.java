@@ -1,8 +1,6 @@
 package backend.msclasificator.medicalimage.infrastructure.storage;
 
-import backend.msclasificator.medicalimage.application.port.out.ImageStorageService;
-import backend.msclasificator.medicalimage.infrastructure.storage.MinioImageStorageService;
-//import backend.msclasificator.medicalimage.infrastructure.storage.S3ImageStorageService;
+import backend.msclasificator.medicalimage.application.port.out.ImageStorage;
 import io.minio.MinioClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,13 +36,13 @@ public class StorageConfig {
 
     @Bean
     @Profile("dev")
-    public ImageStorageService imageStorageService(
+    public ImageStorage imageStorage(
             MinioClient minioClient,
             @Value("${storage.minio.bucket}") String bucket,
             @Value("${storage.minio.public-endpoint:${storage.minio.endpoint}}") String publicEndpoint) {
 
         log.info("[Storage] Provider activo: MinIO | bucket={} | publicEndpoint={}", bucket, publicEndpoint);
-        return new MinioImageStorageService(minioClient, bucket, publicEndpoint);
+        return new MinioImageStorage(minioClient, bucket, publicEndpoint);
     }
 
     // ============================================================
@@ -100,7 +98,7 @@ public class StorageConfig {
 //
 //    @Bean
 //    @Profile("prod")
-//    public ImageStorageService imageStorageServiceProd(
+//    public ImageStorage imageStorageProd(
 //            S3Client s3Client,
 //            S3Presigner s3Presigner,
 //            @Value("${storage.s3.bucket}") String bucket,
@@ -109,6 +107,6 @@ public class StorageConfig {
 //            @Value("${storage.s3.presigned-url-expiry-hours:24}") long expiryHours) {
 //
 //        log.info("[Storage] Provider activo: S3/R2 | bucket={} | public={}", bucket, isPublicBucket);
-//        return new S3ImageStorageService(s3Client, s3Presigner, bucket, isPublicBucket, publicBaseUrl, expiryHours);
+//        return new S3ImageStorage(s3Client, s3Presigner, bucket, isPublicBucket, publicBaseUrl, expiryHours);
 //    }
 }

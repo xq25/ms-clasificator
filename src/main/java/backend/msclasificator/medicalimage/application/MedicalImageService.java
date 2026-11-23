@@ -15,7 +15,8 @@ import backend.msclasificator.clinicalrecord.application.port.out.ClinicalRecord
 import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageTypeRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
-import backend.msclasificator.medicalimage.application.port.out.ImageStorageService;
+import backend.msclasificator.medicalimage.application.port.out.ImageFile;
+import backend.msclasificator.medicalimage.application.port.out.ImageStorage;
 import backend.msclasificator.medicalimage.application.exception.ImageStorageException;
 import backend.msclasificator.medicalimage.application.exception.InvalidImageTypeException;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -36,14 +37,25 @@ public class MedicalImageService {
     private final MedicalImageTypeRepository medicalImageTypeRepository;
     private final ImageClassificationRepository imageDiagnosticRepository;
     private final ClinicalRecordRepository clinicalRecordRepository;
-    private final ImageStorageService imageStorageService;
+    private final ImageStorage imageStorage;
     private final MedicalImageMapper medicalImgMapper;
 
     private static final String DEFAULT_FOLDER = "diagnostics";
 
+    // Tipos MIME permitidos para imágenes médicas (antes en el adaptador MinIO, ADR-012)
+    private static final Set<String> ALLOWED_TYPES = Set.of(
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/tiff",        // común en diagnósticos
+            "application/dicom"  // DICOM médico
+    );
+
+    private static final long MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+
     // UPLOAD
     @Transactional
-    public ApiResponse<MedicalImageResponseDTO> uploadImage(MultipartFile file, MedicalImageCreateDTO dto) {
+    public ApiResponse<MedicalImageResponseDTO> uploadImage(ImageFile file, MedicalImageCreateDTO dto) {
         try {
             if (file == null || file.isEmpty()) {
                 return ApiResponse.error("El archivo de imagen no puede estar vacío");
@@ -66,17 +78,20 @@ public class MedicalImageService {
                     ? dto.getFolder()
                     : DEFAULT_FOLDER;
 
+            validateImageType(file);
+            validateImageSize(file);
+
             // 1. Subir al storage — si falla, no toca la BD
-            String imageKey = imageStorageService.uploadImage(file, folder);
+            String imageKey = imageStorage.upload(file, folder);
             log.info("[MedicalImageService] Imagen subida. provider={}, key={}",
-                    imageStorageService.getProviderName(), imageKey);
+                    imageStorage.providerName(), imageKey);
 
             // 2. Persistir en MySQL solo si el upload fue exitoso
             MedicalImage medicalImg = MedicalImage.builder()
                     .imageKey(imageKey)
-                    .provider(imageStorageService.getProviderName())
-                    .contentType(file.getContentType())
-                    .fileSize(file.getSize())
+                    .provider(imageStorage.providerName())
+                    .contentType(file.contentType())
+                    .fileSize(file.size())
                     .medicalImageType(medicalImageType)
                     .clinicalRecord(clinicalRecord)
                     .build();
@@ -220,7 +235,7 @@ public class MedicalImageService {
             }
 
             // 1. Eliminar del storage primero
-            imageStorageService.deleteImage(img.getImageKey());
+            imageStorage.delete(img.getImageKey());
             log.info("[MedicalImageService] Imagen eliminada del storage: key={}", img.getImageKey());
 
             // 2. Eliminar de la BD solo si el storage no falló
@@ -234,6 +249,22 @@ public class MedicalImageService {
             return ApiResponse.error("Error al eliminar imagen del storage. El registro no fue eliminado.");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
+        }
+    }
+
+    // VALIDACIONES DEL ARCHIVO (mismos mensajes que tenía el adaptador MinIO)
+    private static void validateImageType(ImageFile file) {
+        String contentType = file.contentType();
+        if (contentType == null || !ALLOWED_TYPES.contains(contentType)) {
+            throw new InvalidImageTypeException(contentType != null ? contentType : "null");
+        }
+    }
+
+    private static void validateImageSize(ImageFile file) {
+        if (file.size() > MAX_SIZE_BYTES) {
+            throw new IllegalArgumentException(
+                    "La imagen excede el tamaño máximo permitido de " + (MAX_SIZE_BYTES / 1024 / 1024) + " MB"
+            );
         }
     }
 }
