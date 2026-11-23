@@ -3,6 +3,7 @@ package backend.msclasificator.classification.api.mapper;
 import backend.msclasificator.classification.api.dto.ImageClassificationCreateDTO;
 import backend.msclasificator.classification.api.dto.ImageClassificationResponseDTO;
 import backend.msclasificator.classification.api.dto.ImageClassificationSummaryDTO;
+import backend.msclasificator.dataset.api.mapper.DatasetCategoryMapper;
 import backend.msclasificator.doctor.api.mapper.DoctorMapper;
 import backend.msclasificator.shared.mapping.Mapper;
 import backend.msclasificator.medicalimage.api.mapper.MedicalImageMapper;
@@ -18,6 +19,9 @@ public class ImageClassificationMapper implements Mapper<ImageClassification, Im
 
     @Autowired
     private MedicalImageMapper medicalImgMapper;
+
+    @Autowired
+    private DatasetCategoryMapper datasetCategoryMapper;
 
     @Override
     public ImageClassification toEntity(ImageClassificationCreateDTO imageDiagnosticCreateDTO) {
@@ -39,6 +43,7 @@ public class ImageClassificationMapper implements Mapper<ImageClassification, Im
         return ImageClassificationCreateDTO.builder()
                 .doctorId(imageDiagnostic.getDoctor() != null ? imageDiagnostic.getDoctor().getId() : null)
                 .medicalImgId(imageDiagnostic.getMedicalImg() != null ? imageDiagnostic.getMedicalImg().getId() : null)
+                .datasetCategoryId(imageDiagnostic.getDatasetCategory() != null ? imageDiagnostic.getDatasetCategory().getId() : null)
                 .build();
     }
 
@@ -53,6 +58,7 @@ public class ImageClassificationMapper implements Mapper<ImageClassification, Im
                 .doctor(imageDiagnostic.getDoctor() != null ? doctorMapper.toSummaryDTO(imageDiagnostic.getDoctor()): null)
                 .medicalImg(imageDiagnostic.getMedicalImg() != null ? medicalImgMapper.toSummaryDTO(imageDiagnostic.getMedicalImg()) : null)
                 .diagnosticDate(imageDiagnostic.getDiagnosticDate())
+                .datasetCategory(imageDiagnostic.getDatasetCategory() != null ? datasetCategoryMapper.toSummaryDTO(imageDiagnostic.getDatasetCategory()) : null)
                 .build();
     }
 
@@ -67,6 +73,7 @@ public class ImageClassificationMapper implements Mapper<ImageClassification, Im
                 .doctorId(imageDiagnostic.getDoctor() != null ? imageDiagnostic.getDoctor().getId() : null)
                 .medicalImageId(imageDiagnostic.getMedicalImg() != null ? imageDiagnostic.getMedicalImg().getId() : null)
                 .diagnosticDate(imageDiagnostic.getDiagnosticDate())
+                .datasetCategoryId(imageDiagnostic.getDatasetCategory() != null ? imageDiagnostic.getDatasetCategory().getId() : null)
                 .build();
     }
 }

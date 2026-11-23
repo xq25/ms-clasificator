@@ -1,5 +1,6 @@
 package backend.msclasificator.dataset.application;
 
+import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import backend.msclasificator.dataset.api.dto.DatasetCategoryCreateDTO;
 import backend.msclasificator.dataset.api.dto.DatasetCategoryResponseDTO;
 import backend.msclasificator.dataset.api.dto.DatasetCategorySummaryDTO;
@@ -39,6 +40,7 @@ class DatasetCategoryServiceTest {
     @Mock private DatasetCategoryRepository datasetCategoryRepository;
     @Mock private DatasetCategoryMapper datasetCategoryMapper;
     @Mock private DatasetRepository datasetRepository;
+    @Mock private ImageClassificationRepository imageClassificationRepository;
 
     @InjectMocks private DatasetCategoryService service;
 
@@ -239,6 +241,20 @@ class DatasetCategoryServiceTest {
             when(datasetCategoryRepository.findById(100)).thenReturn(Optional.empty());
 
             assertThat(service.delete(100).getMessage()).isEqualTo("Categoria de dataset no encontrada con ID: 100");
+        }
+
+        @Test
+        @DisplayName("con imágenes clasificadas: rechaza y no borra (aunque sea la última)")
+        void conClasificaciones() {
+            DatasetCategory ultima = categoria(11, 2);
+            when(datasetCategoryRepository.findById(11)).thenReturn(Optional.of(ultima));
+            when(imageClassificationRepository.existsByDatasetCategoryId(11)).thenReturn(true);
+
+            ApiResponse<Void> response = service.delete(11);
+
+            assertThat(response.isSuccess()).isFalse();
+            assertThat(response.getMessage()).isEqualTo("No se puede eliminar la categoría: tiene imágenes clasificadas");
+            verify(datasetCategoryRepository, never()).delete(any());
         }
 
         @Test

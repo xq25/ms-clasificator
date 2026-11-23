@@ -1,5 +1,6 @@
 package backend.msclasificator.dataset.application;
 
+import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import backend.msclasificator.dataset.api.dto.DatasetCreateDTO;
 import backend.msclasificator.dataset.api.dto.DatasetResponseDTO;
 import backend.msclasificator.dataset.api.dto.DatasetUpdateDTO;
@@ -44,6 +45,7 @@ class DatasetServiceTest {
     @Mock private MedicalDiagnosticRepository medicalDiagnosticRepository;
     @Mock private MedicalImageTypeRepository medicalImageTypeRepository;
     @Mock private DatasetCategoryRepository datasetCategoryRepository;
+    @Mock private ImageClassificationRepository imageClassificationRepository;
 
     @InjectMocks private DatasetService service;
 
@@ -468,7 +470,20 @@ class DatasetServiceTest {
         }
 
         @Test
-        @DisplayName("existente: borra (las categorías caen por cascada)")
+        @DisplayName("con imágenes clasificadas en sus categorías: error y no borra")
+        void conClasificaciones() {
+            when(datasetRepository.findById(1)).thenReturn(Optional.of(dataset));
+            when(imageClassificationRepository.existsByDatasetCategoryDatasetId(1)).thenReturn(true);
+
+            ApiResponse<Void> response = service.delete(1);
+
+            assertThat(response.isSuccess()).isFalse();
+            assertThat(response.getMessage()).isEqualTo("No se puede eliminar el dataset: tiene imágenes clasificadas en sus categorías");
+            verify(datasetRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("existente sin clasificaciones: borra (las categorías caen por cascada)")
         void existente() {
             when(datasetRepository.findById(1)).thenReturn(Optional.of(dataset));
 

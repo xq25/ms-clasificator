@@ -14,6 +14,7 @@ import backend.msclasificator.dataset.domain.DatasetCategory;
 import backend.msclasificator.medicalimage.domain.MedicalImageType;
 import backend.msclasificator.dataset.application.port.out.DatasetCategoryRepository;
 import backend.msclasificator.dataset.application.port.out.DatasetRepository;
+import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import backend.msclasificator.diagnosiscatalog.application.port.out.MedicalDiagnosticRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,9 @@ public class DatasetService {
 
     @Autowired
     private DatasetCategoryRepository datasetCategoryRepository;
+
+    @Autowired
+    private ImageClassificationRepository imageClassificationRepository;
 
     /**
      * Obtener todas las configuraciones UI
@@ -255,6 +259,11 @@ public class DatasetService {
         try {
             Dataset dataset = datasetRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Dataset no encontrada con ID: " + id));
+
+            // Las clasificaciones de los doctores referencian sus categorías: no se pierden (ADR-010)
+            if (imageClassificationRepository.existsByDatasetCategoryDatasetId(id)) {
+                return ApiResponse.error("No se puede eliminar el dataset: tiene imágenes clasificadas en sus categorías");
+            }
 
             datasetRepository.delete(dataset);
             return ApiResponse.success("Dataset eliminada exitosamente (y sus categories asociados)");

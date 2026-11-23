@@ -21,5 +21,8 @@ public class ImageClassificationCreateDTO {
     @NotNull(message = "El ID de la imagen médica no puede ser nulo")
     private Integer medicalImgId;
 
+    @NotNull(message = "El ID de la categoría hacia la que se desliza la imagen no puede ser nulo")
+    private Integer datasetCategoryId;
+
 }
 
