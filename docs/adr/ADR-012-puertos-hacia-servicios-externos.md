@@ -30,12 +30,27 @@ Por eso cambiar el proveedor de identidad o el de almacenamiento obligaba a toca
 - `SecurityServiceException` se queda en `identity/application/exception`: es parte del contrato del puerto, no de la infraestructura.
 - `PatientService` y `DoctorService` dependen del puerto. Las URLs, el header `secretKey` y las transacciones de alta (bug #9) no cambian.
 
-### 2. Puerto de almacenamiento: `ImageStorage` (pendiente, `refactor/fase-3-puerto-storage`)
-Diseño aprobado, se aplica en el siguiente PR:
-- `record ImageFile(String originalFilename, String contentType, long size, InputStream content)` reemplaza a `MultipartFile` en `application`. El controlador hace la conversión.
-- El puerto `ImageStorage` expone `upload(ImageFile, folder)`, `generatePublicUrl`, `delete`, `exists` y `providerName`.
-- Las validaciones de tipo y tamaño pasan del adaptador MinIO a `MedicalImageService`.
-- El adaptador S3 sigue comentado, pero se adapta a la nueva firma.
+### 2. Puerto de almacenamiento: `ImageStorage`
+Aplicado en `refactor/fase-3-puerto-storage`.
+
+| Pieza | Ubicación | Nombre |
+|-------|-----------|--------|
+| Archivo | `medicalimage/application/port/out/` | `record ImageFile(String originalFilename, String contentType, long size, InputStream content)` |
+| Puerto | `medicalimage/application/port/out/` | `ImageStorage` (antes `ImageStorageService`) |
+| Adaptador MinIO | `medicalimage/infrastructure/storage/` | `MinioImageStorage` (visibilidad de paquete, lo crea `StorageConfig`) |
+| Adaptador S3/R2 | `medicalimage/infrastructure/storage/` | `S3ImageStorage` (comentado hasta incorporar el AWS SDK, ADR-004) |
+
+- `ImageFile` reemplaza a `MultipartFile` en `application`. `MultipartFile` solo existe en `api`.
+- El puerto expone `upload(ImageFile, folder)`, `generatePublicUrl`, `delete`, `exists` y `providerName`.
+- **Validación en `MedicalImageService`:**
+  - las validaciones de tipo MIME (jpeg, png, webp, tiff, dicom) y tamaño (10 MB) pasan del adaptador MinIO al servicio;
+  - mismos mensajes y mismo punto del flujo: después de buscar el tipo de imagen y la historia clínica, antes de subir;
+  - un adaptador nuevo no tiene que repetirlas.
+- La generación del `imageKey` (`{folder}/{uuid}.{extensión}`) sigue en el adaptador (`ImageStorageUtils`), porque es un detalle de almacenamiento.
+- **El stream lo cierra quien lo abre:**
+  - el controlador abre el stream del `MultipartFile` con `try-with-resources` y lo cierra al terminar;
+  - los adaptadores solo lo leen;
+  - si leer el archivo falla (`IOException`), el controlador responde 400 con `"No se pudo leer el archivo de imagen: ..."`. Antes ese caso caía en el adaptador como error de storage.
 
 ## Alternativas consideradas
 - **Mantener `SecurityService` como clase concreta en `application`.** Se descarta porque deja `RestTemplate` dentro de `application` e incumple la regla de dependencias de ADR-001.
@@ -44,5 +59,6 @@ Diseño aprobado, se aplica en el siguiente PR:
 
 ## Consecuencias
 - Cambiar de proveedor de identidad (otro microservicio, un IdP) solo requiere un adaptador nuevo.
-- Los tests de `PatientService` y `DoctorService` simulan el puerto. El adaptador conserva sus propios tests sobre `RestTemplate` (`MsSecurityIdentityProviderTest`).
+- Cambiar de proveedor de almacenamiento (activar S3/R2) solo requiere el adaptador y su bean en `StorageConfig`. La validación del archivo no se repite.
+- Los tests de `PatientService`, `DoctorService` y `MedicalImageService` simulan los puertos. El adaptador conserva sus propios tests sobre `RestTemplate` (`MsSecurityIdentityProviderTest`).
 - Los tests de adaptadores no terminan en `ServiceTest`, así que el comando de ADR-008 se amplía con `*ProviderTest`.

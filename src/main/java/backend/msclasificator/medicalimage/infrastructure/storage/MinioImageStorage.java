@@ -1,28 +1,26 @@
 package backend.msclasificator.medicalimage.infrastructure.storage;
 
-import backend.msclasificator.medicalimage.application.port.out.ImageStorageService;
-
 import backend.msclasificator.medicalimage.application.exception.ImageStorageException;
-import backend.msclasificator.medicalimage.infrastructure.storage.ImageStorageUtils;
+import backend.msclasificator.medicalimage.application.port.out.ImageFile;
+import backend.msclasificator.medicalimage.application.port.out.ImageStorage;
 import io.minio.*;
 import io.minio.http.Method;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
+// Adaptador MinIO del puerto ImageStorage (ADR-012). Lo crea StorageConfig.
 @Slf4j
-public class MinioImageStorageService implements ImageStorageService {
+class MinioImageStorage implements ImageStorage {
 
     private final MinioClient minioClient;
     private final String bucketName;
     private final String publicEndpoint;
     private static final String PROVIDER = "minio";
 
-    public MinioImageStorageService(MinioClient minioClient,
-                                    String bucketName,
-                                    String publicEndpoint) {
+    MinioImageStorage(MinioClient minioClient,
+                      String bucketName,
+                      String publicEndpoint) {
         this.minioClient = minioClient;
         this.bucketName = bucketName;
         this.publicEndpoint = publicEndpoint;
@@ -30,19 +28,17 @@ public class MinioImageStorageService implements ImageStorageService {
     }
 
     @Override
-    public String uploadImage(MultipartFile file, String folder) {
-        ImageStorageUtils.validateImageType(file);
-        ImageStorageUtils.validateImageSize(file, 10 * 1024 * 1024);
+    public String upload(ImageFile file, String folder) {
+        String imageKey = ImageStorageUtils.generateImageKey(file.originalFilename(), folder);
 
-        String imageKey = ImageStorageUtils.generateImageKey(file.getOriginalFilename(), folder);
-
-        try (InputStream inputStream = file.getInputStream()) {
+        // El stream lo cierra quien lo abrió (el controlador)
+        try {
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
                             .object(imageKey)
-                            .stream(inputStream, file.getSize(), -1)
-                            .contentType(file.getContentType())
+                            .stream(file.content(), file.size(), -1)
+                            .contentType(file.contentType())
                             .build()
             );
             log.info("[MinIO] Imagen subida: bucket={}, key={}", bucketName, imageKey);
@@ -80,7 +76,7 @@ public class MinioImageStorageService implements ImageStorageService {
     }
 
     @Override
-    public void deleteImage(String imageKey) {
+    public void delete(String imageKey) {
         try {
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
@@ -97,7 +93,7 @@ public class MinioImageStorageService implements ImageStorageService {
     }
 
     @Override
-    public boolean imageExists(String imageKey) {
+    public boolean exists(String imageKey) {
         try {
             minioClient.statObject(
                     StatObjectArgs.builder()
@@ -112,7 +108,7 @@ public class MinioImageStorageService implements ImageStorageService {
     }
 
     @Override
-    public String getProviderName() {
+    public String providerName() {
         return PROVIDER;
     }
 

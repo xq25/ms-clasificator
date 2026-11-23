@@ -112,7 +112,7 @@ Tabla de relación: asigna sub-diagnósticos CIE-10 a una categoría del dataset
 | medicalImageType | MedicalImageType | Tipo de imagen |
 | clinicalRecord | ClinicalRecord | Historia clínica (nullable) |
 
-> La URL **no** se persiste. Se genera on-demand desde `imageKey` usando el `ImageStorageService`.
+> La URL **no** se persiste. Se genera on-demand desde `imageKey` usando el puerto `ImageStorage` (ADR-012).
 
 ### ImageClassification
 Acto de clasificación: un doctor diagnostica una imagen.

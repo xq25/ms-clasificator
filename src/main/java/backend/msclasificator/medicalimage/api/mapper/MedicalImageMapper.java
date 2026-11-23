@@ -7,7 +7,7 @@ import backend.msclasificator.clinicalrecord.api.mapper.ClinicalRecordMapper;
 import backend.msclasificator.shared.mapping.Mapper;
 import backend.msclasificator.medicalimage.api.mapper.MedicalImageTypeMapper;
 import backend.msclasificator.medicalimage.domain.MedicalImage;
-import backend.msclasificator.medicalimage.application.port.out.ImageStorageService;
+import backend.msclasificator.medicalimage.application.port.out.ImageStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ public class MedicalImageMapper implements Mapper<MedicalImage, MedicalImageCrea
     @Autowired
     private ClinicalRecordMapper clinicalRecordMapper;
 
-    private final ImageStorageService imageStorageService;
+    private final ImageStorage imageStorage;
 
     @Override
     public MedicalImage toEntity(MedicalImageCreateDTO dto) {
@@ -64,7 +64,7 @@ public class MedicalImageMapper implements Mapper<MedicalImage, MedicalImageCrea
 
         String imageUrl = null;
         try {
-            imageUrl = imageStorageService.generatePublicUrl(entity.getImageKey());
+            imageUrl = imageStorage.generatePublicUrl(entity.getImageKey());
         } catch (Exception e) {
             log.warn("[MedicalImageMapper] No se pudo generar URL para key={}: {}", entity.getImageKey(), e.getMessage());
         }

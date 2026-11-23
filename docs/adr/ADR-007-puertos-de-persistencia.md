@@ -42,7 +42,7 @@ Por eso cambiar el motor de persistencia obligaba a tocar la lógica de negocio.
 |---------|--------|
 | `dataset` | Migrado |
 | `diagnosiscatalog` | Migrado |
-| `medicalimage` (persistencia) | Migrado — el puerto de storage se ajusta en la fase 3 |
+| `medicalimage` (persistencia) | Migrado — el puerto de storage se ajustó en la fase 3 (ADR-012) |
 | `patient` | Migrado |
 | `doctor` | Migrado — expone también `findDoctorsNotAssignedToEvaluationArea` y `findEvaluationAreasNotAssignedToDoctor` (sin consumidor aún, por decisión del responsable) |
 | `clinicalrecord` | Migrado |
@@ -55,7 +55,7 @@ Por eso cambiar el motor de persistencia obligaba a tocar la lógica de negocio.
 Pendientes que no son de persistencia (fase 3):
 - ~~`PageRequestDTO.toPageable()` ya no tiene consumidores; se elimina.~~ Eliminado en la fase 3 (`refactor/fase-3-paginacion`): `shared/api` ya no depende de Spring Data.
 - ~~`identity/application/SecurityService` usa `RestTemplate` y `org.springframework.http` → puerto hacia ms-security.~~ Hecho en `refactor/fase-3-puerto-identidad`: puerto `IdentityProvider` ([ADR-012](ADR-012-puertos-hacia-servicios-externos.md)).
-- `medicalimage/application` (`MedicalImageService`, puerto `ImageStorageService`) usa `MultipartFile` → revisar el puerto de storage.
+- ~~`medicalimage/application` (`MedicalImageService`, puerto `ImageStorageService`) usa `MultipartFile` → revisar el puerto de storage.~~ Hecho en `refactor/fase-3-puerto-storage`: puerto `ImageStorage` con `ImageFile` ([ADR-012](ADR-012-puertos-hacia-servicios-externos.md)).
 
 ## Alternativas consideradas
 - **Puerto `XStore` y conservar `XRepository` para Spring Data.** Se descarta porque deja el nombre natural del dominio en manos de la infraestructura.

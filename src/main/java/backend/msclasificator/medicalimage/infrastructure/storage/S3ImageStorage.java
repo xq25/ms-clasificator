@@ -1,11 +1,11 @@
 package backend.msclasificator.medicalimage.infrastructure.storage;
 
-import backend.msclasificator.medicalimage.application.port.out.ImageStorageService;
+// Adaptador S3/R2 del puerto ImageStorage (ADR-012). Comentado hasta incorporar el AWS SDK (ADR-004).
 
 //import backend.msclasificator.medicalimage.application.exception.ImageStorageException;
-//import backend.msclasificator.medicalimage.infrastructure.storage.ImageStorageUtils;
+//import backend.msclasificator.medicalimage.application.port.out.ImageFile;
+//import backend.msclasificator.medicalimage.application.port.out.ImageStorage;
 //import lombok.extern.slf4j.Slf4j;
-//import org.springframework.web.multipart.MultipartFile;
 //import software.amazon.awssdk.core.sync.RequestBody;
 //import software.amazon.awssdk.services.s3.S3Client;
 //import software.amazon.awssdk.services.s3.model.*;
@@ -13,11 +13,10 @@ import backend.msclasificator.medicalimage.application.port.out.ImageStorageServ
 //import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 //import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 //
-//import java.io.IOException;
 //import java.time.Duration;
 //
 //@Slf4j
-//public class S3ImageStorageService implements ImageStorageService {
+//class S3ImageStorage implements ImageStorage {
 //
 //    private final S3Client s3Client;
 //    private final S3Presigner s3Presigner;
@@ -27,12 +26,12 @@ import backend.msclasificator.medicalimage.application.port.out.ImageStorageServ
 //    private final long presignedUrlExpiryHours;
 //    private static final String PROVIDER = "s3";
 //
-//    public S3ImageStorageService(S3Client s3Client,
-//                                 S3Presigner s3Presigner,
-//                                 String bucketName,
-//                                 boolean isPublicBucket,
-//                                 String publicBaseUrl,
-//                                 long presignedUrlExpiryHours) {
+//    S3ImageStorage(S3Client s3Client,
+//                   S3Presigner s3Presigner,
+//                   String bucketName,
+//                   boolean isPublicBucket,
+//                   String publicBaseUrl,
+//                   long presignedUrlExpiryHours) {
 //        this.s3Client = s3Client;
 //        this.s3Presigner = s3Presigner;
 //        this.bucketName = bucketName;
@@ -42,29 +41,23 @@ import backend.msclasificator.medicalimage.application.port.out.ImageStorageServ
 //    }
 //
 //    @Override
-//    public String uploadImage(MultipartFile file, String folder) {
-//        ImageStorageUtils.validateImageType(file);
-//        ImageStorageUtils.validateImageSize(file, 10 * 1024 * 1024);
-//
-//        String imageKey = ImageStorageUtils.generateImageKey(file.getOriginalFilename(), folder);
+//    public String upload(ImageFile file, String folder) {
+//        String imageKey = ImageStorageUtils.generateImageKey(file.originalFilename(), folder);
 //
 //        try {
 //            PutObjectRequest request = PutObjectRequest.builder()
 //                    .bucket(bucketName)
 //                    .key(imageKey)
-//                    .contentType(file.getContentType())
-//                    .contentLength(file.getSize())
+//                    .contentType(file.contentType())
+//                    .contentLength(file.size())
 //                    .build();
 //
-//            s3Client.putObject(request, RequestBody.fromInputStream(
-//                    file.getInputStream(), file.getSize()
-//            ));
+//            // El stream lo cierra quien lo abrió (el controlador)
+//            s3Client.putObject(request, RequestBody.fromInputStream(file.content(), file.size()));
 //
 //            log.info("[S3] Imagen subida: bucket={}, key={}", bucketName, imageKey);
 //            return imageKey;
 //
-//        } catch (IOException e) {
-//            throw new ImageStorageException("Error leyendo el archivo de entrada", PROVIDER, e);
 //        } catch (S3Exception e) {
 //            log.error("[S3] Error subiendo imagen: {}", e.awsErrorDetails().errorMessage());
 //            throw new ImageStorageException("No se pudo subir la imagen a S3: " + e.awsErrorDetails().errorMessage(), PROVIDER, e);
@@ -93,7 +86,7 @@ import backend.msclasificator.medicalimage.application.port.out.ImageStorageServ
 //    }
 //
 //    @Override
-//    public void deleteImage(String imageKey) {
+//    public void delete(String imageKey) {
 //        try {
 //            s3Client.deleteObject(DeleteObjectRequest.builder()
 //                    .bucket(bucketName)
@@ -109,7 +102,7 @@ import backend.msclasificator.medicalimage.application.port.out.ImageStorageServ
 //    }
 //
 //    @Override
-//    public boolean imageExists(String imageKey) {
+//    public boolean exists(String imageKey) {
 //        try {
 //            s3Client.headObject(HeadObjectRequest.builder()
 //                    .bucket(bucketName)
@@ -126,7 +119,7 @@ import backend.msclasificator.medicalimage.application.port.out.ImageStorageServ
 //    }
 //
 //    @Override
-//    public String getProviderName() {
+//    public String providerName() {
 //        return PROVIDER;
 //    }
 //}
