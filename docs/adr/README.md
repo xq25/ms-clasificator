@@ -17,6 +17,7 @@ Registro de las decisiones de arquitectura del proyecto. Cada decisión vive en 
 | [009](ADR-009-errores-de-servicios-externos.md) | Manejo de errores de servicios externos | Aceptado | Arquitectura |
 | [010](ADR-010-clasificacion-por-categoria.md) | Clasificación de imágenes por categoría (deslizamiento) | Aceptado (modificado por 011) | Arquitectura / Persistencia |
 | [011](ADR-011-soft-delete-y-esquema-versionado.md) | Soft delete de datasets y esquema de BD versionado | Aceptado | Persistencia / Infraestructura |
+| [012](ADR-012-puertos-hacia-servicios-externos.md) | Puertos hacia servicios externos (identidad y almacenamiento) | Aceptado | Arquitectura |
 
 ## Plantilla
 
