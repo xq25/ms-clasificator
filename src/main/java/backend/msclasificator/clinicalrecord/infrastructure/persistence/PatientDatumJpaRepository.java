@@ -11,6 +11,8 @@ public interface PatientDatumJpaRepository extends JpaRepository<PatientDatum, I
 
     List<PatientDatum> findByPrimitiveDatumId(Integer primitiveDatumId);
 
+    long countByPrimitiveDatumId(Integer primitiveDatumId);
+
     @Query("SELECT COUNT(p) FROM PatientDatum p")
     long countAll();
 }

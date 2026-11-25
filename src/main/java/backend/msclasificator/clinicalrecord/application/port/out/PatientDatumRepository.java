@@ -15,6 +15,9 @@ public interface PatientDatumRepository {
 
     List<PatientDatum> findByPrimitiveDatumId(Integer primitiveDatumId);
 
+    // Valores de pacientes registrados con este dato primitivo (bugs #14 y #15)
+    long countByPrimitiveDatumId(Integer primitiveDatumId);
+
     Optional<PatientDatum> findById(Integer id);
 
     long count();
