@@ -30,9 +30,10 @@ public class PrimitiveDatum extends SystemDatum{
     @Column(nullable = false)
     private PrimitiveUnit unit;
 
-    // Lo colocamos solo para el cascade
+    // Sin cascada (bug #15): borrar un dato primitivo no puede borrar valores clínicos de pacientes.
+    // PrimitiveDatumService.delete rechaza el borrado si hay valores registrados.
     @JsonIgnore
-    @OneToMany(mappedBy = "primitiveDatum", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "primitiveDatum")
     private List<PatientDatum> patientDatumList;
 
 }

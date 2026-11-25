@@ -9,6 +9,7 @@ import backend.msclasificator.shared.api.PagedResponse;
 import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.clinicalrecord.api.mapper.PrimitiveDatumMapper;
 import backend.msclasificator.clinicalrecord.domain.PrimitiveDatum;
+import backend.msclasificator.clinicalrecord.application.port.out.PatientDatumRepository;
 import backend.msclasificator.clinicalrecord.application.port.out.PrimitiveDatumRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -21,6 +22,9 @@ public class PrimitiveDatumService {
 
 	@Autowired
 	private PrimitiveDatumRepository primitiveDatumRepository;
+
+	@Autowired
+	private PatientDatumRepository patientDatumRepository;
 
 	@Autowired
 	private PrimitiveDatumMapper primitiveDatumMapper;
@@ -104,6 +108,15 @@ public class PrimitiveDatumService {
 				return ApiResponse.error("Ya existe un dato primitivo con el nombre: " + dto.getName());
 			}
 
+			// El tipo solo cambia si no hay valores de pacientes registrados (bug #14)
+			if (dto.getType() != primitiveDatum.getType()) {
+				long valores = patientDatumRepository.countByPrimitiveDatumId(id);
+				if (valores > 0) {
+					return ApiResponse.error("No se puede cambiar el tipo del dato primitivo '" + primitiveDatum.getName()
+							+ "': tiene " + valores + " valores registrados");
+				}
+			}
+
 			primitiveDatum.setName(dto.getName());
 			primitiveDatum.setType(dto.getType());
 			primitiveDatum.setUnit(dto.getUnit());
@@ -124,6 +137,13 @@ public class PrimitiveDatumService {
 		try {
 			PrimitiveDatum primitiveDatum = primitiveDatumRepository.findById(id)
 					.orElseThrow(() -> new IllegalArgumentException("Dato primitivo no encontrado con ID: " + id));
+
+			// No se borran valores clínicos de pacientes (bug #15)
+			long valores = patientDatumRepository.countByPrimitiveDatumId(id);
+			if (valores > 0) {
+				return ApiResponse.error("No se puede eliminar el dato primitivo '" + primitiveDatum.getName()
+						+ "': tiene " + valores + " valores registrados en historias clínicas");
+			}
 
 			primitiveDatumRepository.delete(primitiveDatum);
 			return ApiResponse.success("Dato primitivo eliminado exitosamente");

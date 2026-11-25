@@ -35,6 +35,11 @@ class PatientDatumPersistenceAdapter implements PatientDatumRepository {
     }
 
     @Override
+    public long countByPrimitiveDatumId(Integer primitiveDatumId) {
+        return jpa.countByPrimitiveDatumId(primitiveDatumId);
+    }
+
+    @Override
     public Optional<PatientDatum> findById(Integer id) {
         return jpa.findById(id);
     }

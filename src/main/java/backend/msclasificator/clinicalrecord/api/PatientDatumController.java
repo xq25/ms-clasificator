@@ -66,14 +66,14 @@ public class PatientDatumController {
 	}
 
 	@PostMapping("")
-	public ResponseEntity<ApiResponse<PatientDatumResponseDTO>> create(@RequestBody PatientDatumCreateDTO dto) {
+	public ResponseEntity<ApiResponse<PatientDatumResponseDTO>> create(@Valid @RequestBody PatientDatumCreateDTO dto) {
 		ApiResponse<PatientDatumResponseDTO> response = this.patientDatumService.create(dto);
 		if (response.isSuccess()) return ResponseEntity.status(HttpStatus.CREATED).body(response);
 		return ResponseEntity.badRequest().body(response);
 	}
 
 	@PutMapping("{id}")
-	public ResponseEntity<ApiResponse<PatientDatumResponseDTO>> update(@PathVariable Integer id, @RequestBody PatientDatumUpdateDTO dto) {
+	public ResponseEntity<ApiResponse<PatientDatumResponseDTO>> update(@PathVariable Integer id, @Valid @RequestBody PatientDatumUpdateDTO dto) {
 		ApiResponse<PatientDatumResponseDTO> response = this.patientDatumService.update(id, dto);
 		if (response.isSuccess()) return ResponseEntity.ok(response);
 		return ResponseEntity.badRequest().body(response);

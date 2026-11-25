@@ -138,6 +138,11 @@ public class ClinicalRecordService {
             ClinicalRecord clinicalRecord = clinicalRecordRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Clinical Record no encontrado con ID: " + id));
 
+            // Misma regla que create (bug #12)
+            if (dto.getVisitDate().after(new Date())) {
+                return ApiResponse.error("La fecha de la visita no puede ser superior a la fecha actual");
+            }
+
             clinicalRecord.setVisitDate(dto.getVisitDate());
             clinicalRecord.setChiefComplaint(dto.getChiefComplaint());
 

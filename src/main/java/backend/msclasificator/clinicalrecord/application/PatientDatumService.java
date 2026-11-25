@@ -157,6 +157,9 @@ public class PatientDatumService {
 			PatientDatum existing = patientDatumRepository.findById(id)
 					.orElseThrow(() -> new IllegalArgumentException("Patient Datum no encontrado con ID: " + id));
 
+			// Misma validación que create (bug #13): el valor debe ser compatible con el tipo del dato primitivo
+			existing.getPrimitiveDatum().getType().validate(dto.getDescription());
+
 			// Solo actualizamos la descripcion, la asociacion entre las dos entidades, solo puede ser generada y eliminada.
 			existing.setDescription(dto.getDescription());
 

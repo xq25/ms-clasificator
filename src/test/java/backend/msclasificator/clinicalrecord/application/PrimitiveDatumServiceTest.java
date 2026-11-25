@@ -4,6 +4,7 @@ import backend.msclasificator.clinicalrecord.api.dto.PrimitiveDatumCreateDTO;
 import backend.msclasificator.clinicalrecord.api.dto.PrimitiveDatumResponseDTO;
 import backend.msclasificator.clinicalrecord.api.dto.PrimitiveDatumUpdateDTO;
 import backend.msclasificator.clinicalrecord.api.mapper.PrimitiveDatumMapper;
+import backend.msclasificator.clinicalrecord.application.port.out.PatientDatumRepository;
 import backend.msclasificator.clinicalrecord.application.port.out.PrimitiveDatumRepository;
 import backend.msclasificator.clinicalrecord.domain.PrimitiveDatum;
 import backend.msclasificator.clinicalrecord.domain.PrimitiveType;
@@ -38,6 +39,7 @@ class PrimitiveDatumServiceTest {
     private static final PageQuery QUERY = new PageQuery(0, 10, "id", "asc");
 
     @Mock private PrimitiveDatumRepository primitiveDatumRepository;
+    @Mock private PatientDatumRepository patientDatumRepository;
     @Mock private PrimitiveDatumMapper mapper;
 
     @InjectMocks private PrimitiveDatumService service;
@@ -206,12 +208,41 @@ class PrimitiveDatumServiceTest {
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO #14: cambia el tipo sin revisar los valores ya registrados de pacientes")
-        void cambiaTipoSinRevisarValores() {
+        @DisplayName("mismo tipo: no consulta los valores de pacientes")
+        void mismoTipoNoConsultaValores() {
             when(primitiveDatumRepository.findById(5)).thenReturn(Optional.of(glucemia));
-            when(primitiveDatumRepository.findByNameIgnoreCase("Glucemia")).thenReturn(Optional.empty());
+            when(primitiveDatumRepository.findByNameIgnoreCase("Glucosa en ayunas")).thenReturn(Optional.empty());
             when(primitiveDatumRepository.save(glucemia)).thenReturn(glucemia);
-            when(mapper.toResponseDTO(glucemia)).thenReturn(responseDTO);
+
+            ApiResponse<PrimitiveDatumResponseDTO> r = service.update(5, updateDTO("Glucosa en ayunas", PrimitiveType.DOUBLE));
+
+            assertThat(r.isSuccess()).isTrue();
+            assertThat(glucemia.getName()).isEqualTo("Glucosa en ayunas");
+            verify(patientDatumRepository, never()).countByPrimitiveDatumId(any());
+        }
+
+        @Test
+        @DisplayName("cambio de tipo con valores registrados: error sin guardar (bug #14)")
+        void cambioDeTipoConValores() {
+            when(primitiveDatumRepository.findById(5)).thenReturn(Optional.of(glucemia));
+            when(primitiveDatumRepository.findByNameIgnoreCase("Glucemia")).thenReturn(Optional.of(glucemia));
+            when(patientDatumRepository.countByPrimitiveDatumId(5)).thenReturn(12L);
+
+            ApiResponse<PrimitiveDatumResponseDTO> r = service.update(5, updateDTO("Glucemia", PrimitiveType.BOOLEAN));
+
+            assertThat(r.isSuccess()).isFalse();
+            assertThat(r.getMessage()).isEqualTo("No se puede cambiar el tipo del dato primitivo 'Glucemia': tiene 12 valores registrados");
+            assertThat(glucemia.getType()).isEqualTo(PrimitiveType.DOUBLE);
+            verify(primitiveDatumRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("cambio de tipo sin valores registrados: se permite")
+        void cambioDeTipoSinValores() {
+            when(primitiveDatumRepository.findById(5)).thenReturn(Optional.of(glucemia));
+            when(primitiveDatumRepository.findByNameIgnoreCase("Glucemia")).thenReturn(Optional.of(glucemia));
+            when(patientDatumRepository.countByPrimitiveDatumId(5)).thenReturn(0L);
+            when(primitiveDatumRepository.save(glucemia)).thenReturn(glucemia);
 
             ApiResponse<PrimitiveDatumResponseDTO> r = service.update(5, updateDTO("Glucemia", PrimitiveType.BOOLEAN));
 
@@ -233,9 +264,23 @@ class PrimitiveDatumServiceTest {
         }
 
         @Test
-        @DisplayName("válido: elimina (en BD arrastra sus valores de pacientes, ver bug #15)")
+        @DisplayName("con valores de pacientes registrados: error sin eliminar (bug #15)")
+        void conValores() {
+            when(primitiveDatumRepository.findById(5)).thenReturn(Optional.of(glucemia));
+            when(patientDatumRepository.countByPrimitiveDatumId(5)).thenReturn(12L);
+
+            ApiResponse<Void> r = service.delete(5);
+
+            assertThat(r.isSuccess()).isFalse();
+            assertThat(r.getMessage()).isEqualTo("No se puede eliminar el dato primitivo 'Glucemia': tiene 12 valores registrados en historias clínicas");
+            verify(primitiveDatumRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("sin valores de pacientes: elimina")
         void valido() {
             when(primitiveDatumRepository.findById(5)).thenReturn(Optional.of(glucemia));
+            when(patientDatumRepository.countByPrimitiveDatumId(5)).thenReturn(0L);
 
             ApiResponse<Void> r = service.delete(5);
 
@@ -248,6 +293,7 @@ class PrimitiveDatumServiceTest {
         @DisplayName("violación de integridad: error con prefijo")
         void violacionIntegridad() {
             when(primitiveDatumRepository.findById(5)).thenReturn(Optional.of(glucemia));
+            when(patientDatumRepository.countByPrimitiveDatumId(5)).thenReturn(0L);
             doThrow(new DataIntegrityViolationException("fk")).when(primitiveDatumRepository).delete(glucemia);
 
             assertThat(service.delete(5).getMessage()).isEqualTo("Violacion a integridad de la base de datos: fk");

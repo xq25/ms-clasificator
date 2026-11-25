@@ -196,6 +196,12 @@ Reglas vigentes del feature `dataset`. Están verificadas por los tests de `src/
 - **Soft delete con historial (ADR-011):** quitar un diagnóstico de una categoría lo retira (`deleted_at`). `created_at` y `deleted_at` definen su vigencia en la categoría.
 - Un `MedicalDiagnostic` que alguna vez definió una categoría no se puede borrar del catálogo.
 
+### ClinicalRecord, PatientDatum y PrimitiveDatum (datos clínicos)
+- La fecha de visita de una historia clínica no puede ser futura, ni al crearla ni al editarla.
+- El valor de un `PatientDatum` debe ser compatible con el tipo de su `PrimitiveDatum` (`PrimitiveType.validate`), al crearlo y al editarlo. Un valor en blanco se acepta.
+- El **tipo** de un `PrimitiveDatum` solo se puede cambiar si no tiene valores de pacientes registrados. El nombre y la unidad se pueden editar siempre.
+- Un `PrimitiveDatum` con valores de pacientes registrados **no se puede eliminar**: los datos clínicos nunca se borran como efecto colateral.
+
 ### Alta de Patient y Doctor
 - El `userId` debe existir en ms-security. Si ms-security responde que no existe (o 404), el alta da error. Si ms-security falla, responde **503** (ADR-009).
 - **Todo o nada:** se valida, se guarda y, como último paso, se asigna el rol por defecto (`patient`/`doctor`) en ms-security. Si la asignación falla, se revierte el guardado y no queda ningún registro sin rol.

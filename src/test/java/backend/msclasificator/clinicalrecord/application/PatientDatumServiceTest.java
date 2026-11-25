@@ -305,16 +305,25 @@ class PatientDatumServiceTest {
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO #13: guarda un valor incompatible con el tipo del dato primitivo (create lo rechaza)")
-        void guardaValorIncompatible() {
+        @DisplayName("valor incompatible con el tipo del dato primitivo: error sin guardar (bug #13)")
+        void valorIncompatible() {
             when(patientDatumRepository.findById(8)).thenReturn(Optional.of(datum));
-            when(patientDatumRepository.save(datum)).thenReturn(datum);
-            when(mapper.toResponseDTO(datum)).thenReturn(responseDTO);
 
             ApiResponse<PatientDatumResponseDTO> r = service.update(8, updateDTO("setenta"));
 
-            assertThat(r.isSuccess()).isTrue();
-            assertThat(datum.getDescription()).isEqualTo("setenta");
+            assertThat(r.isSuccess()).isFalse();
+            assertThat(r.getMessage()).isEqualTo("El valor 'setenta' no es compatible con el tipo INTEGER");
+            assertThat(datum.getDescription()).isEqualTo("72");
+            verify(patientDatumRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("valor en blanco: se acepta sin validar el tipo (igual que create)")
+        void valorEnBlanco() {
+            when(patientDatumRepository.findById(8)).thenReturn(Optional.of(datum));
+            when(patientDatumRepository.save(datum)).thenReturn(datum);
+
+            assertThat(service.update(8, updateDTO("")).isSuccess()).isTrue();
         }
     }
 
