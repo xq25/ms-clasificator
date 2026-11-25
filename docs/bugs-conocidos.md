@@ -8,6 +8,8 @@ Cada corrección se hace en su propia rama `fix/`. Si el bug tiene un test de ca
 
 | # | Ubicación | Problema | Impacto | Test |
 |---|-----------|----------|---------|------|
+| 17 | `MedicalDiagnosticService.delete` | Solo revisa sub-diagnósticos y clasificaciones de imágenes. No revisa si el diagnóstico definió alguna categoría de dataset (incluidas retiradas), si es el diagnóstico padre de un dataset ni si está en diagnósticos de historias clínicas, aunque [domain-model](domain-model.md) dice que un diagnóstico que definió una categoría no se puede borrar | La FK de la BD impide el borrado, pero el error llega al hacer commit, fuera del `try` (el `catch` de `DataIntegrityViolationException` no lo atrapa): previsiblemente responde 500 "Error interno" en lugar de un mensaje claro. Sin verificar en vivo | `MedicalDiagnosticServiceTest` › delete › "BUG CONOCIDO #17" |
+| 18 | `MedicalDiagnosticService.addSubDiagnostic` | No impide ciclos: si I20 es padre de I21, se acepta hacer a I20 hijo de I21 | La jerarquía CIE-10 queda circular. `CategoryDiagnosticService` ya se protege, pero `equals`/`hashCode`/`toString` de `MedicalDiagnostic` (`@Data`) entran en recursión infinita con un ciclo | `MedicalDiagnosticServiceTest` › addSubDiagnostic › "BUG CONOCIDO #18" |
 
 ## Resueltos
 
