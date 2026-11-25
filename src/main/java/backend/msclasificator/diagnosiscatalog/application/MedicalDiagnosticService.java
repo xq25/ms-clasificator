@@ -11,6 +11,8 @@ import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.diagnosiscatalog.api.mapper.MedicalDiagnosticMapper;
 import backend.msclasificator.diagnosiscatalog.domain.MedicalDiagnostic;
 import backend.msclasificator.dataset.application.port.out.CategoryDiagnosticRepository;
+import backend.msclasificator.dataset.application.port.out.DatasetRepository;
+import backend.msclasificator.clinicalrecord.application.port.out.DiagnosisRepository;
 import backend.msclasificator.classification.application.port.out.ClassificationDiagnosisRepository;
 import backend.msclasificator.diagnosiscatalog.application.port.out.MedicalDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +20,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class MedicalDiagnosticService {
@@ -34,6 +38,12 @@ public class MedicalDiagnosticService {
 
     @Autowired
     private CategoryDiagnosticRepository diagnosticCategoryDatasetRepository;
+
+    @Autowired
+    private DatasetRepository datasetRepository;
+
+    @Autowired
+    private DiagnosisRepository diagnosisRepository;
 
 
 
@@ -212,6 +222,21 @@ public class MedicalDiagnosticService {
                 return ApiResponse.error("No se puede eliminar el diagnóstico ya que está asociado a clasificaciones de imágenes.");
             }
 
+            // Bug #17: el resto de referencias se valida aquí. Si se dejara a la FK, el error llegaría
+            // al hacer commit (fuera de este try) y la API respondería 500.
+            // Categorías y datasets incluyen los retirados (ADR-011): son historial de clasificaciones.
+            if (diagnosticCategoryDatasetRepository.existsByMedicalDiagnosticId(id)) {
+                return ApiResponse.error("No se puede eliminar el diagnóstico porque define categorías de datasets (incluidas retiradas).");
+            }
+
+            if (datasetRepository.existsByMedicalDiagnosticIdIncludingRetired(id)) {
+                return ApiResponse.error("No se puede eliminar el diagnóstico porque es el diagnóstico padre de un dataset (incluidos retirados).");
+            }
+
+            if (diagnosisRepository.existsByMedicalDiagnosticId(id)) {
+                return ApiResponse.error("No se puede eliminar el diagnóstico porque está registrado en historias clínicas.");
+            }
+
             medicalDiagnosticRepository.delete(medicalDiagnostic);
             return ApiResponse.success("Diagnóstico médico eliminado exitosamente");
 
@@ -242,6 +267,14 @@ public class MedicalDiagnosticService {
             if (subDiagnostic.getParentDiagnostic() != null
                     && !subDiagnostic.getParentDiagnostic().getId().equals(parentDiagnosticId)) {
                 throw new IllegalArgumentException("Este sub-diagnóstico ya está asignado a otro diagnóstico padre");
+            }
+
+            // Bug #18: el sub-diagnóstico no puede ser ancestro del padre propuesto
+            if (isAncestor(subDiagnostic, parentDiagnostic)) {
+                return ApiResponse.error("No se puede asignar " + subDiagnostic.getDiagnosticCode()
+                        + " como sub-diagnóstico de " + parentDiagnostic.getDiagnosticCode() + ": "
+                        + subDiagnostic.getDiagnosticCode() + " ya es ancestro de " + parentDiagnostic.getDiagnosticCode()
+                        + " (se formaría un ciclo)");
             }
 
             subDiagnostic.setParentDiagnostic(parentDiagnostic);
@@ -286,5 +319,19 @@ public class MedicalDiagnosticService {
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         }
+    }
+
+    // true si "candidate" aparece en la cadena de ancestros de "diagnostic".
+    // El set de visitados evita un bucle infinito si ya existiera un ciclo en los datos.
+    private boolean isAncestor(MedicalDiagnostic candidate, MedicalDiagnostic diagnostic) {
+        Set<Integer> visitados = new HashSet<>();
+        MedicalDiagnostic actual = diagnostic.getParentDiagnostic();
+        while (actual != null && visitados.add(actual.getId())) {
+            if (actual.getId().equals(candidate.getId())) {
+                return true;
+            }
+            actual = actual.getParentDiagnostic();
+        }
+        return false;
     }
 }

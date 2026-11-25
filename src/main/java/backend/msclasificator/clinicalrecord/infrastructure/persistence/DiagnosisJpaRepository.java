@@ -12,6 +12,8 @@ public interface DiagnosisJpaRepository extends JpaRepository<Diagnosis, Integer
     List<Diagnosis> findByClinicalRecordId(Integer clinicalRecordId);
     Page<Diagnosis> findByClinicalRecordId(Integer clinicalRecordId, Pageable pageable);
 
+    boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);
+
     @Query("SELECT COUNT(d) FROM Diagnosis d")
     long countAll();
 }

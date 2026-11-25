@@ -22,6 +22,9 @@ public interface DatasetRepository {
 
     boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);
 
+    // Incluye retirados (ADR-011): un diagnóstico que fue padre de un dataset no se puede borrar del catálogo (bug #17)
+    boolean existsByMedicalDiagnosticIdIncludingRetired(Integer medicalDiagnosticId);
+
     boolean existsByMedicalImageTypeId(Integer medicalImageTypeId);
 
     boolean existsByName(String name);
