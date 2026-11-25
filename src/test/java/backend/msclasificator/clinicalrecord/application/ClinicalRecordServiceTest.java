@@ -293,17 +293,18 @@ class ClinicalRecordServiceTest {
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO #12: acepta una fecha de visita futura (create la rechaza)")
-        void aceptaFechaFutura() {
-            Date futura = new Date(System.currentTimeMillis() + UN_DIA);
+        @DisplayName("fecha de visita futura: error sin guardar (bug #12)")
+        void fechaFutura() {
+            Date original = record.getVisitDate();
             when(clinicalRecordRepository.findById(10)).thenReturn(Optional.of(record));
-            when(clinicalRecordRepository.save(record)).thenReturn(record);
-            when(mapper.toResponseDTO(record)).thenReturn(responseDTO);
 
-            ApiResponse<ClinicalRecordResponseDTO> r = service.update(10, updateDTO("Control", futura));
+            ApiResponse<ClinicalRecordResponseDTO> r = service.update(10, updateDTO("Control", new Date(System.currentTimeMillis() + UN_DIA)));
 
-            assertThat(r.isSuccess()).isTrue();
-            assertThat(record.getVisitDate()).isEqualTo(futura);
+            assertThat(r.isSuccess()).isFalse();
+            assertThat(r.getMessage()).isEqualTo("La fecha de la visita no puede ser superior a la fecha actual");
+            assertThat(record.getVisitDate()).isEqualTo(original);
+            assertThat(record.getChiefComplaint()).isEqualTo("Dolor torácico");
+            verify(clinicalRecordRepository, never()).save(any());
         }
     }
 
