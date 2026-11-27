@@ -8,6 +8,8 @@ Cada corrección se hace en su propia rama `fix/`. Si el bug tiene un test de ca
 
 | # | Ubicación | Problema | Impacto | Test |
 |---|-----------|----------|---------|------|
+| 22 | `MedicalImageTypeService.update` | La validación de nombre único usa `existsByName` sin excluir el propio tipo | Enviar el nombre actual del tipo se rechaza como duplicado ("Ya existe un tipo de imagen con el nombre: …") | `MedicalImageTypeServiceTest` › update › "BUG CONOCIDO #22" |
+| 23 | `MedicalImageTypeService.delete` + `MedicalImageType.datasets` (`cascade = ALL`, `orphanRemoval`) | Solo revisa imágenes asociadas. Si el tipo tiene datasets (activos o retirados), la cascada JPA los borra físicamente junto con sus categorías y diagnósticos de categoría | Contradice ADR-011 (los datasets se retiran, nunca se borran) y pierde el historial de configuración sin aviso. Requiere decidir: bloquear el borrado si hay datasets, o permitirlo | `MedicalImageTypeServiceTest` › delete › "BUG CONOCIDO #23" |
 
 ## Resueltos
 
