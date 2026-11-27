@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -22,7 +23,8 @@ public class MedicalImageType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "name", unique = true, nullable = false)
+    // Único solo entre tipos activos (ADR-013): lo valida el servicio, no la BD
+    @Column(name = "name", nullable = false)
     private String name;
 
     // Podemos generar el tipo de imagenes y despues asociarlas a un area de evaluacion
@@ -35,4 +37,27 @@ public class MedicalImageType {
     @JsonIgnore
     @OneToMany(mappedBy = "medicalImageType")
     private List<Dataset> datasets;
+
+    // Soft delete (ADR-013, mismo patrón que ADR-011): `active` para filtrar y validar;
+    // `deletedAt` registra cuándo se retiró. Solo cambian juntos, a través de retire().
+    @Builder.Default
+    @Column(name = "active", nullable = false)
+    private Boolean active = true;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    // Al retirarse deja de pertenecer a su área: el área solo da permiso para clasificar (ADR-013)
+    public void retire() {
+        this.active = false;
+        this.deletedAt = LocalDateTime.now();
+        this.evaluationArea = null;
+    }
+
+    @PrePersist
+    void prePersist() {
+        if (active == null) {
+            active = true;
+        }
+    }
 }

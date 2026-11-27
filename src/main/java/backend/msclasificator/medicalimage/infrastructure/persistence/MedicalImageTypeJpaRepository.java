@@ -7,21 +7,28 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MedicalImageTypeJpaRepository extends JpaRepository<MedicalImageType, Integer> {
 
 	MedicalImageType findByName(String name);
 
-	List<MedicalImageType> findByEvaluationAreaId(Integer evaluationAreaId);
+	// Soft delete (ADR-013): las consultas del adaptador leen solo activos salvo las de id "IncludingRetired"
+	Page<MedicalImageType> findAllByActiveTrue(Pageable pageable);
 
-	boolean existsByEvaluationAreaId(Integer evaluationAreaId);
+	Optional<MedicalImageType> findByIdAndActiveTrue(Integer id);
 
-	boolean existsByName(String name);
+	boolean existsByIdAndActiveTrue(Integer id);
 
-	boolean existsByNameAndIdNot(String name, Integer id);
+	List<MedicalImageType> findByEvaluationAreaIdAndActiveTrue(Integer evaluationAreaId);
 
-	@Query("SELECT COUNT(m) FROM MedicalImageType m")
-	long countAll();
+	boolean existsByEvaluationAreaIdAndActiveTrue(Integer evaluationAreaId);
 
-	Page<MedicalImageType> findByNameContainingIgnoreCase(String query, Pageable pageable);
+	boolean existsByNameAndActiveTrue(String name);
+
+	boolean existsByNameAndIdNotAndActiveTrue(String name, Integer id);
+
+	long countByActiveTrue();
+
+	Page<MedicalImageType> findByNameContainingIgnoreCaseAndActiveTrue(String query, Pageable pageable);
 }

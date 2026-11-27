@@ -88,7 +88,8 @@ public class MedicalImageTypeService {
     @Transactional(readOnly = true)
     public ApiResponse<MedicalImageTypeResponseDTO> findById(Integer id) {
         try {
-            MedicalImageType medicalImageType = medicalImageTypeRepository.findById(id)
+            // Por id también se ve un tipo retirado, marcado con active=false (ADR-013)
+            MedicalImageType medicalImageType = medicalImageTypeRepository.findByIdIncludingRetired(id)
                     .orElseThrow(() -> new IllegalArgumentException("Tipo de imagen médica no encontrado con ID: " + id));
 
             return ApiResponse.success(medicalImageTypeMapper.toResponseDTO(medicalImageType), "Tipo de imagen obtenido exitosamente");
@@ -154,25 +155,23 @@ public class MedicalImageTypeService {
     }
 
     @Transactional
+    // Soft delete (ADR-013): retira el tipo. Las imágenes, datasets retirados y clasificaciones se conservan.
     public ApiResponse<Void> delete(Integer id) {
         try {
             MedicalImageType medicalImageType = medicalImageTypeRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Tipo de imagen médica no encontrado con ID: " + id));
 
-            if (medicalImgRepository.existsByMedicalImageTypeId(id)) {
-                return ApiResponse.error("No se puede eliminar el tipo de imagen porque tiene imágenes médicas asociadas");
+            // Con un dataset activo se bloquea: primero se retira el dataset (ADR-013)
+            var datasetActivo = datasetRepository.findByMedicalImageTypeId(id);
+            if (datasetActivo.isPresent()) {
+                return ApiResponse.error("No se puede retirar el tipo de imagen '" + medicalImageType.getName()
+                        + "': tiene un dataset activo ('" + datasetActivo.get().getName() + "'). Retire primero el dataset.");
             }
 
-            // Los datasets nunca se borran físicamente (ADR-011, bug #23)
-            if (datasetRepository.existsByMedicalImageTypeIdIncludingRetired(id)) {
-                return ApiResponse.error("No se puede eliminar el tipo de imagen porque tiene datasets configurados (incluidos retirados)");
-            }
+            medicalImageType.retire();
+            medicalImageTypeRepository.save(medicalImageType);
+            return ApiResponse.success("Tipo de imagen retirado exitosamente");
 
-            medicalImageTypeRepository.delete(medicalImageType);
-            return ApiResponse.success("Tipo de imagen eliminado exitosamente");
-
-        } catch (DataIntegrityViolationException ex) {
-            return ApiResponse.error("Violacion de integridad de la base de datos: " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         }

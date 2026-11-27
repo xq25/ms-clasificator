@@ -14,4 +14,7 @@ public class MedicalImageTypeSummaryDTO {
     private Integer id;
     private String name;
 
+    // false si el tipo está retirado (soft delete, ADR-013)
+    private Boolean active;
+
 }

@@ -1,6 +1,7 @@
 package backend.msclasificator.medicalimage.application;
 
 import backend.msclasificator.dataset.application.port.out.DatasetRepository;
+import backend.msclasificator.dataset.domain.Dataset;
 import backend.msclasificator.doctor.application.port.out.EvaluationAreaRepository;
 import backend.msclasificator.doctor.domain.EvaluationArea;
 import backend.msclasificator.medicalimage.api.dto.MedicalImageTypeCreateDTO;
@@ -34,6 +35,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -114,7 +116,7 @@ class MedicalImageTypeServiceTest {
         @Test
         @DisplayName("findById existente: devuelve el DTO")
         void findByIdExiste() {
-            when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.of(ecg));
+            when(medicalImageTypeRepository.findByIdIncludingRetired(1)).thenReturn(Optional.of(ecg));
             when(mapper.toResponseDTO(ecg)).thenReturn(responseDTO);
 
             ApiResponse<MedicalImageTypeResponseDTO> r = service.findById(1);
@@ -126,9 +128,19 @@ class MedicalImageTypeServiceTest {
         @Test
         @DisplayName("findById inexistente: error con el ID")
         void findByIdNoExiste() {
-            when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.empty());
+            when(medicalImageTypeRepository.findByIdIncludingRetired(1)).thenReturn(Optional.empty());
 
             assertThat(service.findById(1).getMessage()).isEqualTo("Tipo de imagen médica no encontrado con ID: 1");
+        }
+
+        @Test
+        @DisplayName("findById retirado: se devuelve igual (el DTO lo marca con active=false)")
+        void findByIdRetirado() {
+            ecg.retire();
+            when(medicalImageTypeRepository.findByIdIncludingRetired(1)).thenReturn(Optional.of(ecg));
+            when(mapper.toResponseDTO(ecg)).thenReturn(responseDTO);
+
+            assertThat(service.findById(1).isSuccess()).isTrue();
         }
     }
 
@@ -269,66 +281,57 @@ class MedicalImageTypeServiceTest {
     }
 
     @Nested
-    @DisplayName("delete")
+    @DisplayName("delete (soft delete, ADR-013)")
     class Delete {
 
         @Test
-        @DisplayName("no existe: error con el ID")
+        @DisplayName("no existe o ya está retirado: error con el ID")
         void noExiste() {
             when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.empty());
 
             assertThat(service.delete(1).getMessage()).isEqualTo("Tipo de imagen médica no encontrado con ID: 1");
+            verify(medicalImageTypeRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("con imágenes asociadas: error sin eliminar")
-        void conImagenes() {
+        @DisplayName("con dataset activo: error sin retirar")
+        void conDatasetActivo() {
             when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.of(ecg));
-            when(medicalImageRepository.existsByMedicalImageTypeId(1)).thenReturn(true);
-
-            ApiResponse<Void> r = service.delete(1);
-
-            assertThat(r.getMessage()).isEqualTo("No se puede eliminar el tipo de imagen porque tiene imágenes médicas asociadas");
-            verify(medicalImageTypeRepository, never()).delete(any());
-        }
-
-        @Test
-        @DisplayName("sin imágenes ni datasets: elimina")
-        void valido() {
-            when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.of(ecg));
-            when(medicalImageRepository.existsByMedicalImageTypeId(1)).thenReturn(false);
-            when(datasetRepository.existsByMedicalImageTypeIdIncludingRetired(1)).thenReturn(false);
-
-            ApiResponse<Void> r = service.delete(1);
-
-            assertThat(r.isSuccess()).isTrue();
-            assertThat(r.getMessage()).isEqualTo("Tipo de imagen eliminado exitosamente");
-            verify(medicalImageTypeRepository).delete(ecg);
-        }
-
-        @Test
-        @DisplayName("con datasets (incluidos retirados): error sin eliminar (bug #23)")
-        void conDatasets() {
-            when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.of(ecg));
-            when(medicalImageRepository.existsByMedicalImageTypeId(1)).thenReturn(false);
-            when(datasetRepository.existsByMedicalImageTypeIdIncludingRetired(1)).thenReturn(true);
+            when(datasetRepository.findByMedicalImageTypeId(1)).thenReturn(Optional.of(Dataset.builder().id(4).name("ECG").build()));
 
             ApiResponse<Void> r = service.delete(1);
 
             assertThat(r.isSuccess()).isFalse();
-            assertThat(r.getMessage()).isEqualTo("No se puede eliminar el tipo de imagen porque tiene datasets configurados (incluidos retirados)");
+            assertThat(r.getMessage()).isEqualTo("No se puede retirar el tipo de imagen 'Electrocardiograma': tiene un dataset activo ('ECG'). Retire primero el dataset.");
+            assertThat(ecg.getActive()).isTrue();
+            verify(medicalImageTypeRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("sin dataset activo: se retira, pierde el área y no se borra físicamente")
+        void retira() {
+            when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.of(ecg));
+            when(datasetRepository.findByMedicalImageTypeId(1)).thenReturn(Optional.empty());
+
+            ApiResponse<Void> r = service.delete(1);
+
+            assertThat(r.isSuccess()).isTrue();
+            assertThat(r.getMessage()).isEqualTo("Tipo de imagen retirado exitosamente");
+            assertThat(ecg.getActive()).isFalse();
+            assertThat(ecg.getDeletedAt()).isNotNull();
+            assertThat(ecg.getEvaluationArea()).isNull();
+            verify(medicalImageTypeRepository).save(ecg);
             verify(medicalImageTypeRepository, never()).delete(any());
         }
 
         @Test
-        @DisplayName("violación de integridad: error con prefijo")
-        void violacionIntegridad() {
+        @DisplayName("con imágenes: se retira igual (las imágenes se conservan)")
+        void conImagenes() {
             when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.of(ecg));
-            when(medicalImageRepository.existsByMedicalImageTypeId(1)).thenReturn(false);
-            when(datasetRepository.existsByMedicalImageTypeIdIncludingRetired(1)).thenReturn(false);
-            doThrow(new DataIntegrityViolationException("fk")).when(medicalImageTypeRepository).delete(ecg);
+            when(datasetRepository.findByMedicalImageTypeId(1)).thenReturn(Optional.empty());
 
-            assertThat(service.delete(1).getMessage()).isEqualTo("Violacion de integridad de la base de datos: fk");
+            assertThat(service.delete(1).isSuccess()).isTrue();
+            verifyNoInteractions(medicalImageRepository);
         }
     }
 

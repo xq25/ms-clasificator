@@ -26,8 +26,6 @@ public interface DatasetJpaRepository extends JpaRepository<Dataset, Integer> {
 
     boolean existsByMedicalImageTypeIdAndActiveTrue(Integer medicalImageTypeId);
 
-    boolean existsByMedicalImageTypeId(Integer medicalImageTypeId);
-
     boolean existsByNameAndActiveTrue(String name);
 
     boolean existsByNameAndIdNotAndActiveTrue(String name, Integer id);
