@@ -196,6 +196,11 @@ Reglas vigentes del feature `dataset`. Están verificadas por los tests de `src/
 - **Soft delete con historial (ADR-011):** quitar un diagnóstico de una categoría lo retira (`deleted_at`). `created_at` y `deleted_at` definen su vigencia en la categoría.
 - Un `MedicalDiagnostic` que alguna vez definió una categoría no se puede borrar del catálogo.
 
+### MedicalDiagnostic (catálogo CIE-10)
+- Un diagnóstico no se puede borrar si tiene sub-diagnósticos, si está en clasificaciones de imágenes, si define categorías de datasets o es el padre de un dataset (incluidos los retirados, ADR-011), o si está registrado en historias clínicas.
+- La jerarquía no admite ciclos: un diagnóstico no puede ser sub-diagnóstico de uno de sus descendientes.
+- Un sub-diagnóstico asignado a una categoría de dataset no se puede separar de su padre.
+
 ### ClinicalRecord, PatientDatum y PrimitiveDatum (datos clínicos)
 - La fecha de visita de una historia clínica no puede ser futura, ni al crearla ni al editarla.
 - El valor de un `PatientDatum` debe ser compatible con el tipo de su `PrimitiveDatum` (`PrimitiveType.validate`), al crearlo y al editarlo. Un valor en blanco se acepta.

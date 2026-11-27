@@ -39,6 +39,11 @@ class DiagnosisPersistenceAdapter implements DiagnosisRepository {
     }
 
     @Override
+    public boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId) {
+        return jpa.existsByMedicalDiagnosticId(medicalDiagnosticId);
+    }
+
+    @Override
     public Diagnosis save(Diagnosis diagnosis) {
         return jpa.save(diagnosis);
     }

@@ -16,6 +16,9 @@ public interface DiagnosisRepository {
 
     long count();
 
+    // Diagnósticos de historias clínicas que usan este diagnóstico CIE-10 (bug #17)
+    boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);
+
     Diagnosis save(Diagnosis diagnosis);
 
     void delete(Diagnosis diagnosis);

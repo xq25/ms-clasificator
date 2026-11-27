@@ -1,7 +1,9 @@
 package backend.msclasificator.diagnosiscatalog.application;
 
 import backend.msclasificator.classification.application.port.out.ClassificationDiagnosisRepository;
+import backend.msclasificator.clinicalrecord.application.port.out.DiagnosisRepository;
 import backend.msclasificator.dataset.application.port.out.CategoryDiagnosticRepository;
+import backend.msclasificator.dataset.application.port.out.DatasetRepository;
 import backend.msclasificator.diagnosiscatalog.api.dto.MedicalDiagnosticCreateDTO;
 import backend.msclasificator.diagnosiscatalog.api.dto.MedicalDiagnosticResponseDTO;
 import backend.msclasificator.diagnosiscatalog.api.dto.MedicalDiagnosticSummaryDTO;
@@ -45,6 +47,8 @@ class MedicalDiagnosticServiceTest {
     @Mock private ClassificationDiagnosisRepository classificationDiagnosisRepository;
     @Mock private MedicalDiagnosticMapper mapper;
     @Mock private CategoryDiagnosticRepository categoryDiagnosticRepository;
+    @Mock private DatasetRepository datasetRepository;
+    @Mock private DiagnosisRepository diagnosisRepository;
 
     @InjectMocks private MedicalDiagnosticService service;
 
@@ -337,12 +341,20 @@ class MedicalDiagnosticServiceTest {
             verify(medicalDiagnosticRepository, never()).delete(any());
         }
 
-        @Test
-        @DisplayName("sin hijos ni clasificaciones: elimina")
-        void valido() {
+        // Sin hijos, clasificaciones, categorías, datasets ni historias clínicas
+        private void sinReferencias() {
             when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
             when(medicalDiagnosticRepository.existsByParentDiagnosticId(2)).thenReturn(false);
             when(classificationDiagnosisRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
+            when(categoryDiagnosticRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
+            when(datasetRepository.existsByMedicalDiagnosticIdIncludingRetired(2)).thenReturn(false);
+            when(diagnosisRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
+        }
+
+        @Test
+        @DisplayName("sin referencias: elimina")
+        void valido() {
+            sinReferencias();
 
             ApiResponse<Void> r = service.delete(2);
 
@@ -352,24 +364,54 @@ class MedicalDiagnosticServiceTest {
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO #17: no revisa si el diagnóstico definió una categoría de dataset antes de eliminar")
-        void noRevisaCategorias() {
+        @DisplayName("define categorías de datasets (incluidas retiradas): error sin eliminar (bug #17)")
+        void defineCategorias() {
             when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
             when(medicalDiagnosticRepository.existsByParentDiagnosticId(2)).thenReturn(false);
             when(classificationDiagnosisRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
+            when(categoryDiagnosticRepository.existsByMedicalDiagnosticId(2)).thenReturn(true);
 
-            service.delete(2);
+            ApiResponse<Void> r = service.delete(2);
 
-            verifyNoInteractions(categoryDiagnosticRepository);
-            verify(medicalDiagnosticRepository).delete(infarto);
+            assertThat(r.getMessage()).isEqualTo("No se puede eliminar el diagnóstico porque define categorías de datasets (incluidas retiradas).");
+            verify(medicalDiagnosticRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("es padre de un dataset (incluidos retirados): error sin eliminar (bug #17)")
+        void padreDeDataset() {
+            when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
+            when(medicalDiagnosticRepository.existsByParentDiagnosticId(2)).thenReturn(false);
+            when(classificationDiagnosisRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
+            when(categoryDiagnosticRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
+            when(datasetRepository.existsByMedicalDiagnosticIdIncludingRetired(2)).thenReturn(true);
+
+            ApiResponse<Void> r = service.delete(2);
+
+            assertThat(r.getMessage()).isEqualTo("No se puede eliminar el diagnóstico porque es el diagnóstico padre de un dataset (incluidos retirados).");
+            verify(medicalDiagnosticRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("registrado en historias clínicas: error sin eliminar (bug #17)")
+        void enHistoriasClinicas() {
+            when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
+            when(medicalDiagnosticRepository.existsByParentDiagnosticId(2)).thenReturn(false);
+            when(classificationDiagnosisRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
+            when(categoryDiagnosticRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
+            when(datasetRepository.existsByMedicalDiagnosticIdIncludingRetired(2)).thenReturn(false);
+            when(diagnosisRepository.existsByMedicalDiagnosticId(2)).thenReturn(true);
+
+            ApiResponse<Void> r = service.delete(2);
+
+            assertThat(r.getMessage()).isEqualTo("No se puede eliminar el diagnóstico porque está registrado en historias clínicas.");
+            verify(medicalDiagnosticRepository, never()).delete(any());
         }
 
         @Test
         @DisplayName("violación de integridad lanzada en el delete: error con prefijo")
         void violacionIntegridad() {
-            when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
-            when(medicalDiagnosticRepository.existsByParentDiagnosticId(2)).thenReturn(false);
-            when(classificationDiagnosisRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
+            sinReferencias();
             doThrow(new DataIntegrityViolationException("fk")).when(medicalDiagnosticRepository).delete(infarto);
 
             assertThat(service.delete(2).getMessage()).isEqualTo("Violación a la integridad de la base de datos: fk");
@@ -453,19 +495,50 @@ class MedicalDiagnosticServiceTest {
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO #18: permite ciclos (un ancestro pasa a ser hijo de su descendiente)")
-        void permiteCiclos() {
+        @DisplayName("el sub-diagnóstico es padre directo del padre propuesto: error sin guardar (bug #18)")
+        void cicloDirecto() {
             // I20 es padre de I21; se pide que I20 sea hijo de I21
             when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
             when(medicalDiagnosticRepository.findById(1)).thenReturn(Optional.of(cardiopatiaIsquemica));
-            // any(): con el ciclo, equals/hashCode de @Data entran en recursión infinita
-            when(medicalDiagnosticRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             ApiResponse<MedicalDiagnosticResponseDTO> r = service.addSubDiagnostic(2, 1);
 
+            assertThat(r.isSuccess()).isFalse();
+            assertThat(r.getMessage()).isEqualTo("No se puede asignar I20 como sub-diagnóstico de I21: I20 ya es ancestro de I21 (se formaría un ciclo)");
+            assertThat(cardiopatiaIsquemica.getParentDiagnostic()).isNull();
+            verify(medicalDiagnosticRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("el sub-diagnóstico es ancestro lejano del padre propuesto: error sin guardar (bug #18)")
+        void cicloIndirecto() {
+            // I20 → I21 → I21.0; se pide que I20 sea hijo de I21.0
+            MedicalDiagnostic nieto = MedicalDiagnostic.builder().id(4).diagnosticCode("I21.0").parentDiagnostic(infarto).build();
+            when(medicalDiagnosticRepository.findById(4)).thenReturn(Optional.of(nieto));
+            when(medicalDiagnosticRepository.findById(1)).thenReturn(Optional.of(cardiopatiaIsquemica));
+
+            ApiResponse<MedicalDiagnosticResponseDTO> r = service.addSubDiagnostic(4, 1);
+
+            assertThat(r.getMessage()).isEqualTo("No se puede asignar I20 como sub-diagnóstico de I21.0: I20 ya es ancestro de I21.0 (se formaría un ciclo)");
+            verify(medicalDiagnosticRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("ciclo ya existente en los datos: el recorrido termina y la asignación se permite")
+        void cicloPrevioNoCuelga() {
+            // A ↔ B ya forman un ciclo; se asigna C (raíz, ajeno) como hijo de A
+            MedicalDiagnostic a = MedicalDiagnostic.builder().id(10).diagnosticCode("Z10").build();
+            MedicalDiagnostic b = MedicalDiagnostic.builder().id(11).diagnosticCode("Z11").parentDiagnostic(a).build();
+            a.setParentDiagnostic(b);
+            MedicalDiagnostic c = MedicalDiagnostic.builder().id(12).diagnosticCode("Z12").build();
+            when(medicalDiagnosticRepository.findById(10)).thenReturn(Optional.of(a));
+            when(medicalDiagnosticRepository.findById(12)).thenReturn(Optional.of(c));
+            when(medicalDiagnosticRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            ApiResponse<MedicalDiagnosticResponseDTO> r = service.addSubDiagnostic(10, 12);
+
             assertThat(r.isSuccess()).isTrue();
-            assertThat(cardiopatiaIsquemica.getParentDiagnostic() == infarto).isTrue();
-            assertThat(infarto.getParentDiagnostic() == cardiopatiaIsquemica).isTrue();
+            assertThat(c.getParentDiagnostic() == a).isTrue();
         }
     }
 
