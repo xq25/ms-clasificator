@@ -12,6 +12,7 @@ import backend.msclasificator.shared.api.PagedResponse;
 import backend.msclasificator.shared.application.PageResult;
 import backend.msclasificator.doctor.api.mapper.DoctorMapper;
 import backend.msclasificator.doctor.domain.Doctor;
+import backend.msclasificator.doctor.domain.EvaluationArea;
 import backend.msclasificator.doctor.application.port.out.DoctorRepository;
 import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -198,6 +199,12 @@ public class DoctorService {
             Doctor doctor = doctorRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + id));
 
+            // Código único, excluyendo al propio doctor; mismo mensaje que create (bug #19)
+            String code = doctorUpdateDTO.getCode();
+            if (code != null && doctorRepository.findByCode(code).filter(otro -> !otro.getId().equals(id)).isPresent()) {
+                return ApiResponse.error("Ya existe un doctor con el código: " + code + ". El código debe ser único.");
+            }
+
             // Actualizar solo los campos que vienen en el DTO
             // Si están disponibles en DoctorUpdateDTO, se actualizan aquí
             doctor.setCode(doctorUpdateDTO.getCode() != null ? doctorUpdateDTO.getCode() : doctor.getCode());
@@ -223,6 +230,15 @@ public class DoctorService {
             // Validamos que el medico no tenga diagnosticos de imagenes asociados.
             if (imageDiagnosticRepository.existsByDoctorId(doctor.getId())) {
                 return ApiResponse.error("No se puede eliminar el doctor porque tiene diagnosticos asociados");
+            }
+
+            // La cascada borra sus asignaciones a áreas: se descuenta el contador de cada área,
+            // igual que DoctorAreaService al quitar una asignación (bug #20)
+            if (doctor.getDoctorAreas() != null) {
+                doctor.getDoctorAreas().forEach(asignacion -> {
+                    EvaluationArea area = asignacion.getEvaluationArea();
+                    area.setDoctorsCount(area.getDoctorsCount() - 1);
+                });
             }
 
             doctorRepository.delete(doctor);

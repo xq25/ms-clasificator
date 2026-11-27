@@ -292,6 +292,7 @@ class DoctorServiceTest {
         void valido() {
             DoctorSummaryDTO summary = DoctorSummaryDTO.builder().id(2).build();
             when(doctorRepository.findById(2)).thenReturn(Optional.of(doctor));
+            when(doctorRepository.findByCode("MED-02")).thenReturn(Optional.empty());
             when(doctorRepository.save(doctor)).thenReturn(doctor);
             when(doctorMapper.toSummaryDTO(doctor)).thenReturn(summary);
 
@@ -313,17 +314,28 @@ class DoctorServiceTest {
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO #19: acepta el código de otro doctor sin validarlo (create sí lo valida)")
+        @DisplayName("código de otro doctor: error sin guardar (bug #19)")
         void codigoDeOtroDoctor() {
+            Doctor otro = Doctor.builder().id(5).code("MED-99").userId("doc-5").build();
             when(doctorRepository.findById(2)).thenReturn(Optional.of(doctor));
-            when(doctorRepository.save(doctor)).thenReturn(doctor);
+            when(doctorRepository.findByCode("MED-99")).thenReturn(Optional.of(otro));
 
             ApiResponse<DoctorSummaryDTO> r = service.update(2, updateDTO("MED-99"));
 
-            assertThat(r.isSuccess()).isTrue();
-            assertThat(doctor.getCode()).isEqualTo("MED-99");
-            verify(doctorRepository, never()).existsByCode(anyString());
-            verify(doctorRepository, never()).findByCode(anyString());
+            assertThat(r.isSuccess()).isFalse();
+            assertThat(r.getMessage()).isEqualTo("Ya existe un doctor con el código: MED-99. El código debe ser único.");
+            assertThat(doctor.getCode()).isEqualTo("MED-01");
+            verify(doctorRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("su propio código: se permite")
+        void propioCodigo() {
+            when(doctorRepository.findById(2)).thenReturn(Optional.of(doctor));
+            when(doctorRepository.findByCode("MED-01")).thenReturn(Optional.of(doctor));
+            when(doctorRepository.save(doctor)).thenReturn(doctor);
+
+            assertThat(service.update(2, updateDTO("MED-01")).isSuccess()).isTrue();
         }
     }
 
@@ -365,15 +377,31 @@ class DoctorServiceTest {
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO #20: con áreas asignadas, la cascada borra las asignaciones pero no descuenta doctorsCount")
-        void noDescuentaContador() {
+        @DisplayName("con áreas asignadas: descuenta doctorsCount de cada área y elimina (bug #20)")
+        void descuentaContador() {
             EvaluationArea cardio = EvaluationArea.builder().id(1).codeArea("CARDIO").doctorsCount(3).build();
-            DoctorArea asignacion = DoctorArea.builder().id(7).doctor(doctor).evaluationArea(cardio).build();
-            doctor.setDoctorAreas(List.of(asignacion));
+            EvaluationArea neuro = EvaluationArea.builder().id(3).codeArea("NEURO").doctorsCount(1).build();
+            doctor.setDoctorAreas(List.of(
+                    DoctorArea.builder().id(7).doctor(doctor).evaluationArea(cardio).build(),
+                    DoctorArea.builder().id(8).doctor(doctor).evaluationArea(neuro).build()));
             when(doctorRepository.findById(2)).thenReturn(Optional.of(doctor));
             when(imageClassificationRepository.existsByDoctorId(2)).thenReturn(false);
 
             assertThat(service.delete(2).isSuccess()).isTrue();
+            assertThat(cardio.getDoctorsCount()).isEqualTo(2);
+            assertThat(neuro.getDoctorsCount()).isZero();
+            verify(doctorRepository).delete(any());
+        }
+
+        @Test
+        @DisplayName("con clasificaciones: no toca los contadores")
+        void conClasificacionesNoTocaContadores() {
+            EvaluationArea cardio = EvaluationArea.builder().id(1).codeArea("CARDIO").doctorsCount(3).build();
+            doctor.setDoctorAreas(List.of(DoctorArea.builder().id(7).doctor(doctor).evaluationArea(cardio).build()));
+            when(doctorRepository.findById(2)).thenReturn(Optional.of(doctor));
+            when(imageClassificationRepository.existsByDoctorId(2)).thenReturn(true);
+
+            assertThat(service.delete(2).isSuccess()).isFalse();
             assertThat(cardio.getDoctorsCount()).isEqualTo(3);
         }
 
