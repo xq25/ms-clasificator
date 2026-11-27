@@ -40,10 +40,10 @@ Los puertos de persistencia (ADR-007) permiten probar los servicios de aplicaci�
 | `identity` | Cubierto (`InternalController` registro, adaptador `MsSecurityIdentityProvider`); `InternalService` pendiente |
 | `classification` | `ClassificationDiagnosisService` cubierto; `ImageClassificationService` solo `create` y `findById` |
 | `medicalimage` | `MedicalImageService` solo `uploadImage` y `delete`; `MedicalImageTypeService` pendiente |
-| `doctor` | `DoctorService` solo búsquedas y alta; `DoctorAreaService` y `EvaluationAreaService` pendientes |
+| `doctor` | Cubierto (`DoctorService`, `DoctorAreaService`, `EvaluationAreaService`) |
 | `diagnosiscatalog` | Cubierto (`MedicalDiagnosticService`) |
 
-Orden de los PRs pendientes: `doctor`, `medicalimage`, `classification` (incluye `InternalService`).
+Orden de los PRs pendientes: `medicalimage`, `classification` (incluye `InternalService`).
 
 ## Alternativas consideradas
 - **Tests de integración con H2 o Testcontainers.** Prueban también los adaptadores y las consultas, pero requieren dependencias nuevas. Quedan pendientes de aprobación.

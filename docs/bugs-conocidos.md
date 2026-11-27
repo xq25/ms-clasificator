@@ -8,6 +8,9 @@ Cada corrección se hace en su propia rama `fix/`. Si el bug tiene un test de ca
 
 | # | Ubicación | Problema | Impacto | Test |
 |---|-----------|----------|---------|------|
+| 19 | `DoctorService.update` | No valida que el código nuevo sea único. `create` sí lo valida ("Ya existe un doctor con el código: …") | La columna `code` es `unique`: un código repetido termina en error de BD al hacer commit (fuera del `catch`) en lugar de un mensaje claro | `DoctorServiceTest` › update › "BUG CONOCIDO #19" |
+| 20 | `DoctorService.delete` + `Doctor.doctorAreas` (`cascade = ALL`) | Al borrar un doctor, la cascada JPA borra sus asignaciones a áreas, pero no descuenta `EvaluationArea.doctorsCount` (`DoctorAreaService` sí lo hace al quitar una asignación) | El contador de doctores del área queda inflado. Requiere decidir: descontarlo al borrar, o calcularlo en lugar de guardarlo | `DoctorServiceTest` › delete › "BUG CONOCIDO #20" |
+| 21 | `EvaluationAreaService.delete` + `EvaluationArea.doctorAreas` (`cascade = ALL`, `orphanRemoval`) | Solo revisa tipos de imagen asociados. Si el área tiene doctores asignados, la cascada JPA borra esas asignaciones sin aviso | Los doctores pierden el área (y con ella el permiso de clasificar sus tipos de imagen) como efecto colateral. Requiere decidir: bloquear el borrado si hay doctores asignados, o permitirlo | `EvaluationAreaServiceTest` › delete › "BUG CONOCIDO #21" |
 
 ## Resueltos
 
