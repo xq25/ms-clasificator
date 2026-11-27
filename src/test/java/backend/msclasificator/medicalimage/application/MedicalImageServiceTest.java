@@ -5,6 +5,7 @@ import backend.msclasificator.clinicalrecord.application.port.out.ClinicalRecord
 import backend.msclasificator.clinicalrecord.domain.ClinicalRecord;
 import backend.msclasificator.medicalimage.api.dto.MedicalImageCreateDTO;
 import backend.msclasificator.medicalimage.api.dto.MedicalImageResponseDTO;
+import backend.msclasificator.medicalimage.api.dto.MedicalImageSummaryDTO;
 import backend.msclasificator.medicalimage.api.mapper.MedicalImageMapper;
 import backend.msclasificator.medicalimage.application.exception.ImageStorageException;
 import backend.msclasificator.medicalimage.application.port.out.ImageFile;
@@ -14,6 +15,10 @@ import backend.msclasificator.medicalimage.application.port.out.MedicalImageType
 import backend.msclasificator.medicalimage.domain.MedicalImage;
 import backend.msclasificator.medicalimage.domain.MedicalImageType;
 import backend.msclasificator.shared.api.ApiResponse;
+import backend.msclasificator.shared.api.PageRequestDTO;
+import backend.msclasificator.shared.api.PagedResponse;
+import backend.msclasificator.shared.application.PageQuery;
+import backend.msclasificator.shared.application.PageResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,6 +30,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayInputStream;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,7 +42,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doThrow;
 
-// Cubre uploadImage (validación de archivo, ADR-012) y delete; las lecturas quedan pendientes (ADR-008)
+// Cubre uploadImage (validación de archivo, ADR-012), delete y las lecturas (ADR-008)
 @ExtendWith(MockitoExtension.class)
 class MedicalImageServiceTest {
 
@@ -236,6 +242,137 @@ class MedicalImageServiceTest {
             assertThat(r.isSuccess()).isFalse();
             assertThat(r.getMessage()).isEqualTo("Error al eliminar imagen del storage. El registro no fue eliminado.");
             verify(medicalImageRepository, never()).delete(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("lecturas")
+    class Lecturas {
+
+        private final PageQuery query = new PageQuery(0, 10, "id", "asc");
+        private final MedicalImage imagen = MedicalImage.builder().imageKey("diagnostics/abc.png").build();
+        private final MedicalImageResponseDTO responseDTO = new MedicalImageResponseDTO();
+        private final MedicalImageSummaryDTO summary = new MedicalImageSummaryDTO();
+
+        @Test
+        @DisplayName("findAll: página de resúmenes")
+        void findAll() {
+            when(medicalImageRepository.findAll(query)).thenReturn(new PageResult<>(List.of(imagen), 0, 10, 1, 1, true));
+            when(mapper.toSummaryDTO(imagen)).thenReturn(summary);
+
+            ApiResponse<PagedResponse<MedicalImageSummaryDTO>> r = service.findAll(new PageRequestDTO());
+
+            assertThat(r.getMessage()).isEqualTo("Imágenes médicas obtenidas exitosamente");
+            assertThat(r.getData().getContent()).containsExactly(summary);
+        }
+
+        @Test
+        @DisplayName("count: devuelve el total del repositorio")
+        void count() {
+            when(medicalImageRepository.count()).thenReturn(36L);
+
+            assertThat(service.count().getData()).isEqualTo(36L);
+        }
+
+        @Test
+        @DisplayName("findById existente: devuelve el DTO (con la URL que genera el mapper)")
+        void findByIdExiste() {
+            when(medicalImageRepository.findById(5)).thenReturn(Optional.of(imagen));
+            when(mapper.toResponseDTO(imagen)).thenReturn(responseDTO);
+
+            ApiResponse<MedicalImageResponseDTO> r = service.findById(5);
+
+            assertThat(r.getData()).isSameAs(responseDTO);
+            assertThat(r.getMessage()).isEqualTo("Imagen médica obtenida exitosamente");
+        }
+
+        @Test
+        @DisplayName("findById inexistente: error con el ID")
+        void findByIdNoExiste() {
+            when(medicalImageRepository.findById(5)).thenReturn(Optional.empty());
+
+            assertThat(service.findById(5).getMessage()).isEqualTo("Imagen médica no encontrada con ID: 5");
+        }
+
+        @Test
+        @DisplayName("findByMedicalImageType con tipo inexistente: error")
+        void porTipoInexistente() {
+            when(medicalImageTypeRepository.existsById(1)).thenReturn(false);
+
+            ApiResponse<PagedResponse<MedicalImageResponseDTO>> r = service.findByMedicalImageType(1, new PageRequestDTO());
+
+            assertThat(r.isSuccess()).isFalse();
+            assertThat(r.getMessage()).isEqualTo("No se encontró el tipo de imagen médica con ID: 1");
+        }
+
+        @Test
+        @DisplayName("findByMedicalImageType: página con el DTO de respuesta")
+        void porTipo() {
+            when(medicalImageTypeRepository.existsById(1)).thenReturn(true);
+            when(medicalImageRepository.findByMedicalImageTypeId(1, query)).thenReturn(new PageResult<>(List.of(imagen), 0, 10, 1, 1, true));
+            when(mapper.toResponseDTO(imagen)).thenReturn(responseDTO);
+
+            ApiResponse<PagedResponse<MedicalImageResponseDTO>> r = service.findByMedicalImageType(1, new PageRequestDTO());
+
+            assertThat(r.getMessage()).isEqualTo("Imágenes médicas obtenidas exitosamente");
+            assertThat(r.getData().getContent()).containsExactly(responseDTO);
+        }
+
+        @Test
+        @DisplayName("findByClinicalRecord con historia inexistente: error")
+        void porHistoriaInexistente() {
+            when(clinicalRecordRepository.existsById(7)).thenReturn(false);
+
+            ApiResponse<PagedResponse<MedicalImageSummaryDTO>> r = service.findByClinicalRecord(7, new PageRequestDTO());
+
+            assertThat(r.getMessage()).isEqualTo("No se encontró el registro clínico con ID: 7");
+        }
+
+        @Test
+        @DisplayName("findByClinicalRecord con imágenes: mensaje de encontradas")
+        void porHistoria() {
+            when(clinicalRecordRepository.existsById(7)).thenReturn(true);
+            when(medicalImageRepository.findByClinicalRecordId(7, query)).thenReturn(new PageResult<>(List.of(imagen), 0, 10, 1, 1, true));
+            when(mapper.toSummaryDTO(imagen)).thenReturn(summary);
+
+            ApiResponse<PagedResponse<MedicalImageSummaryDTO>> r = service.findByClinicalRecord(7, new PageRequestDTO());
+
+            assertThat(r.getMessage()).isEqualTo("Imágenes médicas obtenidas exitosamente");
+            assertThat(r.getData().getContent()).containsExactly(summary);
+        }
+
+        @Test
+        @DisplayName("findByClinicalRecord sin imágenes: éxito con mensaje de vacío")
+        void porHistoriaVacia() {
+            when(clinicalRecordRepository.existsById(7)).thenReturn(true);
+            when(medicalImageRepository.findByClinicalRecordId(7, query)).thenReturn(new PageResult<>(List.of(), 0, 10, 0, 0, true));
+
+            ApiResponse<PagedResponse<MedicalImageSummaryDTO>> r = service.findByClinicalRecord(7, new PageRequestDTO());
+
+            assertThat(r.isSuccess()).isTrue();
+            assertThat(r.getMessage()).isEqualTo("No se encontraron imágenes médicas para este clinical record");
+        }
+
+        @Test
+        @DisplayName("findUndiagnosedByDoctorAndMedicalImageType con tipo inexistente: error")
+        void pendientesTipoInexistente() {
+            when(medicalImageTypeRepository.existsById(1)).thenReturn(false);
+
+            assertThat(service.findUndiagnosedByDoctorAndMedicalImageType(2, 1).getMessage())
+                    .isEqualTo("No se encontró el tipo de imagen médica con ID: 1");
+        }
+
+        @Test
+        @DisplayName("findUndiagnosedByDoctorAndMedicalImageType: imágenes que el doctor aún no clasificó")
+        void pendientes() {
+            when(medicalImageTypeRepository.existsById(1)).thenReturn(true);
+            when(medicalImageRepository.findUndiagnosedImagesByDoctorAndMedicalImageType(2, 1)).thenReturn(List.of(imagen));
+            when(mapper.toResponseDTO(imagen)).thenReturn(responseDTO);
+
+            ApiResponse<List<MedicalImageResponseDTO>> r = service.findUndiagnosedByDoctorAndMedicalImageType(2, 1);
+
+            assertThat(r.getMessage()).isEqualTo("Imágenes médicas no diagnosticadas obtenidas exitosamente");
+            assertThat(r.getData()).containsExactly(responseDTO);
         }
     }
 }
