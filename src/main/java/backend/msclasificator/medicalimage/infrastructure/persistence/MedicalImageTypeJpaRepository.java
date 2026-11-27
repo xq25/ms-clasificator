@@ -18,6 +18,8 @@ public interface MedicalImageTypeJpaRepository extends JpaRepository<MedicalImag
 
 	boolean existsByName(String name);
 
+	boolean existsByNameAndIdNot(String name, Integer id);
+
 	@Query("SELECT COUNT(m) FROM MedicalImageType m")
 	long countAll();
 

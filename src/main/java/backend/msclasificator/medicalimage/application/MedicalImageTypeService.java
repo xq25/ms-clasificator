@@ -13,6 +13,7 @@ import backend.msclasificator.doctor.domain.EvaluationArea;
 import backend.msclasificator.medicalimage.domain.MedicalImageType;
 import backend.msclasificator.doctor.application.port.out.EvaluationAreaRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageTypeRepository;
+import backend.msclasificator.dataset.application.port.out.DatasetRepository;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,9 @@ public class MedicalImageTypeService {
 
     @Autowired
     private MedicalImageTypeMapper medicalImageTypeMapper;
+
+    @Autowired
+    private DatasetRepository datasetRepository;
 
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<MedicalImageTypeSummaryDTO>> findAll(PageRequestDTO pageRequest) {
@@ -136,8 +140,8 @@ public class MedicalImageTypeService {
             MedicalImageType medicalImageType = medicalImageTypeRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Tipo de imagen médica no encontrado con ID: " + id));
 
-            // Validamos el que el nombre sea unico
-            if (this.medicalImageTypeRepository.existsByName(dto.getName())) {
+            // Validamos que el nombre sea unico, excluyendo el propio tipo (bug #22)
+            if (this.medicalImageTypeRepository.existsByNameAndIdNot(dto.getName(), id)) {
                 return ApiResponse.error("Ya existe un tipo de imagen con el nombre: " + dto.getName());
             }
             medicalImageType.setName(dto.getName());
@@ -157,6 +161,11 @@ public class MedicalImageTypeService {
 
             if (medicalImgRepository.existsByMedicalImageTypeId(id)) {
                 return ApiResponse.error("No se puede eliminar el tipo de imagen porque tiene imágenes médicas asociadas");
+            }
+
+            // Los datasets nunca se borran físicamente (ADR-011, bug #23)
+            if (datasetRepository.existsByMedicalImageTypeIdIncludingRetired(id)) {
+                return ApiResponse.error("No se puede eliminar el tipo de imagen porque tiene datasets configurados (incluidos retirados)");
             }
 
             medicalImageTypeRepository.delete(medicalImageType);

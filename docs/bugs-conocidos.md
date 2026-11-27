@@ -8,8 +8,6 @@ Cada corrección se hace en su propia rama `fix/`. Si el bug tiene un test de ca
 
 | # | Ubicación | Problema | Impacto | Test |
 |---|-----------|----------|---------|------|
-| 22 | `MedicalImageTypeService.update` | La validación de nombre único usa `existsByName` sin excluir el propio tipo | Enviar el nombre actual del tipo se rechaza como duplicado ("Ya existe un tipo de imagen con el nombre: …") | `MedicalImageTypeServiceTest` › update › "BUG CONOCIDO #22" |
-| 23 | `MedicalImageTypeService.delete` + `MedicalImageType.datasets` (`cascade = ALL`, `orphanRemoval`) | Solo revisa imágenes asociadas. Si el tipo tiene datasets (activos o retirados), la cascada JPA los borra físicamente junto con sus categorías y diagnósticos de categoría | Contradice ADR-011 (los datasets se retiran, nunca se borran) y pierde el historial de configuración sin aviso. Requiere decidir: bloquear el borrado si hay datasets, o permitirlo | `MedicalImageTypeServiceTest` › delete › "BUG CONOCIDO #23" |
 
 ## Resueltos
 
@@ -36,3 +34,5 @@ Cada corrección se hace en su propia rama `fix/`. Si el bug tiene un test de ca
 | 19 | `DoctorService.update` | No validaba que el código nuevo fuera único (`create` sí); un repetido terminaba en error de BD al hacer commit | Se valida excluyendo al propio doctor, con el mensaje de `create`: "Ya existe un doctor con el código: …. El código debe ser único." | `fix/doctor-codigo-y-contadores` |
 | 20 | `DoctorService.delete` | La cascada borraba las asignaciones a áreas sin descontar `EvaluationArea.doctorsCount` | Antes de borrar se descuenta el contador de cada área del doctor, igual que al quitar una asignación | `fix/doctor-codigo-y-contadores` |
 | 21 | `EvaluationAreaService.delete` | Borraba en cascada las asignaciones de doctores del área sin aviso | Por decisión del responsable se mantiene el borrado en cascada, y el mensaje de éxito indica cuántas asignaciones se quitaron | `fix/doctor-codigo-y-contadores` |
+| 22 | `MedicalImageTypeService.update` | La validación de nombre único no excluía el propio tipo: su nombre actual se rechazaba como duplicado | Se valida con `existsByNameAndIdNot` (puerto nuevo); el nombre de otro tipo se sigue rechazando con el mismo mensaje | `fix/medicalimagetype-nombre-y-datasets` |
+| 23 | `MedicalImageTypeService.delete` + `MedicalImageType.datasets` | La cascada JPA borraba físicamente los datasets del tipo (también retirados), contra ADR-011 | El borrado se rechaza si el tipo tiene datasets, incluidos retirados (`DatasetRepository.existsByMedicalImageTypeIdIncludingRetired`), y se quita la cascada. Sin cambios de esquema | `fix/medicalimagetype-nombre-y-datasets` |

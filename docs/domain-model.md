@@ -207,6 +207,10 @@ Reglas vigentes del feature `dataset`. Están verificadas por los tests de `src/
 - El **tipo** de un `PrimitiveDatum` solo se puede cambiar si no tiene valores de pacientes registrados. El nombre y la unidad se pueden editar siempre.
 - Un `PrimitiveDatum` con valores de pacientes registrados **no se puede eliminar**: los datos clínicos nunca se borran como efecto colateral.
 
+### MedicalImageType
+- El nombre de un tipo de imagen es único, al crearlo y al editarlo.
+- Un tipo de imagen no se puede borrar si tiene imágenes médicas o datasets, incluidos los retirados (ADR-011: los datasets nunca se borran físicamente).
+
 ### Doctor, DoctorArea y EvaluationArea
 - El código de un doctor es único, al crearlo y al editarlo.
 - `EvaluationArea.doctorsCount` cuenta los doctores asignados: sube al asignar, baja al quitar la asignación y baja también cuando se borra un doctor asignado.
