@@ -22,6 +22,9 @@ public interface MedicalImageTypeRepository {
 
     boolean existsByName(String name);
 
+    // Nombre en uso por otro tipo de imagen (bug #22)
+    boolean existsByNameAndIdNot(String name, Integer id);
+
     boolean existsByEvaluationAreaId(Integer evaluationAreaId);
 
     long count();

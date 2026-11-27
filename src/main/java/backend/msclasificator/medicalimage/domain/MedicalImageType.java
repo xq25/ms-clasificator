@@ -29,9 +29,10 @@ public class MedicalImageType {
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     private EvaluationArea evaluationArea;
 
-    // Lo colocamos solo por el cascade. Un dataset no puede existir si se borra el tipo de imagen que iba a clasificar.
     // Varios datasets por tipo (uno activo + retirados, ADR-011); la unicidad del activo la valida el servicio.
+    // Sin cascada (bug #23): los datasets nunca se borran físicamente. MedicalImageTypeService.delete
+    // rechaza el borrado si el tipo tiene datasets, incluidos los retirados.
     @JsonIgnore
-    @OneToMany(mappedBy = "medicalImageType", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "medicalImageType")
     private List<Dataset> datasets;
 }

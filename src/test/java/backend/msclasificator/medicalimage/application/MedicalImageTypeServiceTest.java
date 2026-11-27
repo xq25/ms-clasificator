@@ -1,6 +1,6 @@
 package backend.msclasificator.medicalimage.application;
 
-import backend.msclasificator.dataset.domain.Dataset;
+import backend.msclasificator.dataset.application.port.out.DatasetRepository;
 import backend.msclasificator.doctor.application.port.out.EvaluationAreaRepository;
 import backend.msclasificator.doctor.domain.EvaluationArea;
 import backend.msclasificator.medicalimage.api.dto.MedicalImageTypeCreateDTO;
@@ -45,6 +45,7 @@ class MedicalImageTypeServiceTest {
     @Mock private MedicalImageRepository medicalImageRepository;
     @Mock private EvaluationAreaRepository evaluationAreaRepository;
     @Mock private MedicalImageTypeMapper mapper;
+    @Mock private DatasetRepository datasetRepository;
 
     @InjectMocks private MedicalImageTypeService service;
 
@@ -231,7 +232,7 @@ class MedicalImageTypeServiceTest {
         @DisplayName("nombre de otro tipo: error sin guardar")
         void nombreDeOtro() {
             when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.of(ecg));
-            when(medicalImageTypeRepository.existsByName("Rx de tórax")).thenReturn(true);
+            when(medicalImageTypeRepository.existsByNameAndIdNot("Rx de tórax", 1)).thenReturn(true);
 
             assertThat(service.update(1, updateDTO("Rx de tórax")).getMessage()).isEqualTo("Ya existe un tipo de imagen con el nombre: Rx de tórax");
             verify(medicalImageTypeRepository, never()).save(any());
@@ -241,7 +242,7 @@ class MedicalImageTypeServiceTest {
         @DisplayName("válido: cambia el nombre y conserva el área")
         void valido() {
             when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.of(ecg));
-            when(medicalImageTypeRepository.existsByName("ECG de 12 derivaciones")).thenReturn(false);
+            when(medicalImageTypeRepository.existsByNameAndIdNot("ECG de 12 derivaciones", 1)).thenReturn(false);
             when(medicalImageTypeRepository.save(ecg)).thenReturn(ecg);
             when(mapper.toResponseDTO(ecg)).thenReturn(responseDTO);
 
@@ -254,15 +255,16 @@ class MedicalImageTypeServiceTest {
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO #22: su propio nombre se rechaza como duplicado (no se excluye el propio tipo)")
-        void propioNombreRechazado() {
+        @DisplayName("su propio nombre: se acepta (bug #22)")
+        void propioNombre() {
             when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.of(ecg));
-            when(medicalImageTypeRepository.existsByName("Electrocardiograma")).thenReturn(true);
+            when(medicalImageTypeRepository.existsByNameAndIdNot("Electrocardiograma", 1)).thenReturn(false);
+            when(medicalImageTypeRepository.save(ecg)).thenReturn(ecg);
 
             ApiResponse<MedicalImageTypeResponseDTO> r = service.update(1, updateDTO("Electrocardiograma"));
 
-            assertThat(r.isSuccess()).isFalse();
-            assertThat(r.getMessage()).isEqualTo("Ya existe un tipo de imagen con el nombre: Electrocardiograma");
+            assertThat(r.isSuccess()).isTrue();
+            assertThat(r.getMessage()).isEqualTo("Tipo de imagen actualizado exitosamente");
         }
     }
 
@@ -291,10 +293,11 @@ class MedicalImageTypeServiceTest {
         }
 
         @Test
-        @DisplayName("sin imágenes: elimina")
+        @DisplayName("sin imágenes ni datasets: elimina")
         void valido() {
             when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.of(ecg));
             when(medicalImageRepository.existsByMedicalImageTypeId(1)).thenReturn(false);
+            when(datasetRepository.existsByMedicalImageTypeIdIncludingRetired(1)).thenReturn(false);
 
             ApiResponse<Void> r = service.delete(1);
 
@@ -304,16 +307,17 @@ class MedicalImageTypeServiceTest {
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO #23: con datasets (incluso retirados) elimina igual; en BD la cascada los borra físicamente")
+        @DisplayName("con datasets (incluidos retirados): error sin eliminar (bug #23)")
         void conDatasets() {
-            ecg.setDatasets(List.of(Dataset.builder().id(4).name("ECG").build()));
             when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.of(ecg));
             when(medicalImageRepository.existsByMedicalImageTypeId(1)).thenReturn(false);
+            when(datasetRepository.existsByMedicalImageTypeIdIncludingRetired(1)).thenReturn(true);
 
             ApiResponse<Void> r = service.delete(1);
 
-            assertThat(r.isSuccess()).isTrue();
-            verify(medicalImageTypeRepository).delete(any());
+            assertThat(r.isSuccess()).isFalse();
+            assertThat(r.getMessage()).isEqualTo("No se puede eliminar el tipo de imagen porque tiene datasets configurados (incluidos retirados)");
+            verify(medicalImageTypeRepository, never()).delete(any());
         }
 
         @Test
@@ -321,6 +325,7 @@ class MedicalImageTypeServiceTest {
         void violacionIntegridad() {
             when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.of(ecg));
             when(medicalImageRepository.existsByMedicalImageTypeId(1)).thenReturn(false);
+            when(datasetRepository.existsByMedicalImageTypeIdIncludingRetired(1)).thenReturn(false);
             doThrow(new DataIntegrityViolationException("fk")).when(medicalImageTypeRepository).delete(ecg);
 
             assertThat(service.delete(1).getMessage()).isEqualTo("Violacion de integridad de la base de datos: fk");

@@ -50,6 +50,11 @@ class MedicalImageTypePersistenceAdapter implements MedicalImageTypeRepository {
     }
 
     @Override
+    public boolean existsByNameAndIdNot(String name, Integer id) {
+        return jpa.existsByNameAndIdNot(name, id);
+    }
+
+    @Override
     public boolean existsByEvaluationAreaId(Integer evaluationAreaId) {
         return jpa.existsByEvaluationAreaId(evaluationAreaId);
     }
