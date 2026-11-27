@@ -6,6 +6,8 @@ import backend.msclasificator.doctor.api.dto.EvaluationAreaSummaryDTO;
 import backend.msclasificator.doctor.api.dto.EvaluationAreaUpdateDTO;
 import backend.msclasificator.doctor.api.mapper.EvaluationAreaMapper;
 import backend.msclasificator.doctor.application.port.out.EvaluationAreaRepository;
+import backend.msclasificator.doctor.domain.Doctor;
+import backend.msclasificator.doctor.domain.DoctorArea;
 import backend.msclasificator.doctor.domain.EvaluationArea;
 import backend.msclasificator.medicalimage.application.port.out.MedicalImageTypeRepository;
 import backend.msclasificator.shared.api.ApiResponse;
@@ -287,8 +289,8 @@ class EvaluationAreaServiceTest {
         }
 
         @Test
-        @DisplayName("BUG CONOCIDO #21: con doctores asignados (doctorsCount=3) elimina igual; en BD la cascada borra las asignaciones")
-        void conDoctoresAsignados() {
+        @DisplayName("sin doctores asignados: elimina con el mensaje de siempre")
+        void sinDoctores() {
             when(evaluationAreaRepository.findById(1)).thenReturn(Optional.of(cardio));
             when(medicalImageTypeRepository.existsByEvaluationAreaId(1)).thenReturn(false);
 
@@ -297,6 +299,34 @@ class EvaluationAreaServiceTest {
             assertThat(r.isSuccess()).isTrue();
             assertThat(r.getMessage()).isEqualTo("Área de evaluación eliminada exitosamente");
             verify(evaluationAreaRepository).delete(cardio);
+        }
+
+        @Test
+        @DisplayName("con doctores asignados: elimina y avisa cuántas asignaciones se quitaron (bug #21)")
+        void conDoctoresAsignados() {
+            cardio.setDoctorAreas(List.of(
+                    DoctorArea.builder().id(7).doctor(Doctor.builder().id(2).build()).evaluationArea(cardio).build(),
+                    DoctorArea.builder().id(8).doctor(Doctor.builder().id(4).build()).evaluationArea(cardio).build()));
+            when(evaluationAreaRepository.findById(1)).thenReturn(Optional.of(cardio));
+            when(medicalImageTypeRepository.existsByEvaluationAreaId(1)).thenReturn(false);
+
+            ApiResponse<Void> r = service.delete(1);
+
+            assertThat(r.isSuccess()).isTrue();
+            assertThat(r.getMessage()).isEqualTo("Área de evaluación eliminada exitosamente. Se quitaron 2 asignaciones de doctores");
+            verify(evaluationAreaRepository).delete(any());
+        }
+
+        @Test
+        @DisplayName("con un doctor asignado: mensaje en singular")
+        void conUnDoctor() {
+            cardio.setDoctorAreas(List.of(
+                    DoctorArea.builder().id(7).doctor(Doctor.builder().id(2).build()).evaluationArea(cardio).build()));
+            when(evaluationAreaRepository.findById(1)).thenReturn(Optional.of(cardio));
+            when(medicalImageTypeRepository.existsByEvaluationAreaId(1)).thenReturn(false);
+
+            assertThat(service.delete(1).getMessage())
+                    .isEqualTo("Área de evaluación eliminada exitosamente. Se quitó 1 asignación de doctor");
         }
 
         @Test

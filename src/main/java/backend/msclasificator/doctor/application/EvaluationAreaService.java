@@ -204,7 +204,14 @@ public class EvaluationAreaService {
                 return ApiResponse.error("No se puede eliminar el área de evaluación porque tiene tipos de imágenes médicas asociadas");
             }
 
+            // La cascada quita las asignaciones de doctores del área; se avisa cuántas (bug #21)
+            int asignaciones = evaluationArea.getDoctorAreas() != null ? evaluationArea.getDoctorAreas().size() : 0;
+
             evaluationAreaRepository.delete(evaluationArea);
+            if (asignaciones > 0) {
+                return ApiResponse.success("Área de evaluación eliminada exitosamente. "
+                        + (asignaciones == 1 ? "Se quitó 1 asignación de doctor" : "Se quitaron " + asignaciones + " asignaciones de doctores"));
+            }
             return ApiResponse.success("Área de evaluación eliminada exitosamente");
 
         } catch (DataIntegrityViolationException ex) {
