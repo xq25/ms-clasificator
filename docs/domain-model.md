@@ -207,6 +207,12 @@ Reglas vigentes del feature `dataset`. Están verificadas por los tests de `src/
 - El **tipo** de un `PrimitiveDatum` solo se puede cambiar si no tiene valores de pacientes registrados. El nombre y la unidad se pueden editar siempre.
 - Un `PrimitiveDatum` con valores de pacientes registrados **no se puede eliminar**: los datos clínicos nunca se borran como efecto colateral.
 
+### Doctor, DoctorArea y EvaluationArea
+- El código de un doctor es único, al crearlo y al editarlo.
+- `EvaluationArea.doctorsCount` cuenta los doctores asignados: sube al asignar, baja al quitar la asignación y baja también cuando se borra un doctor asignado.
+- Un doctor con clasificaciones de imágenes no se puede borrar. Al borrarlo se quitan sus asignaciones a áreas.
+- Un área con tipos de imagen asociados no se puede borrar. Si tiene doctores asignados, se borra igual: se quitan esas asignaciones y el mensaje indica cuántas.
+
 ### Alta de Patient y Doctor
 - El `userId` debe existir en ms-security. Si ms-security responde que no existe (o 404), el alta da error. Si ms-security falla, responde **503** (ADR-009).
 - **Todo o nada:** se valida, se guarda y, como último paso, se asigna el rol por defecto (`patient`/`doctor`) en ms-security. Si la asignación falla, se revierte el guardado y no queda ningún registro sin rol.
