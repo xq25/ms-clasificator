@@ -107,8 +107,12 @@ public class DiagnosisService {
                     .orElseThrow(() -> new IllegalArgumentException("Clinical Record no encontrado con ID: " + dto.getClinicalRecordId()));
 
             // Validamos que exista el medicalDiagnostic
-            MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(dto.getMedicalDiagnosticId())
+            MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findByIdIncludingRetired(dto.getMedicalDiagnosticId())
                     .orElseThrow(() -> new IllegalArgumentException("Medical Diagnostic no encontrado con ID: " + dto.getMedicalDiagnosticId()));
+            // Un diagnóstico retirado no se registra en historias clínicas nuevas (ADR-013)
+            if (Boolean.FALSE.equals(medicalDiagnostic.getActive())) {
+                return ApiResponse.error("El diagnóstico " + medicalDiagnostic.getDiagnosticCode() + " está retirado del catálogo");
+            }
 
             // Generamos la entidad vacia
             Diagnosis diagnosis = diagnosisMapper.toEntity(dto);

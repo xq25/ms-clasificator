@@ -22,8 +22,11 @@ public interface CategoryDiagnosticRepository {
     // Categoría activa del dataset a la que está asignado el diagnóstico (a lo sumo una)
     Optional<CategoryDiagnostic> findByDatasetIdAndMedicalDiagnosticId(Integer datasetId, Integer medicalDiagnosticId);
 
-    // Incluye retiradas: un diagnóstico que alguna vez definió una categoría no se puede borrar del catálogo
+    // Diagnóstico que define alguna categoría ACTIVA (asignación activa en categoría activa): bloquea su retiro (ADR-013)
     boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);
+
+    // Incluye retiradas: un sub-diagnóstico que alguna vez definió una categoría no se separa de su padre
+    boolean existsByMedicalDiagnosticIdIncludingRetired(Integer medicalDiagnosticId);
 
     // Definición de la categoría vigente en un instante: asignaciones creadas antes y no retiradas hasta entonces
     List<CategoryDiagnostic> findDefinitionAt(Integer datasetCategoryId, LocalDateTime at);

@@ -27,6 +27,8 @@ public interface CategoryDiagnosticJpaRepository extends JpaRepository<CategoryD
 
     boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);
 
+    boolean existsByMedicalDiagnosticIdAndActiveTrueAndDatasetCategoryActiveTrue(Integer medicalDiagnosticId);
+
     @Query("""
         SELECT cd
         FROM CategoryDiagnostic cd

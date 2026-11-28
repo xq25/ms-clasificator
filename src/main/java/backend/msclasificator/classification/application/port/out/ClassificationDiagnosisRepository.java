@@ -19,7 +19,6 @@ public interface ClassificationDiagnosisRepository {
 
     boolean existsByImageClassificationIdAndMedicalDiagnosticId(Integer imageClassificationId, Integer medicalDiagnosticId);
 
-    boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);
 
     long count();
 

@@ -18,6 +18,8 @@
 --     active filtra y valida; deleted_at registra cuándo se retiró.
 --   * diagnostic_category_dataset.created_at/deleted_at definen la vigencia de cada
 --     diagnóstico en su categoría (definición histórica, ADR-011).
+--   * medical_diagnostic: soft delete (ADR-013). active tiene DEFAULT 1 por los INSERT
+--     de 02-data.sql. diagnostic_code SÍ es UNIQUE: un código nunca se reutiliza.
 --   * medical_image_type: soft delete (ADR-013). active tiene DEFAULT 1 para que los
 --     INSERT de 02-data.sql (que no lo nombran) creen tipos activos. name NO es UNIQUE:
 --     la unicidad es solo entre tipos activos y la valida el servicio.
@@ -125,8 +127,10 @@
     ) engine=InnoDB;
 
     create table medical_diagnostic (
+        active bit not null default 1,
         id integer not null auto_increment,
         parent_diagnostic_id integer,
+        deleted_at datetime(6),
         diagnostic_code varchar(255) not null,
         diagnostic_name varchar(255),
         primary key (id)

@@ -38,10 +38,6 @@ class DiagnosisPersistenceAdapter implements DiagnosisRepository {
         return jpa.countAll();
     }
 
-    @Override
-    public boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId) {
-        return jpa.existsByMedicalDiagnosticId(medicalDiagnosticId);
-    }
 
     @Override
     public Diagnosis save(Diagnosis diagnosis) {

@@ -47,6 +47,11 @@ class CategoryDiagnosticPersistenceAdapter implements CategoryDiagnosticReposito
 
     @Override
     public boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId) {
+        return jpa.existsByMedicalDiagnosticIdAndActiveTrueAndDatasetCategoryActiveTrue(medicalDiagnosticId);
+    }
+
+    @Override
+    public boolean existsByMedicalDiagnosticIdIncludingRetired(Integer medicalDiagnosticId) {
         return jpa.existsByMedicalDiagnosticId(medicalDiagnosticId);
     }
 

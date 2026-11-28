@@ -1,7 +1,5 @@
 package backend.msclasificator.diagnosiscatalog.application;
 
-import backend.msclasificator.classification.application.port.out.ClassificationDiagnosisRepository;
-import backend.msclasificator.clinicalrecord.application.port.out.DiagnosisRepository;
 import backend.msclasificator.dataset.application.port.out.CategoryDiagnosticRepository;
 import backend.msclasificator.dataset.application.port.out.DatasetRepository;
 import backend.msclasificator.diagnosiscatalog.api.dto.MedicalDiagnosticCreateDTO;
@@ -44,11 +42,9 @@ class MedicalDiagnosticServiceTest {
     private static final PageQuery QUERY = new PageQuery(0, 10, "id", "asc");
 
     @Mock private MedicalDiagnosticRepository medicalDiagnosticRepository;
-    @Mock private ClassificationDiagnosisRepository classificationDiagnosisRepository;
     @Mock private MedicalDiagnosticMapper mapper;
     @Mock private CategoryDiagnosticRepository categoryDiagnosticRepository;
     @Mock private DatasetRepository datasetRepository;
-    @Mock private DiagnosisRepository diagnosisRepository;
 
     @InjectMocks private MedicalDiagnosticService service;
 
@@ -146,7 +142,7 @@ class MedicalDiagnosticServiceTest {
         @Test
         @DisplayName("findById existente: devuelve el DTO")
         void findByIdExiste() {
-            when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
+            when(medicalDiagnosticRepository.findByIdIncludingRetired(2)).thenReturn(Optional.of(infarto));
             when(mapper.toResponseDTO(infarto)).thenReturn(responseDTO);
 
             ApiResponse<MedicalDiagnosticResponseDTO> r = service.findById(2);
@@ -158,7 +154,7 @@ class MedicalDiagnosticServiceTest {
         @Test
         @DisplayName("findById inexistente: error con el ID")
         void findByIdNoExiste() {
-            when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.empty());
+            when(medicalDiagnosticRepository.findByIdIncludingRetired(2)).thenReturn(Optional.empty());
 
             assertThat(service.findById(2).getMessage()).isEqualTo("Diagnóstico médico no encontrado con ID: 2");
         }
@@ -203,7 +199,7 @@ class MedicalDiagnosticServiceTest {
         @DisplayName("código duplicado: error sin guardar")
         void codigoDuplicado() {
             MedicalDiagnosticCreateDTO dto = MedicalDiagnosticCreateDTO.builder().diagnosticCode("I21").diagnosticName("x").build();
-            when(medicalDiagnosticRepository.findByDiagnosticCode("I21")).thenReturn(Optional.of(infarto));
+            when(medicalDiagnosticRepository.findByDiagnosticCodeIncludingRetired("I21")).thenReturn(Optional.of(infarto));
 
             ApiResponse<MedicalDiagnosticResponseDTO> r = service.create(dto);
 
@@ -216,7 +212,7 @@ class MedicalDiagnosticServiceTest {
         void sinPadre() {
             MedicalDiagnosticCreateDTO dto = MedicalDiagnosticCreateDTO.builder().diagnosticCode("I50").diagnosticName("Insuficiencia cardíaca").build();
             MedicalDiagnostic nuevo = new MedicalDiagnostic();
-            when(medicalDiagnosticRepository.findByDiagnosticCode("I50")).thenReturn(Optional.empty());
+            when(medicalDiagnosticRepository.findByDiagnosticCodeIncludingRetired("I50")).thenReturn(Optional.empty());
             when(mapper.toEntity(dto)).thenReturn(nuevo);
             when(medicalDiagnosticRepository.save(nuevo)).thenReturn(nuevo);
             when(mapper.toResponseDTO(nuevo)).thenReturn(responseDTO);
@@ -233,7 +229,7 @@ class MedicalDiagnosticServiceTest {
         void conPadre() {
             MedicalDiagnosticCreateDTO dto = MedicalDiagnosticCreateDTO.builder().diagnosticCode("I22").diagnosticName("Infarto subsecuente").parentDiagnosticId(1).build();
             MedicalDiagnostic nuevo = new MedicalDiagnostic();
-            when(medicalDiagnosticRepository.findByDiagnosticCode("I22")).thenReturn(Optional.empty());
+            when(medicalDiagnosticRepository.findByDiagnosticCodeIncludingRetired("I22")).thenReturn(Optional.empty());
             when(mapper.toEntity(dto)).thenReturn(nuevo);
             when(medicalDiagnosticRepository.findById(1)).thenReturn(Optional.of(cardiopatiaIsquemica));
             when(medicalDiagnosticRepository.save(nuevo)).thenReturn(nuevo);
@@ -246,7 +242,7 @@ class MedicalDiagnosticServiceTest {
         @DisplayName("con padre inexistente: error sin guardar")
         void padreInexistente() {
             MedicalDiagnosticCreateDTO dto = MedicalDiagnosticCreateDTO.builder().diagnosticCode("I22").diagnosticName("x").parentDiagnosticId(99).build();
-            when(medicalDiagnosticRepository.findByDiagnosticCode("I22")).thenReturn(Optional.empty());
+            when(medicalDiagnosticRepository.findByDiagnosticCodeIncludingRetired("I22")).thenReturn(Optional.empty());
             when(mapper.toEntity(dto)).thenReturn(new MedicalDiagnostic());
             when(medicalDiagnosticRepository.findById(99)).thenReturn(Optional.empty());
 
@@ -279,7 +275,7 @@ class MedicalDiagnosticServiceTest {
         @DisplayName("código de otro diagnóstico: error sin guardar")
         void codigoDeOtro() {
             when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
-            when(medicalDiagnosticRepository.findByDiagnosticCode("I20")).thenReturn(Optional.of(cardiopatiaIsquemica));
+            when(medicalDiagnosticRepository.findByDiagnosticCodeIncludingRetired("I20")).thenReturn(Optional.of(cardiopatiaIsquemica));
 
             ApiResponse<MedicalDiagnosticResponseDTO> r = service.update(2, updateDTO("I20", "x"));
 
@@ -291,7 +287,7 @@ class MedicalDiagnosticServiceTest {
         @DisplayName("válido: cambia código y nombre, conserva el padre")
         void valido() {
             when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
-            when(medicalDiagnosticRepository.findByDiagnosticCode("I21")).thenReturn(Optional.of(infarto));
+            when(medicalDiagnosticRepository.findByDiagnosticCodeIncludingRetired("I21")).thenReturn(Optional.of(infarto));
             when(medicalDiagnosticRepository.save(infarto)).thenReturn(infarto);
             when(mapper.toResponseDTO(infarto)).thenReturn(responseDTO);
 
@@ -305,11 +301,18 @@ class MedicalDiagnosticServiceTest {
     }
 
     @Nested
-    @DisplayName("delete")
+    @DisplayName("delete (soft delete, ADR-013)")
     class Delete {
 
+        private void libre() {
+            when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
+            when(medicalDiagnosticRepository.countActiveChildren(2)).thenReturn(0L);
+            when(categoryDiagnosticRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
+            when(datasetRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
+        }
+
         @Test
-        @DisplayName("no existe: error con el ID")
+        @DisplayName("no existe o ya está retirado: error con el ID")
         void noExiste() {
             when(medicalDiagnosticRepository.findById(1)).thenReturn(Optional.empty());
 
@@ -317,104 +320,76 @@ class MedicalDiagnosticServiceTest {
         }
 
         @Test
-        @DisplayName("con sub-diagnósticos: error sin eliminar")
-        void conHijos() {
+        @DisplayName("con sub-diagnósticos activos: error sin retirar")
+        void conHijosActivos() {
             when(medicalDiagnosticRepository.findById(1)).thenReturn(Optional.of(cardiopatiaIsquemica));
-            when(medicalDiagnosticRepository.existsByParentDiagnosticId(1)).thenReturn(true);
+            when(medicalDiagnosticRepository.countActiveChildren(1)).thenReturn(4L);
 
             ApiResponse<Void> r = service.delete(1);
 
-            assertThat(r.getMessage()).isEqualTo("El diagnóstico médico no se puede eliminar porque tiene sub-diagnósticos asociados.");
-            verify(medicalDiagnosticRepository, never()).delete(any());
+            assertThat(r.getMessage()).isEqualTo("No se puede retirar el diagnóstico I20: tiene 4 sub-diagnósticos activos.");
+            assertThat(cardiopatiaIsquemica.getActive()).isTrue();
+            verify(medicalDiagnosticRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("usado en clasificaciones de imágenes: error sin eliminar")
-        void usadoEnClasificaciones() {
-            when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
-            when(medicalDiagnosticRepository.existsByParentDiagnosticId(2)).thenReturn(false);
-            when(classificationDiagnosisRepository.existsByMedicalDiagnosticId(2)).thenReturn(true);
+        @DisplayName("con un sub-diagnóstico activo: mensaje en singular")
+        void conUnHijo() {
+            when(medicalDiagnosticRepository.findById(1)).thenReturn(Optional.of(cardiopatiaIsquemica));
+            when(medicalDiagnosticRepository.countActiveChildren(1)).thenReturn(1L);
 
-            ApiResponse<Void> r = service.delete(2);
-
-            assertThat(r.getMessage()).isEqualTo("No se puede eliminar el diagnóstico ya que está asociado a clasificaciones de imágenes.");
-            verify(medicalDiagnosticRepository, never()).delete(any());
-        }
-
-        // Sin hijos, clasificaciones, categorías, datasets ni historias clínicas
-        private void sinReferencias() {
-            when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
-            when(medicalDiagnosticRepository.existsByParentDiagnosticId(2)).thenReturn(false);
-            when(classificationDiagnosisRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
-            when(categoryDiagnosticRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
-            when(datasetRepository.existsByMedicalDiagnosticIdIncludingRetired(2)).thenReturn(false);
-            when(diagnosisRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
+            assertThat(service.delete(1).getMessage()).isEqualTo("No se puede retirar el diagnóstico I20: tiene 1 sub-diagnóstico activo.");
         }
 
         @Test
-        @DisplayName("sin referencias: elimina")
-        void valido() {
-            sinReferencias();
-
-            ApiResponse<Void> r = service.delete(2);
-
-            assertThat(r.isSuccess()).isTrue();
-            assertThat(r.getMessage()).isEqualTo("Diagnóstico médico eliminado exitosamente");
-            verify(medicalDiagnosticRepository).delete(infarto);
-        }
-
-        @Test
-        @DisplayName("define categorías de datasets (incluidas retiradas): error sin eliminar (bug #17)")
-        void defineCategorias() {
+        @DisplayName("define categorías activas: error sin retirar")
+        void enCategoriaActiva() {
             when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
-            when(medicalDiagnosticRepository.existsByParentDiagnosticId(2)).thenReturn(false);
-            when(classificationDiagnosisRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
+            when(medicalDiagnosticRepository.countActiveChildren(2)).thenReturn(0L);
             when(categoryDiagnosticRepository.existsByMedicalDiagnosticId(2)).thenReturn(true);
 
             ApiResponse<Void> r = service.delete(2);
 
-            assertThat(r.getMessage()).isEqualTo("No se puede eliminar el diagnóstico porque define categorías de datasets (incluidas retiradas).");
-            verify(medicalDiagnosticRepository, never()).delete(any());
+            assertThat(r.getMessage()).isEqualTo("No se puede retirar el diagnóstico I21: define categorías activas de datasets. Quítelo primero de esas categorías.");
+            verify(medicalDiagnosticRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("es padre de un dataset (incluidos retirados): error sin eliminar (bug #17)")
-        void padreDeDataset() {
+        @DisplayName("padre de un dataset activo: error sin retirar")
+        void padreDeDatasetActivo() {
             when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
-            when(medicalDiagnosticRepository.existsByParentDiagnosticId(2)).thenReturn(false);
-            when(classificationDiagnosisRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
+            when(medicalDiagnosticRepository.countActiveChildren(2)).thenReturn(0L);
             when(categoryDiagnosticRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
-            when(datasetRepository.existsByMedicalDiagnosticIdIncludingRetired(2)).thenReturn(true);
+            when(datasetRepository.existsByMedicalDiagnosticId(2)).thenReturn(true);
 
             ApiResponse<Void> r = service.delete(2);
 
-            assertThat(r.getMessage()).isEqualTo("No se puede eliminar el diagnóstico porque es el diagnóstico padre de un dataset (incluidos retirados).");
-            verify(medicalDiagnosticRepository, never()).delete(any());
+            assertThat(r.getMessage()).isEqualTo("No se puede retirar el diagnóstico I21: es el diagnóstico padre de un dataset activo. Retire primero el dataset.");
+            verify(medicalDiagnosticRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("registrado en historias clínicas: error sin eliminar (bug #17)")
-        void enHistoriasClinicas() {
-            when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
-            when(medicalDiagnosticRepository.existsByParentDiagnosticId(2)).thenReturn(false);
-            when(classificationDiagnosisRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
-            when(categoryDiagnosticRepository.existsByMedicalDiagnosticId(2)).thenReturn(false);
-            when(datasetRepository.existsByMedicalDiagnosticIdIncludingRetired(2)).thenReturn(false);
-            when(diagnosisRepository.existsByMedicalDiagnosticId(2)).thenReturn(true);
+        @DisplayName("sin usos vigentes: se retira y no se borra físicamente")
+        void retira() {
+            libre();
 
             ApiResponse<Void> r = service.delete(2);
 
-            assertThat(r.getMessage()).isEqualTo("No se puede eliminar el diagnóstico porque está registrado en historias clínicas.");
+            assertThat(r.isSuccess()).isTrue();
+            assertThat(r.getMessage()).isEqualTo("Diagnóstico médico retirado exitosamente");
+            assertThat(infarto.getActive()).isFalse();
+            assertThat(infarto.getDeletedAt()).isNotNull();
+            verify(medicalDiagnosticRepository).save(infarto);
             verify(medicalDiagnosticRepository, never()).delete(any());
         }
 
         @Test
-        @DisplayName("violación de integridad lanzada en el delete: error con prefijo")
-        void violacionIntegridad() {
-            sinReferencias();
-            doThrow(new DataIntegrityViolationException("fk")).when(medicalDiagnosticRepository).delete(infarto);
+        @DisplayName("historias clínicas, clasificaciones y usos retirados no bloquean el retiro")
+        void historialNoBloquea() {
+            libre();
 
-            assertThat(service.delete(2).getMessage()).isEqualTo("Violación a la integridad de la base de datos: fk");
+            assertThat(service.delete(2).isSuccess()).isTrue();
+            verify(categoryDiagnosticRepository, never()).existsByMedicalDiagnosticIdIncludingRetired(anyInt());
         }
     }
 
@@ -587,7 +562,7 @@ class MedicalDiagnosticServiceTest {
         void enCategoria() {
             when(medicalDiagnosticRepository.existsById(1)).thenReturn(true);
             when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
-            when(categoryDiagnosticRepository.existsByMedicalDiagnosticId(2)).thenReturn(true);
+            when(categoryDiagnosticRepository.existsByMedicalDiagnosticIdIncludingRetired(2)).thenReturn(true);
 
             ApiResponse<MedicalDiagnosticResponseDTO> r = service.removeSubDiagnostic(1, 2);
 
@@ -601,7 +576,7 @@ class MedicalDiagnosticServiceTest {
         void valido() {
             when(medicalDiagnosticRepository.existsById(1)).thenReturn(true);
             when(medicalDiagnosticRepository.findById(2)).thenReturn(Optional.of(infarto));
-            when(categoryDiagnosticRepository.existsByMedicalDiagnosticId(anyInt())).thenReturn(false);
+            when(categoryDiagnosticRepository.existsByMedicalDiagnosticIdIncludingRetired(anyInt())).thenReturn(false);
             when(medicalDiagnosticRepository.save(infarto)).thenReturn(infarto);
             when(mapper.toResponseDTO(infarto)).thenReturn(responseDTO);
 

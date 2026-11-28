@@ -45,10 +45,6 @@ class ClassificationDiagnosisPersistenceAdapter implements ClassificationDiagnos
         return jpa.existsByImageDiagnosticIdAndMedicalDiagnosticId(imageClassificationId, medicalDiagnosticId);
     }
 
-    @Override
-    public boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId) {
-        return jpa.existsByMedicalDiagnosticId(medicalDiagnosticId);
-    }
 
     @Override
     public long count() {

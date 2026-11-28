@@ -21,47 +21,52 @@ class MedicalDiagnosticPersistenceAdapter implements MedicalDiagnosticRepository
 
     @Override
     public PageResult<MedicalDiagnostic> findAll(PageQuery query) {
-        return PageMapper.toResult(jpa.findAll(PageMapper.toPageable(query)));
+        return PageMapper.toResult(jpa.findAllByActiveTrue(PageMapper.toPageable(query)));
     }
 
     @Override
     public PageResult<MedicalDiagnostic> searchByName(String query, PageQuery pageQuery) {
-        return PageMapper.toResult(jpa.findByDiagnosticNameContainingIgnoreCase(query, PageMapper.toPageable(pageQuery)));
+        return PageMapper.toResult(jpa.findByDiagnosticNameContainingIgnoreCaseAndActiveTrue(query, PageMapper.toPageable(pageQuery)));
     }
 
     @Override
     public PageResult<MedicalDiagnostic> searchByCode(String query, PageQuery pageQuery) {
-        return PageMapper.toResult(jpa.findByDiagnosticCodeContainingIgnoreCase(query, PageMapper.toPageable(pageQuery)));
+        return PageMapper.toResult(jpa.findByDiagnosticCodeContainingIgnoreCaseAndActiveTrue(query, PageMapper.toPageable(pageQuery)));
     }
 
     @Override
     public Optional<MedicalDiagnostic> findById(Integer id) {
+        return jpa.findByIdAndActiveTrue(id);
+    }
+
+    @Override
+    public Optional<MedicalDiagnostic> findByIdIncludingRetired(Integer id) {
         return jpa.findById(id);
     }
 
     @Override
-    public Optional<MedicalDiagnostic> findByDiagnosticCode(String diagnosticCode) {
+    public Optional<MedicalDiagnostic> findByDiagnosticCodeIncludingRetired(String diagnosticCode) {
         return Optional.ofNullable(jpa.findByDiagnosticCode(diagnosticCode));
     }
 
     @Override
     public List<MedicalDiagnostic> findByParentDiagnosticId(Integer parentDiagnosticId) {
-        return jpa.findByParentDiagnosticId(parentDiagnosticId);
+        return jpa.findByParentDiagnosticIdAndActiveTrue(parentDiagnosticId);
     }
 
     @Override
     public boolean existsById(Integer id) {
-        return jpa.existsById(id);
+        return jpa.existsByIdAndActiveTrue(id);
     }
 
     @Override
-    public boolean existsByParentDiagnosticId(Integer parentDiagnosticId) {
-        return jpa.existsByParentDiagnosticId(parentDiagnosticId);
+    public long countActiveChildren(Integer parentDiagnosticId) {
+        return jpa.countByParentDiagnosticIdAndActiveTrue(parentDiagnosticId);
     }
 
     @Override
     public long count() {
-        return jpa.countAll();
+        return jpa.countByActiveTrue();
     }
 
     @Override

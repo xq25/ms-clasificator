@@ -196,8 +196,12 @@ Reglas vigentes del feature `dataset`. Están verificadas por los tests de `src/
 - **Soft delete con historial (ADR-011):** quitar un diagnóstico de una categoría lo retira (`deleted_at`). `created_at` y `deleted_at` definen su vigencia en la categoría.
 - Un `MedicalDiagnostic` que alguna vez definió una categoría no se puede borrar del catálogo.
 
-### MedicalDiagnostic (catálogo CIE-10)
-- Un diagnóstico no se puede borrar si tiene sub-diagnósticos, si está en clasificaciones de imágenes, si define categorías de datasets o es el padre de un dataset (incluidos los retirados, ADR-011), o si está registrado en historias clínicas.
+### MedicalDiagnostic (catálogo CIE-10, soft delete ADR-013)
+- Eliminar un diagnóstico lo **retira** (`active=false`, `deleted_at`); nunca se borra físicamente.
+- No se puede retirar si tiene sub-diagnósticos activos, si define categorías activas de datasets o si es el padre de un dataset activo. Las historias clínicas, las clasificaciones y los usos retirados no lo impiden.
+- Retirado, no se puede usar en categorías, datasets, jerarquía ni historias clínicas nuevas; lo histórico lo conserva.
+- El código CIE-10 es único entre todos los diagnósticos, incluidos los retirados: nunca se reutiliza.
+- Los listados y búsquedas muestran solo activos; por id se ve también un retirado (`active=false`).
 - La jerarquía no admite ciclos: un diagnóstico no puede ser sub-diagnóstico de uno de sus descendientes.
 - Un sub-diagnóstico asignado a una categoría de dataset no se puede separar de su padre.
 
