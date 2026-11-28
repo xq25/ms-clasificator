@@ -79,6 +79,7 @@ public class MedicalImageMapper implements Mapper<MedicalImage, MedicalImageCrea
                 .medicalImageType(entity.getMedicalImageType() != null ? medicalImageTypeMapper.toSummaryDTO(entity.getMedicalImageType()) : null)
                 .clinicalRecord(entity.getClinicalRecord() != null ? clinicalRecordMapper.toSummaryDTO(entity.getClinicalRecord()) : null)
                 .createdAt(entity.getCreatedAt())
+                .active(entity.getActive())
                 .build();
     }
 
@@ -100,6 +101,7 @@ public class MedicalImageMapper implements Mapper<MedicalImage, MedicalImageCrea
                 .fileSize(entity.getFileSize())
                 .medicalImageTypeName(entity.getMedicalImageType() != null ? entity.getMedicalImageType().getName() : null)
                 .createdAt(entity.getCreatedAt())
+                .active(entity.getActive())
                 .build();
     }
 }

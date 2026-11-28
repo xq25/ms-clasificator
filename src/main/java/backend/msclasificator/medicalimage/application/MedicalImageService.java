@@ -142,7 +142,8 @@ public class MedicalImageService {
     @Transactional(readOnly = true)
     public ApiResponse<MedicalImageResponseDTO> findById(Integer id) {
         try {
-            MedicalImageResponseDTO img = medicalImgRepository.findById(id)
+            // Por id también se ve una imagen retirada, marcada con active=false (ADR-013)
+            MedicalImageResponseDTO img = medicalImgRepository.findByIdIncludingRetired(id)
                     .map(medicalImgMapper::toResponseDTO)
                     .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + id));
             return ApiResponse.success(img, "Imagen médica obtenida exitosamente");
@@ -227,31 +228,26 @@ public class MedicalImageService {
         }
     }
 
-    // DELETE
+    // DELETE — soft delete (ADR-013): la imagen se retira; su archivo en el storage y sus clasificaciones se conservan.
+    // Pendiente de decisión (ADR-013): qué hacer con el archivo en el storage de una imagen retirada.
     @Transactional
     public ApiResponse<Void> delete(Integer id) {
         try {
             MedicalImage img = medicalImgRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + id));
 
-            // Validamos que la imagen no tenga diagnosticos asociados
-            if(imageDiagnosticRepository.existsByMedicalImageId(id)) {
-                return ApiResponse.error("No se puede eliminar: la imagen tiene diagnósticos asignados");
+            long clasificaciones = imageDiagnosticRepository.countByMedicalImageId(id);
+
+            img.retire();
+            medicalImgRepository.save(img);
+            log.info("[MedicalImageService] Imagen retirada: id={}, key={} (el archivo se conserva)", id, img.getImageKey());
+
+            if (clasificaciones == 0) {
+                return ApiResponse.success("Imagen médica retirada exitosamente");
             }
+            return ApiResponse.success("Imagen médica retirada. "
+                    + (clasificaciones == 1 ? "Su clasificación se conserva." : "Sus " + clasificaciones + " clasificaciones se conservan."));
 
-            // 1. Eliminar del storage primero
-            imageStorage.delete(img.getImageKey());
-            log.info("[MedicalImageService] Imagen eliminada del storage: key={}", img.getImageKey());
-
-            // 2. Eliminar de la BD solo si el storage no falló
-            medicalImgRepository.delete(img);
-            return ApiResponse.success("Imagen médica eliminada exitosamente");
-
-        } catch (DataIntegrityViolationException ex) {
-            return ApiResponse.error("Violacion a la integridad de la base de datos:" + ex.getMessage());
-        } catch (ImageStorageException ex) {
-            log.error("[MedicalImageService] Error eliminando del storage: {}", ex.getMessage());
-            return ApiResponse.error("Error al eliminar imagen del storage. El registro no fue eliminado.");
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         }

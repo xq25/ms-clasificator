@@ -83,6 +83,29 @@ public class MedicalImage extends SystemDatum{
     @JoinColumn(name = "clinical_record_id", nullable = true )
     private ClinicalRecord clinicalRecord;
 
+    // Soft delete (ADR-013, mismo patrón que ADR-011): `active` para filtrar y validar;
+    // `deletedAt` registra cuándo se retiró. Solo cambian juntos, a través de retire().
+    // Una imagen retirada conserva su archivo en el storage y sus clasificaciones (congeladas).
+    @Builder.Default
+    @Column(name = "active", nullable = false)
+    private Boolean active = true;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
+    public void retire() {
+        this.active = false;
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public boolean isRetired() {
+        return Boolean.FALSE.equals(active);
+    }
+
+    @PrePersist
+    void prePersistActive() {
+        if (active == null) {
+            active = true;
+        }
+    }
 }

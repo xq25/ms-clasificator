@@ -209,52 +209,56 @@ class MedicalImageServiceTest {
     }
 
     @Nested
-    @DisplayName("delete")
+    @DisplayName("delete (soft delete, ADR-013)")
     class Delete {
 
         private MedicalImage imagen() {
-            MedicalImage img = MedicalImage.builder().imageKey("diagnostics/abc.png").build();
+            MedicalImage img = MedicalImage.builder().id(5).imageKey("diagnostics/abc.png").build();
             when(medicalImageRepository.findById(5)).thenReturn(Optional.of(img));
             return img;
         }
 
         @Test
-        void eliminaDelStorageYLuegoDeLaBD() {
+        void noExisteOYaRetirada_devuelveError() {
+            when(medicalImageRepository.findById(5)).thenReturn(Optional.empty());
+
+            assertThat(service.delete(5).getMessage()).isEqualTo("Imagen médica no encontrada con ID: 5");
+            verify(medicalImageRepository, never()).save(any());
+        }
+
+        @Test
+        void sinClasificaciones_seRetira_yConservaElArchivo() {
             MedicalImage img = imagen();
-            when(imageClassificationRepository.existsByMedicalImageId(5)).thenReturn(false);
+            when(imageClassificationRepository.countByMedicalImageId(5)).thenReturn(0L);
 
             ApiResponse<Void> r = service.delete(5);
 
             assertThat(r.isSuccess()).isTrue();
-            InOrder orden = inOrder(imageStorage, medicalImageRepository);
-            orden.verify(imageStorage).delete("diagnostics/abc.png");
-            orden.verify(medicalImageRepository).delete(img);
-        }
-
-        @Test
-        void conClasificaciones_noElimina() {
-            imagen();
-            when(imageClassificationRepository.existsByMedicalImageId(5)).thenReturn(true);
-
-            ApiResponse<Void> r = service.delete(5);
-
-            assertThat(r.isSuccess()).isFalse();
-            assertThat(r.getMessage()).isEqualTo("No se puede eliminar: la imagen tiene diagnósticos asignados");
+            assertThat(r.getMessage()).isEqualTo("Imagen médica retirada exitosamente");
+            assertThat(img.getActive()).isFalse();
+            assertThat(img.getDeletedAt()).isNotNull();
+            verify(medicalImageRepository).save(img);
+            verify(medicalImageRepository, never()).delete(any());
             verify(imageStorage, never()).delete(anyString());
-            verify(medicalImageRepository, never()).delete(any());
         }
 
         @Test
-        void falloDelStorage_noEliminaDeLaBD() {
+        void conClasificaciones_seRetira_yLasConserva() {
             imagen();
-            when(imageClassificationRepository.existsByMedicalImageId(5)).thenReturn(false);
-            doThrow(new ImageStorageException("boom", "minio")).when(imageStorage).delete("diagnostics/abc.png");
+            when(imageClassificationRepository.countByMedicalImageId(5)).thenReturn(3L);
 
             ApiResponse<Void> r = service.delete(5);
 
-            assertThat(r.isSuccess()).isFalse();
-            assertThat(r.getMessage()).isEqualTo("Error al eliminar imagen del storage. El registro no fue eliminado.");
-            verify(medicalImageRepository, never()).delete(any());
+            assertThat(r.isSuccess()).isTrue();
+            assertThat(r.getMessage()).isEqualTo("Imagen médica retirada. Sus 3 clasificaciones se conservan.");
+        }
+
+        @Test
+        void conUnaClasificacion_mensajeEnSingular() {
+            imagen();
+            when(imageClassificationRepository.countByMedicalImageId(5)).thenReturn(1L);
+
+            assertThat(service.delete(5).getMessage()).isEqualTo("Imagen médica retirada. Su clasificación se conserva.");
         }
     }
 
@@ -290,7 +294,7 @@ class MedicalImageServiceTest {
         @Test
         @DisplayName("findById existente: devuelve el DTO (con la URL que genera el mapper)")
         void findByIdExiste() {
-            when(medicalImageRepository.findById(5)).thenReturn(Optional.of(imagen));
+            when(medicalImageRepository.findByIdIncludingRetired(5)).thenReturn(Optional.of(imagen));
             when(mapper.toResponseDTO(imagen)).thenReturn(responseDTO);
 
             ApiResponse<MedicalImageResponseDTO> r = service.findById(5);
@@ -302,7 +306,7 @@ class MedicalImageServiceTest {
         @Test
         @DisplayName("findById inexistente: error con el ID")
         void findByIdNoExiste() {
-            when(medicalImageRepository.findById(5)).thenReturn(Optional.empty());
+            when(medicalImageRepository.findByIdIncludingRetired(5)).thenReturn(Optional.empty());
 
             assertThat(service.findById(5).getMessage()).isEqualTo("Imagen médica no encontrada con ID: 5");
         }
@@ -386,6 +390,25 @@ class MedicalImageServiceTest {
 
             assertThat(r.getMessage()).isEqualTo("Imágenes médicas no diagnosticadas obtenidas exitosamente");
             assertThat(r.getData()).containsExactly(responseDTO);
+        }
+    }
+
+    @Nested
+    @DisplayName("imagen retirada por id")
+    class Retirada {
+
+        @Test
+        void findById_devuelveLaImagenRetirada() {
+            MedicalImage img = MedicalImage.builder().id(5).imageKey("diagnostics/abc.png").build();
+            img.retire();
+            MedicalImageResponseDTO dto = new MedicalImageResponseDTO();
+            when(medicalImageRepository.findByIdIncludingRetired(5)).thenReturn(Optional.of(img));
+            when(mapper.toResponseDTO(img)).thenReturn(dto);
+
+            ApiResponse<MedicalImageResponseDTO> r = service.findById(5);
+
+            assertThat(r.isSuccess()).isTrue();
+            assertThat(r.getData()).isSameAs(dto);
         }
     }
 }

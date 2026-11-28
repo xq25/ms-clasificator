@@ -55,8 +55,8 @@ class ImageClassificationPersistenceAdapter implements ImageClassificationReposi
     }
 
     @Override
-    public boolean existsByMedicalImageId(Integer medicalImageId) {
-        return jpa.existsByMedicalImgId(medicalImageId);
+    public long countByMedicalImageId(Integer medicalImageId) {
+        return jpa.countByMedicalImgId(medicalImageId);
     }
 
     @Override

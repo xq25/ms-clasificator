@@ -166,7 +166,7 @@ public class ClinicalRecordService {
 
             // Al tener transactional al inicio, JPA detecta los cambios sobre las imagenes y las actualiza.
             // Desasociar imágenes - > Composicion debil
-            medicalImgRepository.findByClinicalRecordId(clinicalRecord.getId())
+            medicalImgRepository.findByClinicalRecordIdIncludingRetired(clinicalRecord.getId())
                     .forEach(img -> img.setClinicalRecord(null));
 
             // Eliminar registro médico

@@ -10,20 +10,30 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MedicalImageJpaRepository extends JpaRepository<MedicalImage, Integer> {
 
-    List<MedicalImage> findByMedicalImageTypeId(Integer medicalImageTypeId);
-    Page<MedicalImage> findByMedicalImageTypeId(Integer medicalImageTypeId, Pageable pageable);
+    // Soft delete (ADR-013): las lecturas del adaptador son solo de activas, salvo las "IncludingRetired"
+    Page<MedicalImage> findAllByActiveTrue(Pageable pageable);
 
+    Optional<MedicalImage> findByIdAndActiveTrue(Integer id);
+
+    Page<MedicalImage> findByMedicalImageTypeIdAndActiveTrue(Integer medicalImageTypeId, Pageable pageable);
+
+    // Incluye retiradas: al borrar una historia clínica se desvinculan todas sus imágenes
     List<MedicalImage> findByClinicalRecordId(Integer clinicalRecordId);
-    Page<MedicalImage> findByClinicalRecordId(Integer clinicalRecordId, Pageable pageable);
+
+    Page<MedicalImage> findByClinicalRecordIdAndActiveTrue(Integer clinicalRecordId, Pageable pageable);
+
+    long countByActiveTrue();
 
     // Consulta para la busqueda de las iamgenes con un tipo de imagen especifico que no han sido diagnosticadas por un doctor en especifico
     @Query("""
         SELECT m
         FROM MedicalImage m
         WHERE m.medicalImageType.id = :medicalImageTypeId
+          AND m.active = true
           AND NOT EXISTS (
                 SELECT d
                 FROM ImageClassification d
@@ -35,8 +45,6 @@ public interface MedicalImageJpaRepository extends JpaRepository<MedicalImage, I
 
     boolean existsByMedicalImageTypeId(Integer medicalImageTypeId);
 
-    @Query("SELECT COUNT(m) FROM MedicalImage m")
-    long countAll();
 
     /**
      * Desvincular en bloque todas las imágenes médicas asociadas a los ClinicalRecord

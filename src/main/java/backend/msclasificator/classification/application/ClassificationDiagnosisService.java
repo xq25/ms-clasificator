@@ -127,6 +127,11 @@ public class ClassificationDiagnosisService {
             ImageClassification imageDiagnostic = imageDiagnosticRepository.findById(dto.getImageDiagnosticId())
                     .orElseThrow(() -> new IllegalArgumentException("ImageClassification no encontrado con ID: " + dto.getImageDiagnosticId()));
 
+            // Las clasificaciones de una imagen retirada quedan congeladas (ADR-013)
+            if (imageDiagnostic.getMedicalImg() != null && imageDiagnostic.getMedicalImg().isRetired()) {
+                return ApiResponse.error("La imagen médica " + imageDiagnostic.getMedicalImg().getId() + " está retirada");
+            }
+
             // Validamos que exista el medical diagnostic
             MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(dto.getMedicalDiagnosticId())
                     .orElseThrow(() -> new IllegalArgumentException("MedicalDiagnostic no encontrado con ID: " + dto.getMedicalDiagnosticId()));
@@ -193,6 +198,12 @@ public class ClassificationDiagnosisService {
         try {
             ClassificationDiagnosis entity = repository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Diagnóstico de imagen no encontrado con ID: " + id));
+
+            // Las clasificaciones de una imagen retirada quedan congeladas (ADR-013)
+            if (entity.getImageDiagnostic() != null && entity.getImageDiagnostic().getMedicalImg() != null
+                    && entity.getImageDiagnostic().getMedicalImg().isRetired()) {
+                return ApiResponse.error("La imagen médica " + entity.getImageDiagnostic().getMedicalImg().getId() + " está retirada");
+            }
 
             repository.delete(entity);
             return ApiResponse.success("Diagnóstico eliminado exitosamente");

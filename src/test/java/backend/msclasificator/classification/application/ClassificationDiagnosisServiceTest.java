@@ -95,6 +95,19 @@ class ClassificationDiagnosisServiceTest {
         }
 
         @Test
+        @DisplayName("clasificación de una imagen retirada: congelada, no admite detalle (ADR-013)")
+        void imagenRetirada() {
+            clasificacion.getMedicalImg().retire();
+            when(imageClassificationRepository.findById(5)).thenReturn(Optional.of(clasificacion));
+
+            ApiResponse<?> r = service.create(dto(300));
+
+            assertThat(r.isSuccess()).isFalse();
+            assertThat(r.getMessage()).isEqualTo("La imagen médica 50 está retirada");
+            verify(repository, never()).save(any());
+        }
+
+        @Test
         @DisplayName("DTO nulo: error")
         void dtoNulo() {
             assertThat(service.create(null).getMessage()).isEqualTo("El DTO no puede ser nulo");
@@ -277,6 +290,17 @@ class ClassificationDiagnosisServiceTest {
 
             assertThat(service.delete(7).getMessage()).isEqualTo("Diagnóstico eliminado exitosamente");
             verify(repository).delete(cd);
+        }
+
+        @Test
+        @DisplayName("delete de una imagen retirada: congelado, no borra (ADR-013)")
+        void deleteImagenRetirada() {
+            clasificacion.getMedicalImg().retire();
+            ClassificationDiagnosis cd = asignado(i203);
+            when(repository.findById(7)).thenReturn(Optional.of(cd));
+
+            assertThat(service.delete(7).getMessage()).isEqualTo("La imagen médica 50 está retirada");
+            verify(repository, never()).delete(any());
         }
 
         @Test

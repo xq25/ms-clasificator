@@ -21,27 +21,32 @@ class MedicalImagePersistenceAdapter implements MedicalImageRepository {
 
     @Override
     public PageResult<MedicalImage> findAll(PageQuery query) {
-        return PageMapper.toResult(jpa.findAll(PageMapper.toPageable(query)));
+        return PageMapper.toResult(jpa.findAllByActiveTrue(PageMapper.toPageable(query)));
     }
 
     @Override
     public Optional<MedicalImage> findById(Integer id) {
+        return jpa.findByIdAndActiveTrue(id);
+    }
+
+    @Override
+    public Optional<MedicalImage> findByIdIncludingRetired(Integer id) {
         return jpa.findById(id);
     }
 
     @Override
     public PageResult<MedicalImage> findByMedicalImageTypeId(Integer medicalImageTypeId, PageQuery query) {
-        return PageMapper.toResult(jpa.findByMedicalImageTypeId(medicalImageTypeId, PageMapper.toPageable(query)));
+        return PageMapper.toResult(jpa.findByMedicalImageTypeIdAndActiveTrue(medicalImageTypeId, PageMapper.toPageable(query)));
     }
 
     @Override
-    public List<MedicalImage> findByClinicalRecordId(Integer clinicalRecordId) {
+    public List<MedicalImage> findByClinicalRecordIdIncludingRetired(Integer clinicalRecordId) {
         return jpa.findByClinicalRecordId(clinicalRecordId);
     }
 
     @Override
     public PageResult<MedicalImage> findByClinicalRecordId(Integer clinicalRecordId, PageQuery query) {
-        return PageMapper.toResult(jpa.findByClinicalRecordId(clinicalRecordId, PageMapper.toPageable(query)));
+        return PageMapper.toResult(jpa.findByClinicalRecordIdAndActiveTrue(clinicalRecordId, PageMapper.toPageable(query)));
     }
 
     @Override
@@ -61,7 +66,7 @@ class MedicalImagePersistenceAdapter implements MedicalImageRepository {
 
     @Override
     public long count() {
-        return jpa.countAll();
+        return jpa.countByActiveTrue();
     }
 
     @Override

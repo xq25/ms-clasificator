@@ -18,7 +18,7 @@ public interface ImageClassificationJpaRepository extends JpaRepository<ImageCla
     List<ImageClassification> findByMedicalImgId(Integer medicalImgId);
     Page<ImageClassification> findByMedicalImgId(Integer medicalImgId, Pageable pageable);
 
-    boolean existsByMedicalImgId(Integer medicalImgId);
+    long countByMedicalImgId(Integer medicalImgId);
 
     boolean existsByDoctorId(Integer doctorId);
 

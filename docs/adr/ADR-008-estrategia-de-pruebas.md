@@ -37,13 +37,13 @@ Los puertos de persistencia (ADR-007) permiten probar los servicios de aplicaci�
 | `dataset` | Cubierto (3 servicios) |
 | `clinicalrecord` | Cubierto (`ClinicalRecordService`, `DiagnosisService`, `PatientDatumService`, `PrimitiveDatumService`) |
 | `patient` | Cubierto (`PatientService`) |
-| `identity` | Cubierto (`InternalController` registro, adaptador `MsSecurityIdentityProvider`); `InternalService` pendiente |
-| `classification` | `ClassificationDiagnosisService` cubierto; `ImageClassificationService` solo `create` y `findById` |
+| `identity` | Cubierto (`InternalController` registro, `InternalService`, adaptador `MsSecurityIdentityProvider`) |
+| `classification` | Cubierto (`ClassificationDiagnosisService`, `ImageClassificationService`) |
 | `medicalimage` | Cubierto (`MedicalImageService`, `MedicalImageTypeService`) |
 | `doctor` | Cubierto (`DoctorService`, `DoctorAreaService`, `EvaluationAreaService`) |
 | `diagnosiscatalog` | Cubierto (`MedicalDiagnosticService`) |
 
-Orden de los PRs pendientes: `classification` (incluye `InternalService`).
+Todos los servicios están cubiertos. Los tests de `classification` e `InternalService` se integraron en `feat/soft-delete-imagenes` (ADR-013, etapa 3) en lugar de una rama `test/` propia.
 
 ## Alternativas consideradas
 - **Tests de integración con H2 o Testcontainers.** Prueban también los adaptadores y las consultas, pero requieren dependencias nuevas. Quedan pendientes de aprobación.

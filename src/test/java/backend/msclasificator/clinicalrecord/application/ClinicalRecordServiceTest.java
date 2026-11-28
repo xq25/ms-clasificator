@@ -320,7 +320,7 @@ class ClinicalRecordServiceTest {
             ApiResponse<Void> r = service.delete(10);
 
             assertThat(r.getMessage()).isEqualTo("Clinical Record no encontrado con ID: 10");
-            verify(medicalImageRepository, never()).findByClinicalRecordId(any());
+            verify(medicalImageRepository, never()).findByClinicalRecordIdIncludingRetired(any());
         }
 
         @Test
@@ -329,7 +329,7 @@ class ClinicalRecordServiceTest {
             MedicalImage img1 = MedicalImage.builder().imageKey("a").clinicalRecord(record).build();
             MedicalImage img2 = MedicalImage.builder().imageKey("b").clinicalRecord(record).build();
             when(clinicalRecordRepository.findById(10)).thenReturn(Optional.of(record));
-            when(medicalImageRepository.findByClinicalRecordId(10)).thenReturn(List.of(img1, img2));
+            when(medicalImageRepository.findByClinicalRecordIdIncludingRetired(10)).thenReturn(List.of(img1, img2));
 
             ApiResponse<Void> r = service.delete(10);
 
@@ -338,7 +338,7 @@ class ClinicalRecordServiceTest {
             assertThat(img1.getClinicalRecord()).isNull();
             assertThat(img2.getClinicalRecord()).isNull();
             InOrder orden = inOrder(medicalImageRepository, clinicalRecordRepository);
-            orden.verify(medicalImageRepository).findByClinicalRecordId(10);
+            orden.verify(medicalImageRepository).findByClinicalRecordIdIncludingRetired(10);
             orden.verify(clinicalRecordRepository).delete(record);
         }
 
@@ -346,7 +346,7 @@ class ClinicalRecordServiceTest {
         @DisplayName("violación de integridad: error con prefijo")
         void violacionIntegridad() {
             when(clinicalRecordRepository.findById(10)).thenReturn(Optional.of(record));
-            when(medicalImageRepository.findByClinicalRecordId(10)).thenReturn(List.of());
+            when(medicalImageRepository.findByClinicalRecordIdIncludingRetired(10)).thenReturn(List.of());
             doThrow(new DataIntegrityViolationException("fk")).when(clinicalRecordRepository).delete(record);
 
             ApiResponse<Void> r = service.delete(10);

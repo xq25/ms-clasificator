@@ -1,6 +1,6 @@
 # ADR-013: Soft delete de las entidades esenciales de la clasificación
 
-- **Estado:** Aceptado (implementación por etapas)
+- **Estado:** Aceptado (implementado en 3 etapas)
 - **Fecha:** 2026-11-27
 - **Área:** Persistencia / Dominio
 - **Extiende:** [ADR-011](ADR-011-soft-delete-y-esquema-versionado.md), que introdujo el soft delete en `Dataset`, `DatasetCategory` y `CategoryDiagnostic`.
@@ -20,7 +20,7 @@ Se necesita poder sacarlas de circulación sin perder el historial.
 |---------|---------|-------|
 | `MedicalImageType` | Soft delete | `feat/soft-delete-tipos-imagen` |
 | `MedicalDiagnostic` | Soft delete | `feat/soft-delete-diagnosticos` |
-| `MedicalImage` | Soft delete | `feat/soft-delete-imagenes` (pendiente) |
+| `MedicalImage` | Soft delete | `feat/soft-delete-imagenes` |
 | `Dataset`, `DatasetCategory`, `CategoryDiagnostic` | Soft delete (ya existente, ADR-011) | — |
 | `Doctor`, `EvaluationArea`, `DoctorArea`, `Patient`, `ClinicalRecord`, `PrimitiveDatum`, `PatientDatum`, `Diagnosis` | Se conserva el borrado actual (con las reglas de los bugs #12–#21) | — |
 | `ImageClassification`, `ClassificationDiagnosis` | Sin cambios en esta decisión | — |
@@ -52,10 +52,12 @@ Se necesita poder sacarlas de circulación sin perder el historial.
 - Se quitan las cascadas JPA de la entidad hacia diagnósticos clínicos, datasets y categorías.
 - Reemplaza la corrección del bug #17: ya no se bloquea por historias clínicas, clasificaciones ni usos retirados; solo por usos vigentes y por hijos activos.
 
-### 5. `MedicalImage` (pendiente de implementar)
+### 5. `MedicalImage`
 - **Con clasificaciones:** se puede retirar, y sus clasificaciones se conservan.
 - **Visibilidad:** sale de la cola de imágenes por clasificar de los doctores y de los listados (general, por tipo, por historia clínica). Por id se sigue viendo.
-- **Clasificaciones congeladas:** no se puede volver a clasificar la imagen ni agregar o quitar sub-diagnósticos a sus clasificaciones.
+- **Clasificaciones congeladas:** no se puede volver a clasificar la imagen, ni borrar sus clasificaciones, ni agregar o quitar sub-diagnósticos ("La imagen médica … está retirada"). Las clasificaciones se siguen consultando.
+- Al borrar una historia clínica se desvinculan todas sus imágenes, también las retiradas.
+- Reemplaza la regla anterior de `delete` (borrado físico en BD y storage, bloqueado si la imagen tenía clasificaciones).
 - **Archivo en storage:** se conserva. **Pendiente de decisión:** si más adelante se borra (liberar espacio) o se mueve a otro bucket; hoy la URL se sigue generando para el historial.
 
 ## Alternativas consideradas

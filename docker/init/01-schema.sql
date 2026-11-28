@@ -20,6 +20,8 @@
 --     diagnóstico en su categoría (definición histórica, ADR-011).
 --   * medical_diagnostic: soft delete (ADR-013). active tiene DEFAULT 1 por los INSERT
 --     de 02-data.sql. diagnostic_code SÍ es UNIQUE: un código nunca se reutiliza.
+--   * medical_img: soft delete (ADR-013). Una imagen retirada conserva su archivo en el
+--     storage y sus clasificaciones.
 --   * medical_image_type: soft delete (ADR-013). active tiene DEFAULT 1 para que los
 --     INSERT de 02-data.sql (que no lo nombran) creen tipos activos. name NO es UNIQUE:
 --     la unicidad es solo entre tipos activos y la valida el servicio.
@@ -115,10 +117,12 @@
     ) engine=InnoDB;
 
     create table medical_img (
+        active bit not null default 1,
         clinical_record_id integer,
         id integer not null,
         medical_image_type_id integer not null,
         created_at datetime(6) not null,
+        deleted_at datetime(6),
         file_size bigint,
         provider varchar(20) not null,
         content_type varchar(50),

@@ -157,8 +157,12 @@ public class ImageClassificationService {
                     .orElseThrow(() -> new IllegalArgumentException("Doctor no encontrado con ID: " + imageDiagnosticCreateDTO.getDoctorId()));
 
             // Validamos que la imagen exista
-            MedicalImage medicalImg = medicalImgRepository.findById(imageDiagnosticCreateDTO.getMedicalImgId())
+            MedicalImage medicalImg = medicalImgRepository.findByIdIncludingRetired(imageDiagnosticCreateDTO.getMedicalImgId())
                     .orElseThrow(() -> new IllegalArgumentException("Imagen médica no encontrada con ID: " + imageDiagnosticCreateDTO.getMedicalImgId()));
+            // Una imagen retirada no se vuelve a clasificar (ADR-013)
+            if (medicalImg.isRetired()) {
+                return ApiResponse.error("La imagen médica " + medicalImg.getId() + " está retirada");
+            }
 
             // Solo se clasifican imágenes cuyo tipo tiene un dataset configurado
             Dataset dataset = datasetRepository.findByMedicalImageTypeId(medicalImg.getMedicalImageType().getId()).orElse(null);
@@ -208,6 +212,11 @@ public class ImageClassificationService {
         try {
             ImageClassification imageDiagnostic = imageDiagnosticRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Diagnóstico de imagen no encontrado con ID: " + id));
+
+            // Las clasificaciones de una imagen retirada quedan congeladas (ADR-013)
+            if (imageDiagnostic.getMedicalImg() != null && imageDiagnostic.getMedicalImg().isRetired()) {
+                return ApiResponse.error("La imagen médica " + imageDiagnostic.getMedicalImg().getId() + " está retirada");
+            }
 
             imageDiagnosticRepository.delete(imageDiagnostic);
             return ApiResponse.success("Diagnóstico de imagen eliminado exitosamente");

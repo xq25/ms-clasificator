@@ -23,7 +23,8 @@ public interface ImageClassificationRepository {
 
     boolean existsByDoctorId(Integer doctorId);
 
-    boolean existsByMedicalImageId(Integer medicalImageId);
+    // Clasificaciones de una imagen (se informan al retirarla, ADR-013)
+    long countByMedicalImageId(Integer medicalImageId);
 
 
     long count();

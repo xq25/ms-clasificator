@@ -2,6 +2,7 @@ package backend.msclasificator.classification.application;
 
 import backend.msclasificator.classification.api.dto.ImageClassificationCreateDTO;
 import backend.msclasificator.classification.api.dto.ImageClassificationResponseDTO;
+import backend.msclasificator.classification.api.dto.ImageClassificationSummaryDTO;
 import backend.msclasificator.classification.api.mapper.ImageClassificationMapper;
 import backend.msclasificator.classification.application.port.out.ImageClassificationRepository;
 import backend.msclasificator.classification.domain.ImageClassification;
@@ -22,6 +23,10 @@ import backend.msclasificator.medicalimage.application.port.out.MedicalImageRepo
 import backend.msclasificator.medicalimage.domain.MedicalImage;
 import backend.msclasificator.medicalimage.domain.MedicalImageType;
 import backend.msclasificator.shared.api.ApiResponse;
+import backend.msclasificator.shared.api.PageRequestDTO;
+import backend.msclasificator.shared.api.PagedResponse;
+import backend.msclasificator.shared.application.PageQuery;
+import backend.msclasificator.shared.application.PageResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -42,7 +47,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// Cubre create (deslizamiento, ADR-010) y findById; el resto de ImageClassificationService queda pendiente (ADR-008)
 @ExtendWith(MockitoExtension.class)
 class ImageClassificationServiceTest {
 
@@ -77,7 +81,7 @@ class ImageClassificationServiceTest {
 
     private void stubHastaAutorizacion() {
         when(doctorRepository.findById(2)).thenReturn(Optional.of(doctor));
-        when(medicalImageRepository.findById(50)).thenReturn(Optional.of(imagen));
+        when(medicalImageRepository.findByIdIncludingRetired(50)).thenReturn(Optional.of(imagen));
         when(datasetRepository.findByMedicalImageTypeId(1)).thenReturn(Optional.of(dataset));
         when(doctorAreaRepository.existsByDoctorIdAndEvaluationAreaId(2, 1)).thenReturn(true);
     }
@@ -93,10 +97,41 @@ class ImageClassificationServiceTest {
         }
 
         @Test
+        @DisplayName("imagen retirada: error sin clasificar (ADR-013)")
+        void imagenRetirada() {
+            imagen.retire();
+            when(doctorRepository.findById(2)).thenReturn(Optional.of(doctor));
+            when(medicalImageRepository.findByIdIncludingRetired(50)).thenReturn(Optional.of(imagen));
+
+            ApiResponse<ImageClassificationResponseDTO> response = service.create(dto);
+
+            assertThat(response.isSuccess()).isFalse();
+            assertThat(response.getMessage()).isEqualTo("La imagen médica 50 está retirada");
+            verify(imageClassificationRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("imagen inexistente: error")
+        void imagenInexistente() {
+            when(doctorRepository.findById(2)).thenReturn(Optional.of(doctor));
+            when(medicalImageRepository.findByIdIncludingRetired(50)).thenReturn(Optional.empty());
+
+            assertThat(service.create(dto).getMessage()).isEqualTo("Imagen médica no encontrada con ID: 50");
+        }
+
+        @Test
+        @DisplayName("doctor inexistente: error")
+        void doctorInexistente() {
+            when(doctorRepository.findById(2)).thenReturn(Optional.empty());
+
+            assertThat(service.create(dto).getMessage()).isEqualTo("Doctor no encontrado con ID: 2");
+        }
+
+        @Test
         @DisplayName("tipo de imagen sin dataset: error y no guarda")
         void sinDataset() {
             when(doctorRepository.findById(2)).thenReturn(Optional.of(doctor));
-            when(medicalImageRepository.findById(50)).thenReturn(Optional.of(imagen));
+            when(medicalImageRepository.findByIdIncludingRetired(50)).thenReturn(Optional.of(imagen));
             when(datasetRepository.findByMedicalImageTypeId(1)).thenReturn(Optional.empty());
 
             ApiResponse<ImageClassificationResponseDTO> response = service.create(dto);
@@ -111,7 +146,7 @@ class ImageClassificationServiceTest {
         void sinArea() {
             imagen.getMedicalImageType().setEvaluationArea(null);
             when(doctorRepository.findById(2)).thenReturn(Optional.of(doctor));
-            when(medicalImageRepository.findById(50)).thenReturn(Optional.of(imagen));
+            when(medicalImageRepository.findByIdIncludingRetired(50)).thenReturn(Optional.of(imagen));
             when(datasetRepository.findByMedicalImageTypeId(1)).thenReturn(Optional.of(dataset));
 
             assertThat(service.create(dto).getMessage())
@@ -123,7 +158,7 @@ class ImageClassificationServiceTest {
         @DisplayName("doctor fuera del área del tipo de imagen: error")
         void doctorSinAutorizacion() {
             when(doctorRepository.findById(2)).thenReturn(Optional.of(doctor));
-            when(medicalImageRepository.findById(50)).thenReturn(Optional.of(imagen));
+            when(medicalImageRepository.findByIdIncludingRetired(50)).thenReturn(Optional.of(imagen));
             when(datasetRepository.findByMedicalImageTypeId(1)).thenReturn(Optional.of(dataset));
             when(doctorAreaRepository.existsByDoctorIdAndEvaluationAreaId(2, 1)).thenReturn(false);
 
@@ -210,6 +245,126 @@ class ImageClassificationServiceTest {
             assertThat(response.isSuccess()).isTrue();
             assertThat(response.getData().getDiagnostics()).isNull();
             verify(categoryDiagnosticRepository, never()).findDefinitionAt(any(), any());
+        }
+    }
+
+    @Nested
+    @DisplayName("findAll / count / findByDoctorId / findByMedicalImgId")
+    class Lecturas {
+
+        private final PageQuery query = new PageQuery(0, 10, "id", "asc");
+        private final ImageClassification clasificacion = ImageClassification.builder().id(3).build();
+        private final ImageClassificationSummaryDTO summary = new ImageClassificationSummaryDTO();
+
+        @Test
+        @DisplayName("findAll: página de resúmenes")
+        void findAll() {
+            when(imageClassificationRepository.findAll(query)).thenReturn(new PageResult<>(List.of(clasificacion), 0, 10, 1, 1, true));
+            when(mapper.toSummaryDTO(clasificacion)).thenReturn(summary);
+
+            ApiResponse<PagedResponse<ImageClassificationSummaryDTO>> r = service.findAll(new PageRequestDTO());
+
+            assertThat(r.getMessage()).isEqualTo("Diagnósticos de imagen obtenidos exitosamente");
+            assertThat(r.getData().getContent()).containsExactly(summary);
+        }
+
+        @Test
+        @DisplayName("count: devuelve el total")
+        void count() {
+            when(imageClassificationRepository.count()).thenReturn(8L);
+
+            assertThat(service.count().getData()).isEqualTo(8L);
+        }
+
+        @Test
+        @DisplayName("findByDoctorId con clasificaciones: mensaje de encontradas")
+        void porDoctor() {
+            when(imageClassificationRepository.findByDoctorId(2, query)).thenReturn(new PageResult<>(List.of(clasificacion), 0, 10, 1, 1, true));
+            when(mapper.toSummaryDTO(clasificacion)).thenReturn(summary);
+
+            ApiResponse<PagedResponse<ImageClassificationSummaryDTO>> r = service.findByDoctorId(2, new PageRequestDTO());
+
+            assertThat(r.getMessage()).isEqualTo("Diagnósticos de imagen encontrados exitosamente para el doctor con ID: 2");
+            assertThat(r.getData().getContent()).containsExactly(summary);
+        }
+
+        @Test
+        @DisplayName("findByDoctorId sin clasificaciones: éxito con mensaje de vacío (no valida que el doctor exista)")
+        void porDoctorVacio() {
+            when(imageClassificationRepository.findByDoctorId(99, query)).thenReturn(new PageResult<>(List.of(), 0, 10, 0, 0, true));
+
+            ApiResponse<PagedResponse<ImageClassificationSummaryDTO>> r = service.findByDoctorId(99, new PageRequestDTO());
+
+            assertThat(r.isSuccess()).isTrue();
+            assertThat(r.getMessage()).isEqualTo("No se encontraron diagnósticos de imagen para el doctor con ID: 99");
+        }
+
+        @Test
+        @DisplayName("findByMedicalImgId con clasificaciones (también de imágenes retiradas): mensaje de encontradas")
+        void porImagen() {
+            when(imageClassificationRepository.findByMedicalImageId(50, query)).thenReturn(new PageResult<>(List.of(clasificacion), 0, 10, 1, 1, true));
+            when(mapper.toSummaryDTO(clasificacion)).thenReturn(summary);
+
+            ApiResponse<PagedResponse<ImageClassificationSummaryDTO>> r = service.findByMedicalImgId(50, new PageRequestDTO());
+
+            assertThat(r.getMessage()).isEqualTo("Diagnósticos de imagen encontrados exitosamente para la imagen médica con ID: 50");
+        }
+
+        @Test
+        @DisplayName("findByMedicalImgId sin clasificaciones: éxito con mensaje de vacío")
+        void porImagenVacia() {
+            when(imageClassificationRepository.findByMedicalImageId(50, query)).thenReturn(new PageResult<>(List.of(), 0, 10, 0, 0, true));
+
+            assertThat(service.findByMedicalImgId(50, new PageRequestDTO()).getMessage())
+                    .isEqualTo("No se encontraron diagnósticos de imagen para la imagen médica con ID: 50");
+        }
+
+        @Test
+        @DisplayName("findById inexistente: error con el ID")
+        void findByIdInexistente() {
+            when(imageClassificationRepository.findById(3)).thenReturn(Optional.empty());
+
+            assertThat(service.findById(3).getMessage()).isEqualTo("Diagnóstico de imagen no encontrado con ID: 3");
+        }
+    }
+
+    @Nested
+    @DisplayName("delete")
+    class Delete {
+
+        @Test
+        @DisplayName("no existe: error con el ID")
+        void noExiste() {
+            when(imageClassificationRepository.findById(3)).thenReturn(Optional.empty());
+
+            assertThat(service.delete(3).getMessage()).isEqualTo("Diagnóstico de imagen no encontrado con ID: 3");
+        }
+
+        @Test
+        @DisplayName("válido: borra la clasificación (y en BD, en cascada, su detalle)")
+        void valido() {
+            ImageClassification clasificacion = ImageClassification.builder().id(3).medicalImg(imagen).build();
+            when(imageClassificationRepository.findById(3)).thenReturn(Optional.of(clasificacion));
+
+            ApiResponse<Void> r = service.delete(3);
+
+            assertThat(r.isSuccess()).isTrue();
+            assertThat(r.getMessage()).isEqualTo("Diagnóstico de imagen eliminado exitosamente");
+            verify(imageClassificationRepository).delete(clasificacion);
+        }
+
+        @Test
+        @DisplayName("imagen retirada: la clasificación está congelada y no se borra (ADR-013)")
+        void imagenRetirada() {
+            imagen.retire();
+            ImageClassification clasificacion = ImageClassification.builder().id(3).medicalImg(imagen).build();
+            when(imageClassificationRepository.findById(3)).thenReturn(Optional.of(clasificacion));
+
+            ApiResponse<Void> r = service.delete(3);
+
+            assertThat(r.isSuccess()).isFalse();
+            assertThat(r.getMessage()).isEqualTo("La imagen médica 50 está retirada");
+            verify(imageClassificationRepository, never()).delete(any());
         }
     }
 }

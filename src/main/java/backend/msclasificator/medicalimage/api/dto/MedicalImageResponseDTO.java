@@ -33,5 +33,8 @@ public class MedicalImageResponseDTO {
     private MedicalImageTypeSummaryDTO medicalImageType;
     private Long fileSize;
     private LocalDateTime createdAt;
+
+    // false si la imagen está retirada (soft delete, ADR-013)
+    private Boolean active;
     private ClinicalRecordSummaryDTO clinicalRecord;
 }
