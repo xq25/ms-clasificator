@@ -61,10 +61,14 @@ public class MedicalImageService {
                 return ApiResponse.error("El archivo de imagen no puede estar vacío");
             }
 
-            MedicalImageType medicalImageType = medicalImageTypeRepository.findById(dto.getMedicalImageTypeId())
+            MedicalImageType medicalImageType = medicalImageTypeRepository.findByIdIncludingRetired(dto.getMedicalImageTypeId())
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Tipo de imagen medica no encontrada con ID: " + dto.getMedicalImageTypeId()
                     ));
+            // Un tipo retirado no admite imágenes nuevas (ADR-013)
+            if (Boolean.FALSE.equals(medicalImageType.getActive())) {
+                return ApiResponse.error("El tipo de imagen '" + medicalImageType.getName() + "' está retirado");
+            }
 
             ClinicalRecord clinicalRecord = null;
             if (dto.getClinicalRecordId() != null) {
@@ -150,7 +154,8 @@ public class MedicalImageService {
     @Transactional(readOnly = true)
     public ApiResponse<PagedResponse<MedicalImageResponseDTO>> findByMedicalImageType(Integer medicalImageTypeId, PageRequestDTO pageRequest) {
         try {
-            if (!medicalImageTypeRepository.existsById(medicalImageTypeId)) {
+            // Las imágenes de un tipo retirado siguen visibles (ADR-013)
+            if (!medicalImageTypeRepository.existsByIdIncludingRetired(medicalImageTypeId)) {
                 return ApiResponse.error("No se encontró el tipo de imagen médica con ID: " + medicalImageTypeId);
             }
 

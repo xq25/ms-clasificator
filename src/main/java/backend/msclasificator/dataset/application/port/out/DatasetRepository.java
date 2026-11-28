@@ -27,9 +27,6 @@ public interface DatasetRepository {
 
     boolean existsByMedicalImageTypeId(Integer medicalImageTypeId);
 
-    // Incluye retirados (ADR-011): un tipo de imagen con datasets no se puede borrar (bug #23)
-    boolean existsByMedicalImageTypeIdIncludingRetired(Integer medicalImageTypeId);
-
     boolean existsByName(String name);
 
     // Variantes que excluyen al propio dataset, para validar duplicados al actualizar

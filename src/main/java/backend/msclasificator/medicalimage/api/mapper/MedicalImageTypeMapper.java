@@ -47,6 +47,7 @@ public class MedicalImageTypeMapper implements Mapper<MedicalImageType, MedicalI
         return MedicalImageTypeResponseDTO.builder()
                 .id(medicalImageType.getId())
                 .name(medicalImageType.getName())
+                .active(medicalImageType.getActive())
                 .evaluationArea(medicalImageType.getEvaluationArea() != null ? evaluationAreaMapper.toSummaryDTO(medicalImageType.getEvaluationArea()) : null)
                 .build();
     }
@@ -60,6 +61,7 @@ public class MedicalImageTypeMapper implements Mapper<MedicalImageType, MedicalI
         return MedicalImageTypeSummaryDTO.builder()
                 .id(medicalImageType.getId())
                 .name(medicalImageType.getName())
+                .active(medicalImageType.getActive())
                 .build();
     }
 }

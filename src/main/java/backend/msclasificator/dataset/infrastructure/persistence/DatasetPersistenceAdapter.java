@@ -60,11 +60,6 @@ class DatasetPersistenceAdapter implements DatasetRepository {
     }
 
     @Override
-    public boolean existsByMedicalImageTypeIdIncludingRetired(Integer medicalImageTypeId) {
-        return jpa.existsByMedicalImageTypeId(medicalImageTypeId);
-    }
-
-    @Override
     public boolean existsByName(String name) {
         return jpa.existsByNameAndActiveTrue(name);
     }

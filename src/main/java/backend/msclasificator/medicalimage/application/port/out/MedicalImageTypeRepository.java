@@ -7,6 +7,7 @@ import backend.msclasificator.shared.application.PageResult;
 import java.util.List;
 import java.util.Optional;
 
+// Soft delete (ADR-013): todas las lecturas devuelven solo tipos activos, salvo los métodos "IncludingRetired"
 public interface MedicalImageTypeRepository {
 
     PageResult<MedicalImageType> findAll(PageQuery query);
@@ -16,9 +17,15 @@ public interface MedicalImageTypeRepository {
 
     Optional<MedicalImageType> findById(Integer id);
 
+    // Incluye retirados: consulta por id (se muestra marcado como retirado) y validaciones con mensaje propio
+    Optional<MedicalImageType> findByIdIncludingRetired(Integer id);
+
     List<MedicalImageType> findByEvaluationAreaId(Integer evaluationAreaId);
 
     boolean existsById(Integer id);
+
+    // Incluye retirados: las imágenes de un tipo retirado siguen visibles (ADR-013)
+    boolean existsByIdIncludingRetired(Integer id);
 
     boolean existsByName(String name);
 

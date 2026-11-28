@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 public class MedicalImageTypeResponseDTO {
     private Integer id;
     private String name;
+
+    // false si el tipo está retirado (soft delete, ADR-013)
+    private Boolean active;
     private EvaluationAreaSummaryDTO evaluationArea;
 }
 

@@ -51,13 +51,13 @@ Cada entidad sigue el patrón: `Model`, `CreateDTO`, `UpdateDTO`, `ResponseDTO`,
   - Tiene muchos **Diagnosis** → cada uno apunta a un **MedicalDiagnostic**.
 
 ### Imágenes médicas
-- **MedicalImageType** — tipo de imagen (Electrocardiograma, Rx de tórax, etc.), asociado opcionalmente a un **EvaluationArea**.
+- **MedicalImageType** — tipo de imagen (Electrocardiograma, Rx de tórax, etc.), asociado opcionalmente a un **EvaluationArea**. Soft delete (ADR-013): al retirarse pierde el área y no admite imágenes ni datasets nuevos; nombre único solo entre activos. `MedicalDiagnostic` y `MedicalImage` tendrán soft delete en las siguientes etapas de ADR-013.
 - **MedicalImage** — imagen almacenada. Campos clave: `imageKey` (clave en storage), `provider` (minio/s3/r2), `contentType`, `fileSize`. **NO guarda URL** (se genera on-demand). Puede o no estar ligada a un **ClinicalRecord**.
 
 ### Clasificación por doctores ("Tinder médico", ADR-010)
 - **ImageClassification** — el doctor **desliza** una imagen hacia una **DatasetCategory** del dataset de su tipo (Doctor + MedicalImage único por par, + `datasetCategory`). Un deslizamiento = un `POST` atómico. Los diagnósticos CIE-10 son la **definición de la categoría vigente al deslizar** (ADR-011); la clase es su `numValue`.
   - **ClassificationDiagnosis** — detalle opcional: sub-diagnósticos de esa definición de la categoría. Las clasificaciones previas a ADR-010 no tienen categoría.
-- **Soft delete (ADR-011):** `Dataset`, `DatasetCategory` y `CategoryDiagnostic` se **retiran** (`active=false` + `deleted_at`, solo vía `retire()`), nunca se borran. Los puertos leen solo activos salvo métodos `...IncludingRetired`/`findDefinitionAt`. Unicidad solo entre activos; `numValue` nunca se reutiliza. No usar `@SQLRestriction`.
+- **Soft delete (ADR-011, ADR-013):** `Dataset`, `DatasetCategory`, `CategoryDiagnostic` y `MedicalImageType` se **retiran** (`active=false` + `deleted_at`, solo vía `retire()`), nunca se borran. Los puertos leen solo activos salvo métodos `...IncludingRetired`/`findDefinitionAt`. Unicidad solo entre activos; `numValue` nunca se reutiliza. No usar `@SQLRestriction`.
 
 ### Datasets
 - **MedicalDiagnostic** — diagnóstico CIE-10, con jerarquía `parentDiagnostic` (self-referencing). Pre-cargados vía `docker/init/02-data.sql`.

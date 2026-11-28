@@ -66,7 +66,7 @@ class MedicalImageServiceTest {
     }
 
     private void tipoExiste() {
-        when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.of(new MedicalImageType()));
+        when(medicalImageTypeRepository.findByIdIncludingRetired(1)).thenReturn(Optional.of(new MedicalImageType()));
     }
 
     @Nested
@@ -84,12 +84,25 @@ class MedicalImageServiceTest {
 
         @Test
         void tipoDeImagenMedicaInexistente_devuelveError() {
-            when(medicalImageTypeRepository.findById(1)).thenReturn(Optional.empty());
+            when(medicalImageTypeRepository.findByIdIncludingRetired(1)).thenReturn(Optional.empty());
 
             ApiResponse<MedicalImageResponseDTO> r = service.uploadImage(archivo("image/png", 100), dto(null, null));
 
             assertThat(r.isSuccess()).isFalse();
             assertThat(r.getMessage()).isEqualTo("Tipo de imagen medica no encontrada con ID: 1");
+            verify(imageStorage, never()).upload(any(), anyString());
+        }
+
+        @Test
+        void tipoDeImagenRetirado_devuelveError_sinSubir() {
+            MedicalImageType retirado = MedicalImageType.builder().id(1).name("Electrocardiograma").build();
+            retirado.retire();
+            when(medicalImageTypeRepository.findByIdIncludingRetired(1)).thenReturn(Optional.of(retirado));
+
+            ApiResponse<MedicalImageResponseDTO> r = service.uploadImage(archivo("image/png", 100), dto(null, null));
+
+            assertThat(r.isSuccess()).isFalse();
+            assertThat(r.getMessage()).isEqualTo("El tipo de imagen 'Electrocardiograma' está retirado");
             verify(imageStorage, never()).upload(any(), anyString());
         }
 
@@ -297,7 +310,7 @@ class MedicalImageServiceTest {
         @Test
         @DisplayName("findByMedicalImageType con tipo inexistente: error")
         void porTipoInexistente() {
-            when(medicalImageTypeRepository.existsById(1)).thenReturn(false);
+            when(medicalImageTypeRepository.existsByIdIncludingRetired(1)).thenReturn(false);
 
             ApiResponse<PagedResponse<MedicalImageResponseDTO>> r = service.findByMedicalImageType(1, new PageRequestDTO());
 
@@ -308,7 +321,7 @@ class MedicalImageServiceTest {
         @Test
         @DisplayName("findByMedicalImageType: página con el DTO de respuesta")
         void porTipo() {
-            when(medicalImageTypeRepository.existsById(1)).thenReturn(true);
+            when(medicalImageTypeRepository.existsByIdIncludingRetired(1)).thenReturn(true);
             when(medicalImageRepository.findByMedicalImageTypeId(1, query)).thenReturn(new PageResult<>(List.of(imagen), 0, 10, 1, 1, true));
             when(mapper.toResponseDTO(imagen)).thenReturn(responseDTO);
 
