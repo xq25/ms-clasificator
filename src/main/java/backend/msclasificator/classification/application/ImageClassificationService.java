@@ -208,6 +208,8 @@ public class ImageClassificationService {
         }
     }
 
+    // Transaccional: con open-in-view=false, revisar la imagen (relación perezosa) fuera de una transacción falla
+    @Transactional
     public ApiResponse<Void> delete(Integer id) {
         try {
             ImageClassification imageDiagnostic = imageDiagnosticRepository.findById(id)
