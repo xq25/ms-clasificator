@@ -46,6 +46,7 @@ public class MedicalDiagnosticMapper implements Mapper<MedicalDiagnostic, Medica
                 .id(medicalDiagnostic.getId())
                 .diagnosticName(medicalDiagnostic.getDiagnosticName())
                 .diagnosticCode(medicalDiagnostic.getDiagnosticCode())
+                .active(medicalDiagnostic.getActive())
                 .parentDiagnostic(medicalDiagnostic.getParentDiagnostic() != null ? toSummaryDTO(medicalDiagnostic.getParentDiagnostic()) : null)
                 .build();
     }
@@ -60,6 +61,7 @@ public class MedicalDiagnosticMapper implements Mapper<MedicalDiagnostic, Medica
                 .id(medicalDiagnostic.getId())
                 .diagnosticCode(medicalDiagnostic.getDiagnosticCode())
                 .diagnosticName(medicalDiagnostic.getDiagnosticName())
+                .active(medicalDiagnostic.getActive())
                 .build();
     }
 }

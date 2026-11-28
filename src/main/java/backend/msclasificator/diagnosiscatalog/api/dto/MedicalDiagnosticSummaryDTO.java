@@ -14,4 +14,7 @@ public class MedicalDiagnosticSummaryDTO {
     private Integer id;
     private String diagnosticCode;
     private String diagnosticName;
+
+    // false si el diagnóstico está retirado del catálogo (soft delete, ADR-013)
+    private Boolean active;
 }

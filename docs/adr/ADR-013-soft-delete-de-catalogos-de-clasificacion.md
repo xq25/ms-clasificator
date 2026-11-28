@@ -19,7 +19,7 @@ Se necesita poder sacarlas de circulación sin perder el historial.
 | Entidad | Borrado | Etapa |
 |---------|---------|-------|
 | `MedicalImageType` | Soft delete | `feat/soft-delete-tipos-imagen` |
-| `MedicalDiagnostic` | Soft delete | `feat/soft-delete-diagnosticos` (pendiente) |
+| `MedicalDiagnostic` | Soft delete | `feat/soft-delete-diagnosticos` |
 | `MedicalImage` | Soft delete | `feat/soft-delete-imagenes` (pendiente) |
 | `Dataset`, `DatasetCategory`, `CategoryDiagnostic` | Soft delete (ya existente, ADR-011) | — |
 | `Doctor`, `EvaluationArea`, `DoctorArea`, `Patient`, `ClinicalRecord`, `PrimitiveDatum`, `PatientDatum`, `Diagnosis` | Se conserva el borrado actual (con las reglas de los bugs #12–#21) | — |
@@ -42,12 +42,15 @@ Se necesita poder sacarlas de circulación sin perder el historial.
 - Para crear o editar datasets, un tipo retirado se trata como inexistente (los puertos leen solo activos).
 - Reemplaza la corrección del bug #23: ya no se bloquea por datasets retirados ni por imágenes; solo por un dataset activo.
 
-### 4. `MedicalDiagnostic` (pendiente de implementar)
+### 4. `MedicalDiagnostic`
 - **En uso vigente:** retirar un diagnóstico que es padre de un dataset activo o que define una categoría activa se **bloquea**. Los datasets y categorías retirados no bloquean.
 - **Jerarquía:** retirar un diagnóstico con sub-diagnósticos activos se **bloquea**.
 - **Código CIE-10 único entre todos**, incluidos los retirados: un código nunca se reutiliza (identifica el diagnóstico en el historial de clasificaciones). No cambia el índice único.
 - **Historias clínicas:** los diagnósticos ya registrados se conservan; no se pueden registrar nuevos con un código retirado. Retirar no se bloquea por historias clínicas.
-- Un diagnóstico retirado no se puede usar en categorías, datasets, jerarquía (`addSubDiagnostic`) ni historias clínicas nuevas.
+- Un diagnóstico retirado no se puede usar en categorías, datasets, jerarquía (`addSubDiagnostic`) ni historias clínicas nuevas. Para historias clínicas el mensaje es explícito ("El diagnóstico … está retirado del catálogo"); en el resto se trata como inexistente.
+- Al retirarse no cambia su jerarquía: conserva su padre. Separar un sub-diagnóstico de su padre sigue bloqueado si alguna vez definió una categoría (incluidas retiradas).
+- Se quitan las cascadas JPA de la entidad hacia diagnósticos clínicos, datasets y categorías.
+- Reemplaza la corrección del bug #17: ya no se bloquea por historias clínicas, clasificaciones ni usos retirados; solo por usos vigentes y por hijos activos.
 
 ### 5. `MedicalImage` (pendiente de implementar)
 - **Con clasificaciones:** se puede retirar, y sus clasificaciones se conservan.

@@ -14,7 +14,6 @@ public interface ClassificationDiagnosisJpaRepository extends JpaRepository<Clas
 
     List<ClassificationDiagnosis> findByMedicalDiagnosticId(Integer medicalDiagnosticId);
 
-    boolean existsByMedicalDiagnosticId(Integer medicalDiagnosticId);
 
     boolean existsByImageDiagnosticIdAndMedicalDiagnosticId(Integer imageDiagnosticId, Integer medicalDiagnosticId);
 

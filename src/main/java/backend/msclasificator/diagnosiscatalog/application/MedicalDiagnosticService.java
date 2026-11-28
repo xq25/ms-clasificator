@@ -12,8 +12,6 @@ import backend.msclasificator.diagnosiscatalog.api.mapper.MedicalDiagnosticMappe
 import backend.msclasificator.diagnosiscatalog.domain.MedicalDiagnostic;
 import backend.msclasificator.dataset.application.port.out.CategoryDiagnosticRepository;
 import backend.msclasificator.dataset.application.port.out.DatasetRepository;
-import backend.msclasificator.clinicalrecord.application.port.out.DiagnosisRepository;
-import backend.msclasificator.classification.application.port.out.ClassificationDiagnosisRepository;
 import backend.msclasificator.diagnosiscatalog.application.port.out.MedicalDiagnosticRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -31,9 +29,6 @@ public class MedicalDiagnosticService {
     private MedicalDiagnosticRepository medicalDiagnosticRepository;
 
     @Autowired
-    private ClassificationDiagnosisRepository imageDoctorDiagnosticsRepository;
-
-    @Autowired
     private MedicalDiagnosticMapper medicalDiagnosticMapper;
 
     @Autowired
@@ -41,9 +36,6 @@ public class MedicalDiagnosticService {
 
     @Autowired
     private DatasetRepository datasetRepository;
-
-    @Autowired
-    private DiagnosisRepository diagnosisRepository;
 
 
 
@@ -119,7 +111,8 @@ public class MedicalDiagnosticService {
     @Transactional(readOnly = true)
     public ApiResponse<MedicalDiagnosticResponseDTO> findById(Integer id) {
         try {
-            MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(id)
+            // Por id también se ve un diagnóstico retirado, marcado con active=false (ADR-013)
+            MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findByIdIncludingRetired(id)
                     .orElseThrow(() -> new IllegalArgumentException("Diagnóstico médico no encontrado con ID: " + id));
             return ApiResponse.success(medicalDiagnosticMapper.toResponseDTO(medicalDiagnostic), "Diagnóstico médico encontrado");
         } catch (IllegalArgumentException ex) {
@@ -155,7 +148,7 @@ public class MedicalDiagnosticService {
             }
 
             // Validamos que el codigo sea unico
-            if (medicalDiagnosticRepository.findByDiagnosticCode(medicalDiagnosticCreateDTO.getDiagnosticCode()).isPresent()) {
+            if (medicalDiagnosticRepository.findByDiagnosticCodeIncludingRetired(medicalDiagnosticCreateDTO.getDiagnosticCode()).isPresent()) {
                 return ApiResponse.error("Ya existe un diagnóstico con el código: " + medicalDiagnosticCreateDTO.getDiagnosticCode());
             }
 
@@ -189,7 +182,7 @@ public class MedicalDiagnosticService {
 
             // Validamos el codigo de diagnostico
             MedicalDiagnostic existingByCode = medicalDiagnosticRepository
-                    .findByDiagnosticCode(medicalDiagnosticUpdateDTO.getDiagnosticCode()).orElse(null);
+                    .findByDiagnosticCodeIncludingRetired(medicalDiagnosticUpdateDTO.getDiagnosticCode()).orElse(null);
             if (existingByCode != null && !existingByCode.getId().equals(id)) {
                 throw new IllegalArgumentException("Ya existe un diagnóstico con el código: "
                         + medicalDiagnosticUpdateDTO.getDiagnosticCode());
@@ -207,41 +200,34 @@ public class MedicalDiagnosticService {
     }
 
     @Transactional
+    // Soft delete (ADR-013): retira el diagnóstico del catálogo. Lo histórico que lo referencia se conserva.
     public ApiResponse<Void> delete(Integer id) {
         try {
             MedicalDiagnostic medicalDiagnostic = medicalDiagnosticRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Diagnóstico médico no encontrado con ID: " + id));
+            String code = medicalDiagnostic.getDiagnosticCode();
 
-            // Validacion de subdiagnosticos
-            if (medicalDiagnosticRepository.existsByParentDiagnosticId(id)) {
-                return ApiResponse.error("El diagnóstico médico no se puede eliminar porque tiene sub-diagnósticos asociados.");
+            long hijosActivos = medicalDiagnosticRepository.countActiveChildren(id);
+            if (hijosActivos > 0) {
+                return ApiResponse.error("No se puede retirar el diagnóstico " + code + ": tiene " + hijosActivos
+                        + (hijosActivos == 1 ? " sub-diagnóstico activo." : " sub-diagnósticos activos."));
             }
 
-            // Validamos que no tenga diagnosticos de imagenes asociados a el
-            if (imageDoctorDiagnosticsRepository.existsByMedicalDiagnosticId(id)) {
-                return ApiResponse.error("No se puede eliminar el diagnóstico ya que está asociado a clasificaciones de imágenes.");
-            }
-
-            // Bug #17: el resto de referencias se valida aquí. Si se dejara a la FK, el error llegaría
-            // al hacer commit (fuera de este try) y la API respondería 500.
-            // Categorías y datasets incluyen los retirados (ADR-011): son historial de clasificaciones.
+            // En uso vigente: lo retirado (categorías y datasets viejos) no bloquea
             if (diagnosticCategoryDatasetRepository.existsByMedicalDiagnosticId(id)) {
-                return ApiResponse.error("No se puede eliminar el diagnóstico porque define categorías de datasets (incluidas retiradas).");
+                return ApiResponse.error("No se puede retirar el diagnóstico " + code
+                        + ": define categorías activas de datasets. Quítelo primero de esas categorías.");
             }
 
-            if (datasetRepository.existsByMedicalDiagnosticIdIncludingRetired(id)) {
-                return ApiResponse.error("No se puede eliminar el diagnóstico porque es el diagnóstico padre de un dataset (incluidos retirados).");
+            if (datasetRepository.existsByMedicalDiagnosticId(id)) {
+                return ApiResponse.error("No se puede retirar el diagnóstico " + code
+                        + ": es el diagnóstico padre de un dataset activo. Retire primero el dataset.");
             }
 
-            if (diagnosisRepository.existsByMedicalDiagnosticId(id)) {
-                return ApiResponse.error("No se puede eliminar el diagnóstico porque está registrado en historias clínicas.");
-            }
+            medicalDiagnostic.retire();
+            medicalDiagnosticRepository.save(medicalDiagnostic);
+            return ApiResponse.success("Diagnóstico médico retirado exitosamente");
 
-            medicalDiagnosticRepository.delete(medicalDiagnostic);
-            return ApiResponse.success("Diagnóstico médico eliminado exitosamente");
-
-        } catch (DataIntegrityViolationException ex) {
-            return ApiResponse.error("Violación a la integridad de la base de datos: " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
             return ApiResponse.error(ex.getMessage());
         }
@@ -307,7 +293,7 @@ public class MedicalDiagnosticService {
             }
 
             // Validar que el subdiagnostico que se va a remover no este dentro de una configuracion.
-            if (this.diagnosticCategoryDatasetRepository.existsByMedicalDiagnosticId(subDiagnosticId)) {
+            if (this.diagnosticCategoryDatasetRepository.existsByMedicalDiagnosticIdIncludingRetired(subDiagnosticId)) {
                 return ApiResponse.error("No se puede remover este sub-diagnóstico porque está asignado a una categoría dentro de un dataset.");
             }
 

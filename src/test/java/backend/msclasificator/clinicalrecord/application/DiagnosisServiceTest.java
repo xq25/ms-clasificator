@@ -172,11 +172,26 @@ class DiagnosisServiceTest {
         @DisplayName("diagnóstico CIE-10 inexistente: error sin guardar")
         void diagnosticoInexistente() {
             when(clinicalRecordRepository.findById(10)).thenReturn(Optional.of(new ClinicalRecord()));
-            when(medicalDiagnosticRepository.findById(20)).thenReturn(Optional.empty());
+            when(medicalDiagnosticRepository.findByIdIncludingRetired(20)).thenReturn(Optional.empty());
 
             ApiResponse<DiagnosisResponseDTO> r = service.create(dto);
 
             assertThat(r.getMessage()).isEqualTo("Medical Diagnostic no encontrado con ID: 20");
+            verify(diagnosisRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("diagnóstico CIE-10 retirado del catálogo: error sin guardar (ADR-013)")
+        void diagnosticoRetirado() {
+            MedicalDiagnostic retirado = MedicalDiagnostic.builder().id(20).diagnosticCode("I21").build();
+            retirado.retire();
+            when(clinicalRecordRepository.findById(10)).thenReturn(Optional.of(new ClinicalRecord()));
+            when(medicalDiagnosticRepository.findByIdIncludingRetired(20)).thenReturn(Optional.of(retirado));
+
+            ApiResponse<DiagnosisResponseDTO> r = service.create(dto);
+
+            assertThat(r.isSuccess()).isFalse();
+            assertThat(r.getMessage()).isEqualTo("El diagnóstico I21 está retirado del catálogo");
             verify(diagnosisRepository, never()).save(any());
         }
 
@@ -187,7 +202,7 @@ class DiagnosisServiceTest {
             MedicalDiagnostic medicalDiagnostic = MedicalDiagnostic.builder().id(20).build();
             Diagnosis nuevo = new Diagnosis();
             when(clinicalRecordRepository.findById(10)).thenReturn(Optional.of(record));
-            when(medicalDiagnosticRepository.findById(20)).thenReturn(Optional.of(medicalDiagnostic));
+            when(medicalDiagnosticRepository.findByIdIncludingRetired(20)).thenReturn(Optional.of(medicalDiagnostic));
             when(mapper.toEntity(dto)).thenReturn(nuevo);
             when(diagnosisRepository.save(nuevo)).thenReturn(nuevo);
             when(mapper.toResponseDTO(nuevo)).thenReturn(responseDTO);
@@ -205,7 +220,7 @@ class DiagnosisServiceTest {
         void errorAlGuardarSePropaga() {
             Diagnosis nuevo = new Diagnosis();
             when(clinicalRecordRepository.findById(10)).thenReturn(Optional.of(new ClinicalRecord()));
-            when(medicalDiagnosticRepository.findById(20)).thenReturn(Optional.of(new MedicalDiagnostic()));
+            when(medicalDiagnosticRepository.findByIdIncludingRetired(20)).thenReturn(Optional.of(new MedicalDiagnostic()));
             when(mapper.toEntity(dto)).thenReturn(nuevo);
             when(diagnosisRepository.save(nuevo)).thenThrow(new DataIntegrityViolationException("fk"));
 
